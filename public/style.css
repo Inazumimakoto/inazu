@@ -22,7 +22,9 @@ body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: var(--bg-primary);
     color: var(--text-primary);
+    min-height: 100dvh;
     min-height: 100vh;
+    /* Fallback */
     line-height: 1.5;
     font-feature-settings: "ss01", "ss02";
 }
@@ -31,9 +33,13 @@ body {
 .container {
     max-width: 720px;
     margin: 0 auto;
+    min-height: 100dvh;
     min-height: 100vh;
+    /* Fallback */
+    height: 100dvh;
     display: flex;
     flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Header */
@@ -55,7 +61,7 @@ header h1 {
     display: flex;
     flex-direction: column;
     padding: 0 1.5rem;
-    max-height: calc(100vh - 100px);
+    overflow: hidden;
 }
 
 .messages {
