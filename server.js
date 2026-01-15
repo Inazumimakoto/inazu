@@ -1,13 +1,47 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
+const os = require('os');
 
 const app = express();
 const PORT = 3000;
 const OLLAMA_URL = 'http://localhost:11434';
+const LOG_FILE = path.join(__dirname, 'usage.log');
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/scripts', express.static(path.join(__dirname, 'node_modules/marked')));
+
+// Logging function
+function logRequest(req, message) {
+    const timestamp = new Date().toISOString();
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+    const memUsage = process.memoryUsage();
+    const systemMem = {
+        total: os.totalmem(),
+        free: os.freemem(),
+        usedPercent: ((1 - os.freemem() / os.totalmem()) * 100).toFixed(1)
+    };
+
+    const logEntry = {
+        timestamp,
+        ip,
+        userAgent,
+        messageLength: message.length,
+        memory: {
+            heapUsedMB: (memUsage.heapUsed / 1024 / 1024).toFixed(2),
+            systemUsedPercent: systemMem.usedPercent
+        }
+    };
+
+    const logLine = JSON.stringify(logEntry) + '\n';
+    fs.appendFile(LOG_FILE, logLine, (err) => {
+        if (err) console.error('Log write error:', err);
+    });
+
+    console.log(`[${timestamp}] ${ip} - ${message.substring(0, 50)}...`);
+}
 
 // Chat API endpoint - proxies to Ollama
 app.post('/api/chat', async (req, res) => {
@@ -16,6 +50,9 @@ app.post('/api/chat', async (req, res) => {
     if (!message) {
         return res.status(400).json({ error: 'Message is required' });
     }
+
+    // Log the request
+    logRequest(req, message);
 
     try {
         // Build messages array with history (system prompt is embedded in nazumi model)
@@ -68,4 +105,5 @@ app.post('/api/chat', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
     console.log(`📡 Proxying to Ollama at ${OLLAMA_URL}`);
+    console.log(`📝 Logging to ${LOG_FILE}`);
 });
