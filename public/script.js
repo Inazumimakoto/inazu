@@ -12,15 +12,8 @@ userInput.addEventListener('input', () => {
     userInput.style.height = Math.min(userInput.scrollHeight, 200) + 'px';
 });
 
-// Handle Enter to send (Shift+Enter for newline)
-userInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        if (!isStreaming && userInput.value.trim()) {
-            chatForm.dispatchEvent(new Event('submit'));
-        }
-    }
-});
+// Enter now creates newline (default textarea behavior)
+// Only clicking the send button sends the message
 
 // Handle form submission
 chatForm.addEventListener('submit', async (e) => {
