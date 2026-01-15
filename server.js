@@ -7,11 +7,12 @@ const OLLAMA_URL = 'http://localhost:11434';
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/scripts', express.static(path.join(__dirname, 'node_modules/marked')));
 
 // Chat API endpoint - proxies to Ollama
 app.post('/api/chat', async (req, res) => {
     const { message, history } = req.body;
-    
+
     if (!message) {
         return res.status(400).json({ error: 'Message is required' });
     }
@@ -46,7 +47,7 @@ app.post('/api/chat', async (req, res) => {
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            
+
             const chunk = decoder.decode(value, { stream: true });
             res.write(`data: ${chunk}\n\n`);
         }

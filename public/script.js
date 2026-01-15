@@ -130,32 +130,42 @@ async function sendMessage(message) {
                             const text = json.message.content;
                             fullResponse += text;
 
-                            // 1. Escape HTML to prevent XSS and broken layout
-                            let safeText = fullResponse
-                                .replace(/&/g, "&amp;")
-                                .replace(/</g, "&lt;")
-                                .replace(/>/g, "&gt;")
-                                .replace(/"/g, "&quot;")
-                                .replace(/'/g, "&#039;");
+                            // 1. Separate generic response and thinking process
+                            const raw = fullResponse;
 
-                            // 2. Format <think> blocks
-                            // Use a non-greedy regex to capture content between tags, 
-                            // handling cases where the closing tag hasn't arrived yet (streaming)
+                            // Regex to capture <think>...</think> content and the rest
+                            // Supporting streaming: if <think> is open but not closed, treat rest as thinking
+                            let thinkContent = null;
+                            let mainContent = raw;
 
-                            if (safeText.includes('&lt;think&gt;')) {
-                                // Open think block
-                                safeText = safeText.replace(/&lt;think&gt;/g, '<div class="think-block"><div class="think-label">Thinking Process</div>');
+                            const thinkMatch = raw.match(/<think>([\s\S]*?)(?:<\/think>|$)/);
 
-                                // Close think block if closing tag exists
-                                if (safeText.includes('&lt;/think&gt;')) {
-                                    safeText = safeText.replace(/&lt;\/think&gt;/g, '</div>');
-                                } else {
-                                    // If still streaming and no closing tag, close it temporarily for rendering
-                                    safeText += '</div>';
-                                }
+                            if (thinkMatch) {
+                                thinkContent = thinkMatch[1];
+                                // Remove the think block from main content to avoid double rendering
+                                mainContent = raw.replace(/<think>[\s\S]*?(?:<\/think>|$)/, '');
                             }
 
-                            contentDiv.innerHTML = safeText;
+                            // 2. Build HTML
+                            let html = '';
+
+                            // Render thinking block (raw text, no markdown inside thought usually)
+                            if (thinkContent) {
+                                // Simple escaping for think content to prevent HTML injection inside block
+                                const safeThink = thinkContent
+                                    .replace(/&/g, "&amp;")
+                                    .replace(/</g, "&lt;")
+                                    .replace(/>/g, "&gt;");
+                                html += `<div class="think-block"><div class="think-label">Thinking Process</div>${safeThink}</div>`;
+                            }
+
+                            // Render main content (Markdown)
+                            if (mainContent) {
+                                // Parse markdown
+                                html += marked.parse(mainContent);
+                            }
+
+                            contentDiv.innerHTML = html;
                             chatMessages.scrollTop = chatMessages.scrollHeight;
                         }
                     } catch (e) {
