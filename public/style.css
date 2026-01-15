@@ -206,11 +206,12 @@ footer {
 
 /* Streaming Cursor */
 .streaming::after {
-    content: '●';
+    content: '▋';
     color: var(--text-primary);
-    font-size: 0.8em;
-    margin-left: 4px;
+    font-size: 0.9em;
+    margin-left: 2px;
     animation: blink 1s infinite step-start;
+    vertical-align: baseline;
 }
 
 @keyframes blink {
@@ -219,38 +220,9 @@ footer {
     }
 }
 
-/* Loading Dots */
+/* Loading Dots (Removed/Unused) */
 .loading-dots {
-    display: flex;
-    gap: 4px;
-}
-
-.loading-dots span {
-    width: 6px;
-    height: 6px;
-    background: var(--text-secondary);
-    border-radius: 50%;
-    animation: pulse 1.5s infinite ease-in-out;
-}
-
-.loading-dots span:nth-child(2) {
-    animation-delay: 0.2s;
-}
-
-.loading-dots span:nth-child(3) {
-    animation-delay: 0.4s;
-}
-
-@keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 0.3;
-    }
-
-    50% {
-        opacity: 1;
-    }
+    display: none;
 }
 
 /* Mobile */

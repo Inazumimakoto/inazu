@@ -28,7 +28,11 @@ app.post('/api/chat', async (req, res) => {
             body: JSON.stringify({
                 model: 'deepseek-r1:8b',
                 messages: messages,
-                stream: true
+                stream: true,
+                options: {
+                    // Enable thinking output for DeepSeek-R1
+                    num_ctx: 8192
+                }
             })
         });
 

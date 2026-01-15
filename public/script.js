@@ -104,9 +104,8 @@ async function sendMessage(message) {
 
         // Create streaming message container
         const contentDiv = addMessage('', 'assistant', true);
-        let fullResponse = '';
-        let thinkingContent = '';
-        let isThinking = false;
+        let thinkingText = '';
+        let responseText = '';
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -126,48 +125,48 @@ async function sendMessage(message) {
 
                     try {
                         const json = JSON.parse(data);
+
+                        // DeepSeek-R1 format: thinking and response are separate fields
+                        // Handle thinking content (思考フェーズ)
                         if (json.message && json.message.content) {
-                            const text = json.message.content;
-                            fullResponse += text;
-
-                            // 1. Separate generic response and thinking process
-                            const raw = fullResponse;
-
-                            // Regex to capture <think>...</think> content and the rest
-                            // Supporting streaming: if <think> is open but not closed, treat rest as thinking
-                            let thinkContent = null;
-                            let mainContent = raw;
-
-                            const thinkMatch = raw.match(/<think>([\s\S]*?)(?:<\/think>|$)/);
-
-                            if (thinkMatch) {
-                                thinkContent = thinkMatch[1];
-                                // Remove the think block from main content to avoid double rendering
-                                mainContent = raw.replace(/<think>[\s\S]*?(?:<\/think>|$)/, '');
-                            }
-
-                            // 2. Build HTML
-                            let html = '';
-
-                            // Render thinking block (raw text, no markdown inside thought usually)
-                            if (thinkContent) {
-                                // Simple escaping for think content to prevent HTML injection inside block
-                                const safeThink = thinkContent
-                                    .replace(/&/g, "&amp;")
-                                    .replace(/</g, "&lt;")
-                                    .replace(/>/g, "&gt;");
-                                html += `<div class="think-block"><div class="think-label">Thinking Process</div>${safeThink}</div>`;
-                            }
-
-                            // Render main content (Markdown)
-                            if (mainContent) {
-                                // Parse markdown
-                                html += marked.parse(mainContent);
-                            }
-
-                            contentDiv.innerHTML = html;
-                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                            // Standard Ollama format - check for thinking in content
+                            const content = json.message.content;
+                            responseText += content;
                         }
+
+                        // Also check for direct thinking/response fields (DeepSeek-R1 specific)
+                        if (json.thinking && json.thinking.length > 0) {
+                            thinkingText += json.thinking;
+                        }
+                        if (json.response && json.response.length > 0) {
+                            responseText += json.response;
+                        }
+
+                        // Build HTML
+                        let html = '';
+
+                        // Render thinking block if we have thinking content
+                        if (thinkingText) {
+                            const safeThink = thinkingText
+                                .replace(/&/g, "&amp;")
+                                .replace(/</g, "&lt;")
+                                .replace(/>/g, "&gt;");
+                            html += `<div class="think-block"><div class="think-label">Thinking</div>${safeThink}</div>`;
+                        }
+
+                        // Render response content (Markdown)
+                        if (responseText) {
+                            html += marked.parse(responseText);
+                        }
+
+                        // If nothing yet, show a placeholder
+                        if (!html) {
+                            html = '<span class="thinking-indicator">思考中...</span>';
+                        }
+
+                        contentDiv.innerHTML = html;
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+
                     } catch (e) {
                         // Skip non-JSON lines
                     }
@@ -178,8 +177,8 @@ async function sendMessage(message) {
         // Remove streaming cursor
         contentDiv.classList.remove('streaming');
 
-        // Add to history (save raw text)
-        conversationHistory.push({ role: 'assistant', content: fullResponse });
+        // Add to history (save response only, not thinking)
+        conversationHistory.push({ role: 'assistant', content: responseText });
 
     } catch (error) {
         console.error('Error:', error);
