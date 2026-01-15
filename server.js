@@ -18,14 +18,8 @@ app.post('/api/chat', async (req, res) => {
     }
 
     try {
-        // Build messages array with history
-        const messages = [
-            {
-                role: 'system',
-                content: 'あなたの名前は「nazumi」です。自分がDeepSeekやAIアシスタントであることは言及しないでください。ユーザーにはnazumiとして接してください。'
-            },
-            ...(history || [])
-        ];
+        // Build messages array with history (system prompt is embedded in nazumi model)
+        const messages = history || [];
         messages.push({ role: 'user', content: message });
 
         const response = await fetch(`${OLLAMA_URL}/api/chat`, {
