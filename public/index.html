@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>inazu.me - AI Chat</title>
+    <meta name="description" content="Chat with a local AI powered by DeepSeek">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 inazu.me</h1>
+            <p class="subtitle">Powered by DeepSeek-R1</p>
+        </header>
+
+        <main class="chat-container">
+            <div id="chat-messages" class="messages">
+                <div class="message assistant">
+                    <div class="message-content">
+                        こんにちは！何か質問があればどうぞ 🎉
+                    </div>
+                </div>
+            </div>
+
+            <form id="chat-form" class="input-container">
+                <textarea 
+                    id="user-input" 
+                    placeholder="メッセージを入力..." 
+                    rows="1"
+                    autofocus
+                ></textarea>
+                <button type="submit" id="send-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </form>
+        </main>
+
+        <footer>
+            <p>Running locally with ❤️</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
