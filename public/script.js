@@ -70,6 +70,7 @@ chatForm.addEventListener('submit', async (e) => {
     addMessage(message, 'user');
     userInput.value = '';
     userInput.style.height = 'auto';
+    userInput.blur(); // Close mobile keyboard
 
     // Add to history
     conversationHistory.push({ role: 'user', content: message });
