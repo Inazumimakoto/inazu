@@ -130,16 +130,32 @@ async function sendMessage(message) {
                             const text = json.message.content;
                             fullResponse += text;
 
-                            // Handle thinking tags (DeepSeek R1 specific)
-                            let displayText = fullResponse;
+                            // 1. Escape HTML to prevent XSS and broken layout
+                            let safeText = fullResponse
+                                .replace(/&/g, "&amp;")
+                                .replace(/</g, "&lt;")
+                                .replace(/>/g, "&gt;")
+                                .replace(/"/g, "&quot;")
+                                .replace(/'/g, "&#039;");
 
-                            // Check for <think> tags and wrap them in a styled block
-                            if (displayText.includes('<think>')) {
-                                displayText = displayText.replace(/<think>/g, '<span class="think-block">');
-                                displayText = displayText.replace(/<\/think>/g, '</span>');
+                            // 2. Format <think> blocks
+                            // Use a non-greedy regex to capture content between tags, 
+                            // handling cases where the closing tag hasn't arrived yet (streaming)
+
+                            if (safeText.includes('&lt;think&gt;')) {
+                                // Open think block
+                                safeText = safeText.replace(/&lt;think&gt;/g, '<div class="think-block"><div class="think-label">Thinking Process</div>');
+
+                                // Close think block if closing tag exists
+                                if (safeText.includes('&lt;/think&gt;')) {
+                                    safeText = safeText.replace(/&lt;\/think&gt;/g, '</div>');
+                                } else {
+                                    // If still streaming and no closing tag, close it temporarily for rendering
+                                    safeText += '</div>';
+                                }
                             }
 
-                            contentDiv.innerHTML = displayText; // Use innerHTML to render the span
+                            contentDiv.innerHTML = safeText;
                             chatMessages.scrollTop = chatMessages.scrollHeight;
                         }
                     } catch (e) {
@@ -152,7 +168,7 @@ async function sendMessage(message) {
         // Remove streaming cursor
         contentDiv.classList.remove('streaming');
 
-        // Add to history
+        // Add to history (save raw text)
         conversationHistory.push({ role: 'assistant', content: fullResponse });
 
     } catch (error) {

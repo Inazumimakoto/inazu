@@ -111,13 +111,25 @@ header h1 {
 
 /* Think block visualization for DeepSeek */
 .message-content .think-block {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    border-left: 2px solid var(--border);
-    padding-left: 1rem;
-    margin-bottom: 1rem;
     display: block;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: var(--bg-secondary);
+    border-radius: 4px;
+    border-left: 3px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-family: 'IBM Plex Mono', monospace;
+    white-space: pre-wrap;
+}
+
+.message-content .think-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+    opacity: 0.7;
+    font-weight: 500;
 }
 
 /* Input Area */
