@@ -14,25 +14,31 @@ app.use('/scripts', express.static(path.join(__dirname, 'node_modules/marked')))
 
 // Logging function
 function logRequest(req, message) {
-    const timestamp = new Date().toISOString();
+    const now = new Date();
+    const timestamp = now.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     const userAgent = req.headers['user-agent'] || 'Unknown';
-    const memUsage = process.memoryUsage();
-    const systemMem = {
-        total: os.totalmem(),
-        free: os.freemem(),
-        usedPercent: ((1 - os.freemem() / os.totalmem()) * 100).toFixed(1)
-    };
+
+    // Parse device from User-Agent
+    let device = 'Unknown';
+    if (userAgent.includes('iPhone')) device = 'iPhone';
+    else if (userAgent.includes('Android')) device = 'Android';
+    else if (userAgent.includes('Mac')) device = 'Mac';
+    else if (userAgent.includes('Windows')) device = 'Windows';
+
+    // Memory info
+    const totalGB = (os.totalmem() / 1024 / 1024 / 1024).toFixed(1);
+    const usedGB = ((os.totalmem() - os.freemem()) / 1024 / 1024 / 1024).toFixed(1);
+    const usedPercent = ((1 - os.freemem() / os.totalmem()) * 100).toFixed(1);
+    const nodeHeapMB = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(1);
 
     const logEntry = {
-        timestamp,
-        ip,
-        userAgent,
-        messageLength: message.length,
-        memory: {
-            heapUsedMB: (memUsage.heapUsed / 1024 / 1024).toFixed(2),
-            systemUsedPercent: systemMem.usedPercent
-        }
+        time: timestamp,
+        ip: ip,
+        device: device,
+        message: message.substring(0, 100),
+        memory: `${usedGB}GB / ${totalGB}GB (${usedPercent}%)`,
+        nodeHeap: `${nodeHeapMB}MB`
     };
 
     const logLine = JSON.stringify(logEntry) + '\n';
@@ -40,7 +46,7 @@ function logRequest(req, message) {
         if (err) console.error('Log write error:', err);
     });
 
-    console.log(`[${timestamp}] ${ip} - ${message.substring(0, 50)}...`);
+    console.log(`[${timestamp}] ${device} ${ip} - "${message.substring(0, 30)}..." | RAM: ${usedGB}/${totalGB}GB`);
 }
 
 // Chat API endpoint - proxies to Ollama
