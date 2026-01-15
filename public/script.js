@@ -126,20 +126,20 @@ async function sendMessage(message) {
                     try {
                         const json = JSON.parse(data);
 
-                        // DeepSeek-R1 format: thinking and response are separate fields
-                        // Handle thinking content (思考フェーズ)
-                        if (json.message && json.message.content) {
-                            // Standard Ollama format - check for thinking in content
-                            const content = json.message.content;
-                            responseText += content;
-                        }
+                        // DEBUG: Log raw JSON to see actual structure
+                        console.log('Ollama response:', JSON.stringify(json));
 
-                        // Also check for direct thinking/response fields (DeepSeek-R1 specific)
-                        if (json.thinking && json.thinking.length > 0) {
-                            thinkingText += json.thinking;
-                        }
-                        if (json.response && json.response.length > 0) {
-                            responseText += json.response;
+                        // DeepSeek-R1 format: message.thinking and message.content are separate fields
+                        if (json.message) {
+                            // Thinking content (思考フェーズ)
+                            if (json.message.thinking && json.message.thinking.length > 0) {
+                                thinkingText += json.message.thinking;
+                            }
+
+                            // Response content (回答フェーズ)
+                            if (json.message.content && json.message.content.length > 0) {
+                                responseText += json.message.content;
+                            }
                         }
 
                         // Build HTML
