@@ -68,9 +68,6 @@ app.post('/api/chat', async (req, res) => {
         return res.status(400).json({ error: 'Message is required' });
     }
 
-    // Log the request
-    logRequest(req, message);
-
     try {
         // Build messages array with history (system prompt is embedded in nazumi model)
         const messages = history || [];
@@ -112,6 +109,9 @@ app.post('/api/chat', async (req, res) => {
 
         res.write('data: [DONE]\n\n');
         res.end();
+
+        // Log after response completes (Ollama memory will be accurate)
+        logRequest(req, message);
 
     } catch (error) {
         console.error('Error:', error);
