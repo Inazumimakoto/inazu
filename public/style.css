@@ -156,6 +156,7 @@ header h1 {
 /* Input Area */
 .input-container {
     margin: 2rem 1.5rem;
+    margin-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
     background: var(--bg-secondary);
     border: 1px solid var(--border);
     border-radius: 6px;
