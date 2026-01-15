@@ -106,11 +106,11 @@ function addLoadingMessage() {
 
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
-    contentDiv.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+    contentDiv.innerHTML = '<div class="loading-spinner"></div>';
 
     messageDiv.appendChild(contentDiv);
     chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    messageDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
 }
 
 function removeLoadingMessage() {
