@@ -92,8 +92,8 @@ function addMessage(content, role, isStreaming = false) {
     messageDiv.appendChild(contentDiv);
     chatMessages.appendChild(messageDiv);
 
-    // Scroll to bottom
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    // Scroll to bottom (smooth, mobile-friendly)
+    messageDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
 
     return contentDiv;
 }
