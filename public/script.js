@@ -32,8 +32,11 @@ userInput.addEventListener('input', () => {
     userInput.style.height = Math.min(userInput.scrollHeight, 200) + 'px';
 });
 
-// Handle Enter to send (Alt+Enter for newline)
-// Ignore Enter during IME composition (e.g., Japanese input)
+// Detect mobile/touch device
+const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+// Handle Enter to send (Desktop: Enter sends, Alt+Enter for newline)
+// Mobile: Enter creates newline, only button sends
 userInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
         // If composing (IME active), let the default behavior happen
@@ -41,11 +44,15 @@ userInput.addEventListener('keydown', (e) => {
             return;
         }
 
+        // On mobile, Enter always creates newline
+        if (isMobile) {
+            return;
+        }
+
+        // On desktop: Alt+Enter for newline, Enter alone sends
         if (e.altKey) {
-            // Alt+Enter: insert newline
             return; // Let default behavior add the newline
         } else {
-            // Enter alone: send message
             e.preventDefault();
             if (!isStreaming && userInput.value.trim()) {
                 chatForm.dispatchEvent(new Event('submit'));
