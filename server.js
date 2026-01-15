@@ -13,7 +13,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/scripts', express.static(path.join(__dirname, 'node_modules/marked')));
 
 // Logging function
-function logRequest(req, message) {
+async function logRequest(req, message) {
     const now = new Date();
     const timestamp = now.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
@@ -29,15 +29,26 @@ function logRequest(req, message) {
     // Memory info
     const totalGB = (os.totalmem() / 1024 / 1024 / 1024).toFixed(1);
     const usedGB = ((os.totalmem() - os.freemem()) / 1024 / 1024 / 1024).toFixed(1);
-    const usedPercent = ((1 - os.freemem() / os.totalmem()) * 100).toFixed(1);
     const nodeHeapMB = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(1);
+
+    // Get Ollama memory usage
+    let ollamaMemGB = '?';
+    try {
+        const { execSync } = require('child_process');
+        const psOutput = execSync('ps -o rss= -p $(pgrep -f "ollama") 2>/dev/null | awk \'{sum+=$1} END {print sum}\'', { encoding: 'utf8' });
+        const ollamaKB = parseInt(psOutput.trim()) || 0;
+        ollamaMemGB = (ollamaKB / 1024 / 1024).toFixed(2);
+    } catch (e) {
+        ollamaMemGB = 'N/A';
+    }
 
     const logEntry = {
         time: timestamp,
         ip: ip,
         device: device,
         message: message.substring(0, 100),
-        memory: `${usedGB}GB / ${totalGB}GB (${usedPercent}%)`,
+        systemMem: `${usedGB}GB / ${totalGB}GB`,
+        ollamaMem: `${ollamaMemGB}GB`,
         nodeHeap: `${nodeHeapMB}MB`
     };
 
@@ -46,7 +57,7 @@ function logRequest(req, message) {
         if (err) console.error('Log write error:', err);
     });
 
-    console.log(`[${timestamp}] ${device} ${ip} - "${message.substring(0, 30)}..." | RAM: ${usedGB}/${totalGB}GB`);
+    console.log(`[${timestamp}] ${device} ${ip} | Ollama: ${ollamaMemGB}GB | System: ${usedGB}/${totalGB}GB`);
 }
 
 // Chat API endpoint - proxies to Ollama
