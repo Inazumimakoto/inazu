@@ -9,6 +9,29 @@ const OLLAMA_URL = 'http://localhost:11434';
 const LOG_FILE = path.join(__dirname, 'usage.log');
 
 app.use(express.json());
+
+// Bot blocking middleware
+const BOT_PATTERNS = [
+    /bot/i, /crawl/i, /spider/i, /scrape/i, /wget/i, /curl/i,
+    /python/i, /java\//i, /ruby/i, /perl/i, /php/i,
+    /googlebot/i, /bingbot/i, /yandex/i, /baidu/i, /duckduck/i,
+    /facebookexternalhit/i, /twitterbot/i, /linkedinbot/i,
+    /slurp/i, /msnbot/i, /ahrefsbot/i, /semrush/i, /dotbot/i,
+    /bytespider/i, /gptbot/i, /claudebot/i, /anthropic/i
+];
+
+app.use((req, res, next) => {
+    const userAgent = req.headers['user-agent'] || '';
+
+    // Block if User-Agent matches bot patterns or is empty
+    if (!userAgent || BOT_PATTERNS.some(pattern => pattern.test(userAgent))) {
+        console.log(`[BOT BLOCKED] ${req.ip} - ${userAgent.substring(0, 50)}`);
+        return res.status(403).send('Access denied');
+    }
+
+    next();
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/scripts', express.static(path.join(__dirname, 'node_modules/marked')));
 
