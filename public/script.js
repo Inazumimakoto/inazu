@@ -12,8 +12,27 @@ userInput.addEventListener('input', () => {
     userInput.style.height = Math.min(userInput.scrollHeight, 200) + 'px';
 });
 
-// Enter now creates newline (default textarea behavior)
-// Only clicking the send button sends the message
+// Handle Enter to send (Alt+Enter for newline)
+// Ignore Enter during IME composition (e.g., Japanese input)
+userInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        // If composing (IME active), let the default behavior happen
+        if (e.isComposing || e.keyCode === 229) {
+            return;
+        }
+
+        if (e.altKey) {
+            // Alt+Enter: insert newline
+            return; // Let default behavior add the newline
+        } else {
+            // Enter alone: send message
+            e.preventDefault();
+            if (!isStreaming && userInput.value.trim()) {
+                chatForm.dispatchEvent(new Event('submit'));
+            }
+        }
+    }
+});
 
 // Handle form submission
 chatForm.addEventListener('submit', async (e) => {
