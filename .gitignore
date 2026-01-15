@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+
+# PM2
+.pm2/
+
+# Environment
+.env
+.env.local
