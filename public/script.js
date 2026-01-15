@@ -131,16 +131,15 @@ async function sendMessage(message) {
                             fullResponse += text;
 
                             // Handle thinking tags (DeepSeek R1 specific)
-                            // Display thinking in a lighter style
                             let displayText = fullResponse;
 
-                            // Check for <think> tags
+                            // Check for <think> tags and wrap them in a styled block
                             if (displayText.includes('<think>')) {
-                                displayText = displayText.replace(/<think>/g, '💭 ');
-                                displayText = displayText.replace(/<\/think>/g, '\n\n');
+                                displayText = displayText.replace(/<think>/g, '<span class="think-block">');
+                                displayText = displayText.replace(/<\/think>/g, '</span>');
                             }
 
-                            contentDiv.textContent = displayText;
+                            contentDiv.innerHTML = displayText; // Use innerHTML to render the span
                             chatMessages.scrollTop = chatMessages.scrollHeight;
                         }
                     } catch (e) {
