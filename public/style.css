@@ -69,12 +69,12 @@ header h1 {
 
 /* Welcome Screen */
 .welcome-screen {
-    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 2rem;
+    padding: 4rem 2rem;
+    min-height: 200px;
 }
 
 .welcome-screen.hidden {
