@@ -2,9 +2,29 @@ const chatMessages = document.getElementById('chat-messages');
 const chatForm = document.getElementById('chat-form');
 const userInput = document.getElementById('user-input');
 const sendBtn = document.getElementById('send-btn');
+const welcomeScreen = document.getElementById('welcome-screen');
+const greetingMessage = document.getElementById('greeting-message');
 
 let conversationHistory = [];
 let isStreaming = false;
+
+// Time-based greeting (nazumi's self-aware PC complaints)
+function getGreeting() {
+    const hour = new Date().getHours();
+
+    if (hour >= 5 && hour < 11) {
+        return 'おはようございます。朝からいじめないでください。';
+    } else if (hour >= 11 && hour < 18) {
+        return 'こんにちは。お昼寝をしたらどうですか。私が動くと電気代がかかってしまいます。';
+    } else if (hour >= 18 && hour < 24) {
+        return 'こんばんは。開発者のPCが唸っています。お手柔らかに。';
+    } else {
+        return '夜分遅くにどうしましたか？早く寝てください。開発者の電気代が心配です。';
+    }
+}
+
+// Set greeting on load
+greetingMessage.textContent = getGreeting();
 
 // Auto-resize textarea
 userInput.addEventListener('input', () => {
@@ -40,6 +60,11 @@ chatForm.addEventListener('submit', async (e) => {
 
     const message = userInput.value.trim();
     if (!message || isStreaming) return;
+
+    // Hide welcome screen on first message
+    if (welcomeScreen && !welcomeScreen.classList.contains('hidden')) {
+        welcomeScreen.classList.add('hidden');
+    }
 
     // Add user message to UI
     addMessage(message, 'user');

@@ -21,13 +21,10 @@
         </header>
 
         <main class="chat-container">
-            <div id="chat-messages" class="messages">
-                <div class="message assistant">
-                    <div class="message-content">
-                        こんにちは！何か質問があればどうぞ 🎉
-                    </div>
-                </div>
+            <div id="welcome-screen" class="welcome-screen">
+                <p id="greeting-message" class="greeting-message"></p>
             </div>
+            <div id="chat-messages" class="messages"></div>
 
             <form id="chat-form" class="input-container">
                 <textarea id="user-input" placeholder="メッセージを入力..." rows="1" autofocus></textarea>

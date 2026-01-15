@@ -67,6 +67,27 @@ header h1 {
     gap: 2rem;
 }
 
+/* Welcome Screen */
+.welcome-screen {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+}
+
+.welcome-screen.hidden {
+    display: none;
+}
+
+.greeting-message {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    max-width: 400px;
+    line-height: 1.8;
+}
+
 /* Message Styles */
 .message {
     display: flex;
