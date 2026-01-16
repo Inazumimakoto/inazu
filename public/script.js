@@ -5,8 +5,39 @@ const sendBtn = document.getElementById('send-btn');
 const welcomeScreen = document.getElementById('welcome-screen');
 const greetingMessage = document.getElementById('greeting-message');
 
+// Load conversation history from localStorage
 let conversationHistory = [];
+try {
+    const saved = localStorage.getItem('chatHistory');
+    if (saved) {
+        conversationHistory = JSON.parse(saved);
+    }
+} catch (e) {
+    console.error('Failed to load chat history:', e);
+}
+
 let isStreaming = false;
+
+// Save conversation to localStorage
+function saveConversation() {
+    try {
+        // Keep only last 20 messages to avoid storage limits
+        const toSave = conversationHistory.slice(-20);
+        localStorage.setItem('chatHistory', JSON.stringify(toSave));
+    } catch (e) {
+        console.error('Failed to save chat history:', e);
+    }
+}
+
+// Move token to localStorage (persists across sessions)
+function getToken() {
+    return localStorage.getItem('turnstileToken') || sessionStorage.getItem('turnstileToken');
+}
+
+function setToken(token) {
+    localStorage.setItem('turnstileToken', token);
+    sessionStorage.setItem('turnstileToken', token); // Keep both for compatibility
+}
 
 // Time-based greeting (nazumi's self-aware PC complaints)
 function getGreeting() {
@@ -25,6 +56,18 @@ function getGreeting() {
 
 // Set greeting on load
 greetingMessage.textContent = getGreeting();
+
+// Restore saved conversation to UI
+if (conversationHistory.length > 0) {
+    // Hide welcome screen since we have history
+    if (welcomeScreen) {
+        welcomeScreen.classList.add('hidden');
+    }
+    // Render saved messages
+    for (const msg of conversationHistory) {
+        addMessage(msg.content, msg.role);
+    }
+}
 
 // Auto-resize textarea
 userInput.addEventListener('input', () => {
@@ -66,7 +109,7 @@ chatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const message = userInput.value.trim();
-    const turnstileToken = sessionStorage.getItem('turnstileToken');
+    const turnstileToken = getToken();
     if (!message || isStreaming) return;
 
     // Hide welcome screen on first message
@@ -80,8 +123,9 @@ chatForm.addEventListener('submit', async (e) => {
     userInput.style.height = 'auto';
     userInput.blur(); // Close mobile keyboard
 
-    // Add to history
+    // Add to history and save
     conversationHistory.push({ role: 'user', content: message });
+    saveConversation();
 
     // Send to API with Turnstile token
     await sendMessage(message, turnstileToken);
@@ -225,8 +269,9 @@ async function sendMessage(message, turnstileToken) {
         // Remove streaming cursor
         contentDiv.classList.remove('streaming');
 
-        // Add to history (save response only, not thinking)
+        // Add to history and save (save response only, not thinking)
         conversationHistory.push({ role: 'assistant', content: responseText });
+        saveConversation();
 
     } catch (error) {
         console.error('Error:', error);

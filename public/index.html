@@ -61,14 +61,15 @@
     </div>
 
     <script>
-        // If already verified, redirect immediately
-        if (sessionStorage.getItem('turnstileToken')) {
+        // If already verified (check localStorage), redirect immediately
+        if (localStorage.getItem('turnstileToken')) {
             window.location.replace('/chat.html');
         }
 
         function onVerifySuccess(token) {
             console.log('Turnstile success, redirecting...');
-            sessionStorage.setItem('turnstileToken', token);
+            localStorage.setItem('turnstileToken', token);
+            sessionStorage.setItem('turnstileToken', token); // Keep both for compatibility
             window.location.replace('/chat.html');
         }
 
