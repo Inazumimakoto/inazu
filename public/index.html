@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>inazu.me - AI Chat</title>
-    <meta name="description" content="Chat with a local AI powered by DeepSeek">
+    <title>inazu.me - Verify</title>
+    <meta name="description" content="Human verification">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -13,40 +13,67 @@
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <style>
+        .verify-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+        .verify-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        .verify-message {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        .cf-turnstile {
+            margin-bottom: 1rem;
+        }
+        .error-message {
+            color: #ff6b6b;
+            margin-top: 1rem;
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <h1>inazu.me</h1>
-        </header>
-
-        <main class="chat-container">
-            <div id="welcome-screen" class="welcome-screen">
-                <p id="greeting-message" class="greeting-message"></p>
-            </div>
-            <div id="chat-messages" class="messages"></div>
-
-            <form id="chat-form" class="input-container">
-                <div class="cf-turnstile" data-sitekey="0x4AAAAAACM0Q7wG9YXHLd8_"></div>
-                <textarea id="user-input" placeholder="メッセージを入力..." rows="1" autofocus></textarea>
-                <button type="submit" id="send-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                </button>
-            </form>
-        </main>
-
-        <footer>
-            <p>Running locally with ❤️</p>
-        </footer>
+    <div class="verify-container">
+        <h1 class="verify-title">inazu.me</h1>
+        <p class="verify-message">人間であることを確認してください</p>
+        
+        <div class="cf-turnstile" 
+             data-sitekey="0x4AAAAAACM0Q7wG9YXHLd8_"
+             data-callback="onVerifySuccess"
+             data-error-callback="onVerifyError">
+        </div>
+        
+        <p id="error-message" class="error-message">検証に失敗しました。もう一度お試しください。</p>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="script.js"></script>
+    <script>
+        function onVerifySuccess(token) {
+            // Store token in sessionStorage and redirect to chat
+            sessionStorage.setItem('turnstileToken', token);
+            window.location.href = '/chat.html';
+        }
+
+        function onVerifyError() {
+            document.getElementById('error-message').style.display = 'block';
+        }
+
+        // If already verified, go to chat
+        if (sessionStorage.getItem('turnstileToken')) {
+            window.location.href = '/chat.html';
+        }
+    </script>
 </body>
 
 </html>

@@ -66,7 +66,7 @@ chatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const message = userInput.value.trim();
-    const turnstileToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
+    const turnstileToken = sessionStorage.getItem('turnstileToken');
     if (!message || isStreaming) return;
 
     // Hide welcome screen on first message
