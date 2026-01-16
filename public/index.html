@@ -23,19 +23,23 @@
             text-align: center;
             padding: 2rem;
         }
+
         .verify-title {
             font-size: 1.5rem;
             margin-bottom: 1rem;
             color: var(--text-primary);
         }
+
         .verify-message {
             color: var(--text-secondary);
             margin-bottom: 2rem;
             line-height: 1.6;
         }
+
         .cf-turnstile {
             margin-bottom: 1rem;
         }
+
         .error-message {
             color: #ff6b6b;
             margin-top: 1rem;
@@ -48,30 +52,29 @@
     <div class="verify-container">
         <h1 class="verify-title">inazu.me</h1>
         <p class="verify-message">人間であることを確認してください</p>
-        
-        <div class="cf-turnstile" 
-             data-sitekey="0x4AAAAAACM0Q7wG9YXHLd8_"
-             data-callback="onVerifySuccess"
-             data-error-callback="onVerifyError">
+
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAACM0Q7wG9YXHLd8_" data-callback="onVerifySuccess"
+            data-error-callback="onVerifyError">
         </div>
-        
+
         <p id="error-message" class="error-message">検証に失敗しました。もう一度お試しください。</p>
     </div>
 
     <script>
+        // If already verified, redirect immediately
+        if (sessionStorage.getItem('turnstileToken')) {
+            window.location.replace('/chat.html');
+        }
+
         function onVerifySuccess(token) {
-            // Store token in sessionStorage and redirect to chat
+            console.log('Turnstile success, redirecting...');
             sessionStorage.setItem('turnstileToken', token);
-            window.location.href = '/chat.html';
+            window.location.replace('/chat.html');
         }
 
         function onVerifyError() {
+            console.log('Turnstile error');
             document.getElementById('error-message').style.display = 'block';
-        }
-
-        // If already verified, go to chat
-        if (sessionStorage.getItem('turnstileToken')) {
-            window.location.href = '/chat.html';
         }
     </script>
 </body>
