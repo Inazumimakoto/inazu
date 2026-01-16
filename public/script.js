@@ -29,6 +29,58 @@ function saveConversation() {
     }
 }
 
+// Re-auth modal handling
+let pendingMessage = null;
+
+function showReauthModal(message) {
+    pendingMessage = message;
+    const modal = document.getElementById('reauth-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        // Reset Turnstile widget if already rendered
+        if (window.turnstile) {
+            turnstile.reset('#reauth-turnstile');
+        }
+    }
+    isStreaming = false;
+    sendBtn.disabled = false;
+}
+
+function hideReauthModal() {
+    const modal = document.getElementById('reauth-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+// Global callback for Turnstile re-auth
+window.onReauthSuccess = async function (token) {
+    try {
+        const response = await fetch('/api/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ turnstileToken: token })
+        });
+
+        if (response.ok) {
+            console.log('Re-auth successful');
+            hideReauthModal();
+            // Retry the pending message
+            if (pendingMessage) {
+                const msg = pendingMessage;
+                pendingMessage = null;
+                await sendMessage(msg);
+            }
+        } else {
+            document.getElementById('reauth-error').style.display = 'block';
+        }
+    } catch (e) {
+        console.error('Re-auth error:', e);
+        document.getElementById('reauth-error').style.display = 'block';
+    }
+};
+
 // Time-based greeting (nazumi's self-aware PC complaints)
 function getGreeting() {
     const hour = new Date().getHours();
@@ -175,6 +227,13 @@ async function sendMessage(message) {
                 history: conversationHistory.slice(0, -1)
             })
         });
+
+        // Handle session expired - show re-auth modal
+        if (response.status === 403) {
+            removeLoadingMessage();
+            showReauthModal(message);
+            return;
+        }
 
         if (!response.ok) {
             throw new Error(`Error: ${response.status}`);

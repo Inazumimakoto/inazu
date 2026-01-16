@@ -43,6 +43,18 @@
         </footer>
     </div>
 
+    <!-- Re-auth modal (hidden by default) -->
+    <div id="reauth-modal" class="reauth-modal hidden">
+        <div class="reauth-content">
+            <p>セッションが期限切れです。再認証してください。</p>
+            <div id="reauth-turnstile" class="cf-turnstile" data-sitekey="0x4AAAAAACM0Q7wG9YXHLd8_"
+                data-callback="onReauthSuccess"></div>
+            <p id="reauth-error" class="error-message" style="display:none;">認証に失敗しました</p>
+        </div>
+    </div>
+
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="script.js"></script>
