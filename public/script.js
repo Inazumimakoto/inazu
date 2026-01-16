@@ -201,9 +201,10 @@ async function sendMessage(message, turnstileToken) {
                             html += `<div class="think-block"><div class="think-label">Thinking</div>${safeThink}</div>`;
                         }
 
-                        // Render response content (Markdown)
+                        // Render response content (Markdown) with sanitization
                         if (responseText) {
-                            html += marked.parse(responseText);
+                            const rawHtml = marked.parse(responseText);
+                            html += DOMPurify.sanitize(rawHtml);
                         }
 
                         // If nothing yet, show a placeholder
@@ -211,7 +212,7 @@ async function sendMessage(message, turnstileToken) {
                             html = '<span class="thinking-indicator">思考中...</span>';
                         }
 
-                        contentDiv.innerHTML = html;
+                        contentDiv.innerHTML = DOMPurify.sanitize(html);
                         chatMessages.scrollTop = chatMessages.scrollHeight;
 
                     } catch (e) {

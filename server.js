@@ -56,15 +56,17 @@ async function logRequest(req, message) {
     const usedGB = ((os.totalmem() - os.freemem()) / 1024 / 1024 / 1024).toFixed(1);
     const nodeHeapMB = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(1);
 
-    // Get Ollama memory usage
-    let ollamaMemGB = '?';
+    // Get Ollama memory usage (async to avoid blocking)
+    let ollamaMemGB = 'N/A';
     try {
-        const { execSync } = require('child_process');
-        const psOutput = execSync('ps -o rss= -p $(pgrep -f "ollama") 2>/dev/null | awk \'{sum+=$1} END {print sum}\'', { encoding: 'utf8' });
-        const ollamaKB = parseInt(psOutput.trim()) || 0;
+        const { exec } = require('child_process');
+        const { promisify } = require('util');
+        const execAsync = promisify(exec);
+        const { stdout } = await execAsync('ps -o rss= -p $(pgrep -f "ollama") 2>/dev/null | awk \'{sum+=$1} END {print sum}\'');
+        const ollamaKB = parseInt(stdout.trim()) || 0;
         ollamaMemGB = (ollamaKB / 1024 / 1024).toFixed(2);
     } catch (e) {
-        ollamaMemGB = 'N/A';
+        // Ignore errors, keep N/A
     }
 
     const logEntry = {
@@ -93,39 +95,63 @@ app.post('/api/chat', async (req, res) => {
         return res.status(400).json({ error: 'Message is required' });
     }
 
-    // Verify Turnstile token
-    if (TURNSTILE_SECRET) {
-        try {
-            const verifyResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    secret: TURNSTILE_SECRET,
-                    response: turnstileToken || ''
-                })
-            });
-            const verifyResult = await verifyResponse.json();
-            if (!verifyResult.success) {
-                console.log('[TURNSTILE FAILED]', verifyResult);
-                return res.status(403).json({ error: 'Human verification failed' });
-            }
-        } catch (e) {
-            console.error('[TURNSTILE ERROR]', e);
-            return res.status(500).json({ error: 'Verification error' });
-        }
+    // Verify Turnstile token (REQUIRED)
+    if (!TURNSTILE_SECRET) {
+        console.error('[SECURITY] TURNSTILE_SECRET not configured!');
+        return res.status(503).json({ error: 'Service not properly configured' });
     }
 
     try {
-        // Build messages array with history (system prompt is embedded in nazumi model)
-        const messages = history || [];
-        messages.push({ role: 'user', content: message });
+        const verifyResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                secret: TURNSTILE_SECRET,
+                response: turnstileToken || ''
+            })
+        });
+        const verifyResult = await verifyResponse.json();
+        if (!verifyResult.success) {
+            console.log('[TURNSTILE FAILED]', verifyResult);
+            return res.status(403).json({ error: 'Human verification failed' });
+        }
+    } catch (e) {
+        console.error('[TURNSTILE ERROR]', e);
+        return res.status(500).json({ error: 'Verification error' });
+    }
+
+    try {
+        // Validate and limit history to prevent memory/CPU abuse
+        let validHistory = [];
+        const MAX_HISTORY = 20;
+        const MAX_MESSAGE_LENGTH = 10000;
+
+        if (Array.isArray(history)) {
+            validHistory = history
+                .slice(-MAX_HISTORY) // Keep only last N messages
+                .filter(msg =>
+                    msg &&
+                    typeof msg === 'object' &&
+                    (msg.role === 'user' || msg.role === 'assistant') &&
+                    typeof msg.content === 'string' &&
+                    msg.content.length <= MAX_MESSAGE_LENGTH
+                )
+                .map(msg => ({
+                    role: msg.role,
+                    content: msg.content.substring(0, MAX_MESSAGE_LENGTH)
+                }));
+        }
+
+        // Validate current message length
+        const safeMessage = message.substring(0, MAX_MESSAGE_LENGTH);
+        validHistory.push({ role: 'user', content: safeMessage });
 
         const response = await fetch(`${OLLAMA_URL}/api/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 model: 'nazumi',
-                messages: messages,
+                messages: validHistory,
                 stream: true,
                 options: {
                     // Enable thinking output for DeepSeek-R1
@@ -145,13 +171,28 @@ app.post('/api/chat', async (req, res) => {
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
+        let buffer = '';
 
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
 
-            const chunk = decoder.decode(value, { stream: true });
-            res.write(`data: ${chunk}\n\n`);
+            buffer += decoder.decode(value, { stream: true });
+
+            // Process complete lines only
+            const lines = buffer.split('\n');
+            buffer = lines.pop(); // Keep incomplete line in buffer
+
+            for (const line of lines) {
+                if (line.trim()) {
+                    res.write(`data: ${line}\n\n`);
+                }
+            }
+        }
+
+        // Send any remaining buffer
+        if (buffer.trim()) {
+            res.write(`data: ${buffer}\n\n`);
         }
 
         res.write('data: [DONE]\n\n');
