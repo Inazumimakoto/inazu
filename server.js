@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const rateLimit = require('express-rate-limit');
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
@@ -13,20 +14,37 @@ const LOG_FILE = path.join(__dirname, 'usage.log');
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET;
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
+// Trust proxy (for Cloudflare)
+app.set('trust proxy', 1);
+
 app.use(express.json());
 
-// Session middleware
+// Session middleware with hardened cookies
 app.use(session({
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    rolling: true, // Extend session on each request
+    rolling: true,
     cookie: {
-        secure: false, // Set to true if using HTTPS in production
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        secure: true,           // HTTPS only (Cloudflare handles this)
+        httpOnly: true,         // Not accessible via JavaScript
+        sameSite: 'strict',     // CSRF protection
+        maxAge: 24 * 60 * 60 * 1000
     }
 }));
+
+// Rate limiting for API endpoints
+const verifyLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,   // 15 minutes
+    max: 10,                     // 10 verify attempts per window
+    message: { error: 'Too many verification attempts, please try again later' }
+});
+
+const chatLimiter = rateLimit({
+    windowMs: 60 * 1000,        // 1 minute
+    max: 15,                     // 15 messages per minute
+    message: { error: 'Too many messages, please slow down' }
+});
 
 // Bot blocking middleware
 const BOT_PATTERNS = [
@@ -104,7 +122,7 @@ async function logRequest(req, message) {
 }
 
 // Verify endpoint - creates session after Turnstile verification
-app.post('/api/verify', async (req, res) => {
+app.post('/api/verify', verifyLimiter, async (req, res) => {
     const { turnstileToken } = req.body;
 
     if (!TURNSTILE_SECRET) {
@@ -141,11 +159,12 @@ app.post('/api/verify', async (req, res) => {
 });
 
 // Chat API endpoint - proxies to Ollama
-app.post('/api/chat', async (req, res) => {
+app.post('/api/chat', chatLimiter, async (req, res) => {
     const { message, history } = req.body;
 
-    if (!message) {
-        return res.status(400).json({ error: 'Message is required' });
+    // Type validation
+    if (!message || typeof message !== 'string') {
+        return res.status(400).json({ error: 'Message must be a non-empty string' });
     }
 
     // Check session instead of Turnstile token
@@ -206,8 +225,16 @@ app.post('/api/chat', async (req, res) => {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
+        let clientClosed = false;
 
-        while (true) {
+        // Handle client disconnect - cancel Ollama stream
+        req.on('close', () => {
+            clientClosed = true;
+            reader.cancel().catch(() => { });
+            console.log('[CLIENT DISCONNECTED] Cancelled Ollama stream');
+        });
+
+        while (!clientClosed) {
             const { done, value } = await reader.read();
             if (done) break;
 
@@ -215,10 +242,10 @@ app.post('/api/chat', async (req, res) => {
 
             // Process complete lines only
             const lines = buffer.split('\n');
-            buffer = lines.pop(); // Keep incomplete line in buffer
+            buffer = lines.pop();
 
             for (const line of lines) {
-                if (line.trim()) {
+                if (line.trim() && !clientClosed) {
                     res.write(`data: ${line}\n\n`);
                 }
             }

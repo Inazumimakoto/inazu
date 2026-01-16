@@ -248,13 +248,15 @@ async function sendMessage(message) {
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
+        let streamBuffer = '';
 
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
 
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n');
+            streamBuffer += decoder.decode(value, { stream: true });
+            const lines = streamBuffer.split('\n');
+            streamBuffer = lines.pop(); // Keep incomplete line in buffer
 
             for (const line of lines) {
                 if (line.startsWith('data: ')) {
