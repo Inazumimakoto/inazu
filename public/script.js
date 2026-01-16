@@ -66,6 +66,7 @@ chatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const message = userInput.value.trim();
+    const turnstileToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
     if (!message || isStreaming) return;
 
     // Hide welcome screen on first message
@@ -82,8 +83,8 @@ chatForm.addEventListener('submit', async (e) => {
     // Add to history
     conversationHistory.push({ role: 'user', content: message });
 
-    // Send to API
-    await sendMessage(message);
+    // Send to API with Turnstile token
+    await sendMessage(message, turnstileToken);
 });
 
 function addMessage(content, role, isStreaming = false) {
@@ -125,7 +126,7 @@ function removeLoadingMessage() {
     if (loading) loading.remove();
 }
 
-async function sendMessage(message) {
+async function sendMessage(message, turnstileToken) {
     isStreaming = true;
     sendBtn.disabled = true;
 
@@ -137,7 +138,8 @@ async function sendMessage(message) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message: message,
-                history: conversationHistory.slice(0, -1) // Exclude the message we just added
+                history: conversationHistory.slice(0, -1),
+                turnstileToken: turnstileToken
             })
         });
 

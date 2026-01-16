@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -7,6 +8,7 @@ const app = express();
 const PORT = 3000;
 const OLLAMA_URL = 'http://localhost:11434';
 const LOG_FILE = path.join(__dirname, 'usage.log');
+const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET;
 
 app.use(express.json());
 
@@ -85,10 +87,32 @@ async function logRequest(req, message) {
 
 // Chat API endpoint - proxies to Ollama
 app.post('/api/chat', async (req, res) => {
-    const { message, history } = req.body;
+    const { message, history, turnstileToken } = req.body;
 
     if (!message) {
         return res.status(400).json({ error: 'Message is required' });
+    }
+
+    // Verify Turnstile token
+    if (TURNSTILE_SECRET) {
+        try {
+            const verifyResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    secret: TURNSTILE_SECRET,
+                    response: turnstileToken || ''
+                })
+            });
+            const verifyResult = await verifyResponse.json();
+            if (!verifyResult.success) {
+                console.log('[TURNSTILE FAILED]', verifyResult);
+                return res.status(403).json({ error: 'Human verification failed' });
+            }
+        } catch (e) {
+            console.error('[TURNSTILE ERROR]', e);
+            return res.status(500).json({ error: 'Verification error' });
+        }
     }
 
     try {
