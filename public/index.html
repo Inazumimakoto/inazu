@@ -61,16 +61,29 @@
     </div>
 
     <script>
-        // If already verified (check localStorage), redirect immediately
-        if (localStorage.getItem('turnstileToken')) {
-            window.location.replace('/chat.html');
-        }
+        async function onVerifySuccess(token) {
+            console.log('Turnstile success, verifying with server...');
 
-        function onVerifySuccess(token) {
-            console.log('Turnstile success, redirecting...');
-            localStorage.setItem('turnstileToken', token);
-            sessionStorage.setItem('turnstileToken', token); // Keep both for compatibility
-            window.location.replace('/chat.html');
+            try {
+                const response = await fetch('/api/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ turnstileToken: token })
+                });
+
+                if (response.ok) {
+                    console.log('Server session created, redirecting...');
+                    window.location.replace('/chat.html');
+                } else {
+                    const data = await response.json();
+                    console.error('Server verification failed:', data);
+                    document.getElementById('error-message').textContent = data.error || '検証に失敗しました';
+                    document.getElementById('error-message').style.display = 'block';
+                }
+            } catch (e) {
+                console.error('Verification error:', e);
+                document.getElementById('error-message').style.display = 'block';
+            }
         }
 
         function onVerifyError() {

@@ -1,5 +1,7 @@
 require('dotenv').config();
 const express = require('express');
+const session = require('express-session');
+const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -9,8 +11,21 @@ const PORT = 3000;
 const OLLAMA_URL = 'http://localhost:11434';
 const LOG_FILE = path.join(__dirname, 'usage.log');
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET;
+const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
 app.use(express.json());
+
+// Session middleware
+app.use(session({
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: false, // Set to true if using HTTPS in production
+        httpOnly: true,
+        maxAge: 60 * 60 * 1000 // 1 hour
+    }
+}));
 
 // Bot blocking middleware
 const BOT_PATTERNS = [
@@ -87,15 +102,10 @@ async function logRequest(req, message) {
     console.log(`[${timestamp}] ${device} ${ip} | Ollama: ${ollamaMemGB}GB | System: ${usedGB}/${totalGB}GB`);
 }
 
-// Chat API endpoint - proxies to Ollama
-app.post('/api/chat', async (req, res) => {
-    const { message, history, turnstileToken } = req.body;
+// Verify endpoint - creates session after Turnstile verification
+app.post('/api/verify', async (req, res) => {
+    const { turnstileToken } = req.body;
 
-    if (!message) {
-        return res.status(400).json({ error: 'Message is required' });
-    }
-
-    // Verify Turnstile token (REQUIRED)
     if (!TURNSTILE_SECRET) {
         console.error('[SECURITY] TURNSTILE_SECRET not configured!');
         return res.status(503).json({ error: 'Service not properly configured' });
@@ -111,13 +121,36 @@ app.post('/api/chat', async (req, res) => {
             })
         });
         const verifyResult = await verifyResponse.json();
+
         if (!verifyResult.success) {
             console.log('[TURNSTILE FAILED]', verifyResult);
             return res.status(403).json({ error: 'Human verification failed' });
         }
+
+        // Create session
+        req.session.verified = true;
+        req.session.verifiedAt = Date.now();
+        console.log('[VERIFIED] Session created');
+
+        return res.json({ success: true });
     } catch (e) {
         console.error('[TURNSTILE ERROR]', e);
         return res.status(500).json({ error: 'Verification error' });
+    }
+});
+
+// Chat API endpoint - proxies to Ollama
+app.post('/api/chat', async (req, res) => {
+    const { message, history } = req.body;
+
+    if (!message) {
+        return res.status(400).json({ error: 'Message is required' });
+    }
+
+    // Check session instead of Turnstile token
+    if (!req.session.verified) {
+        console.log('[SESSION] Not verified');
+        return res.status(403).json({ error: 'Please complete human verification first' });
     }
 
     try {

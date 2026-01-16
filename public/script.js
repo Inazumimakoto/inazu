@@ -29,16 +29,6 @@ function saveConversation() {
     }
 }
 
-// Move token to localStorage (persists across sessions)
-function getToken() {
-    return localStorage.getItem('turnstileToken') || sessionStorage.getItem('turnstileToken');
-}
-
-function setToken(token) {
-    localStorage.setItem('turnstileToken', token);
-    sessionStorage.setItem('turnstileToken', token); // Keep both for compatibility
-}
-
 // Time-based greeting (nazumi's self-aware PC complaints)
 function getGreeting() {
     const hour = new Date().getHours();
@@ -109,7 +99,6 @@ chatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const message = userInput.value.trim();
-    const turnstileToken = getToken();
     if (!message || isStreaming) return;
 
     // Hide welcome screen on first message
@@ -127,8 +116,8 @@ chatForm.addEventListener('submit', async (e) => {
     conversationHistory.push({ role: 'user', content: message });
     saveConversation();
 
-    // Send to API with Turnstile token
-    await sendMessage(message, turnstileToken);
+    // Send to API (session is handled via cookies)
+    await sendMessage(message);
 });
 
 function addMessage(content, role, isStreaming = false) {
@@ -170,7 +159,7 @@ function removeLoadingMessage() {
     if (loading) loading.remove();
 }
 
-async function sendMessage(message, turnstileToken) {
+async function sendMessage(message) {
     isStreaming = true;
     sendBtn.disabled = true;
 
@@ -180,10 +169,10 @@ async function sendMessage(message, turnstileToken) {
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include', // Important: include cookies for session
             body: JSON.stringify({
                 message: message,
-                history: conversationHistory.slice(0, -1),
-                turnstileToken: turnstileToken
+                history: conversationHistory.slice(0, -1)
             })
         });
 
