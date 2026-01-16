@@ -20,10 +20,11 @@ app.use(session({
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    rolling: true, // Extend session on each request
     cookie: {
         secure: false, // Set to true if using HTTPS in production
         httpOnly: true,
-        maxAge: 60 * 60 * 1000 // 1 hour
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));
 
