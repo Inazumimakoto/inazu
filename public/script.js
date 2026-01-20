@@ -8,7 +8,7 @@ const greetingMessage = document.getElementById('greeting-message');
 // Load conversation history from localStorage
 let conversationHistory = [];
 try {
-    const saved = localStorage.getItem('chatHistory');
+    const saved = sessionStorage.getItem('chatHistory');
     if (saved) {
         conversationHistory = JSON.parse(saved);
     }
@@ -23,7 +23,7 @@ function saveConversation() {
     try {
         // Keep only last 20 messages to avoid storage limits
         const toSave = conversationHistory.slice(-20);
-        localStorage.setItem('chatHistory', JSON.stringify(toSave));
+        sessionStorage.setItem('chatHistory', JSON.stringify(toSave));
     } catch (e) {
         console.error('Failed to save chat history:', e);
     }
