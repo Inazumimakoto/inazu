@@ -1,6 +1,7 @@
 const revealTargets = document.querySelectorAll('.reveal');
 const tiltTargets = document.querySelectorAll('[data-tilt]');
 const hero = document.querySelector('[data-hero]');
+const backgroundToggle = document.querySelector('[data-background-toggle]');
 const pageCanvas = document.querySelector('[data-page-canvas]');
 const heroModeButtons = document.querySelectorAll('[data-hero-mode]');
 const heroModeSwitch = document.querySelector('.hero-mode-switch');
@@ -18,6 +19,15 @@ const observer = new IntersectionObserver((entries) => {
 
 for (const target of revealTargets) {
     observer.observe(target);
+}
+
+if (backgroundToggle) {
+    backgroundToggle.addEventListener('click', () => {
+        const nextState = !document.body.classList.contains('background-reveal');
+        document.body.classList.toggle('background-reveal', nextState);
+        backgroundToggle.setAttribute('aria-pressed', nextState ? 'true' : 'false');
+        backgroundToggle.textContent = nextState ? 'hide background' : 'show background';
+    });
 }
 
 for (const card of tiltTargets) {
