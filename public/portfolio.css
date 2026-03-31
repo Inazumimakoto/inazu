@@ -133,7 +133,7 @@ main {
 }
 
 .hero {
-    min-height: 72vh;
+    min-height: 60vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -488,7 +488,7 @@ main {
     }
 
     .hero {
-        min-height: 66vh;
+        min-height: 54vh;
         padding: 36px 24px;
     }
 
