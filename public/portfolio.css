@@ -315,6 +315,38 @@ main {
     font-size: 0.8rem;
 }
 
+.text-glass {
+    position: relative;
+    display: inline;
+    width: fit-content;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        0 10px 28px rgba(0, 0, 0, 0.12);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+.text-glass-label {
+    padding: 0.38rem 0.72rem;
+    border-radius: 999px;
+}
+
+.text-glass-title {
+    display: inline-block;
+    padding: 0.08em 0.18em 0.12em;
+    margin: -0.08em -0.18em -0.12em;
+    border-radius: 28px;
+}
+
+.text-glass-copy {
+    padding: 0.2rem 0.62rem 0.28rem;
+    border-radius: 18px;
+}
+
 .hero-title-wrap {
     overflow: visible;
     padding: 18px 48px 18px 14px;
@@ -474,6 +506,11 @@ main {
     font-weight: 500;
     color: rgba(255, 255, 255, 0.92);
     line-height: 1.75;
+}
+
+.panel-copy .text-glass-copy,
+.hero-copy .text-glass-copy {
+    line-height: inherit;
 }
 
 .feature-grid,
