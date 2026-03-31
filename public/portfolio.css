@@ -75,7 +75,7 @@ textarea {
 
 .page-photo {
     background: url("assets/hero-dinner.jpg") center center / cover no-repeat;
-    filter: none;
+    filter: brightness(1.08) saturate(1.02);
     transform: scale(1.03);
 }
 
@@ -90,13 +90,13 @@ textarea {
         linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
     background-size: 72px 72px;
     mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent 92%);
-    opacity: 0.1;
+    opacity: 0.05;
 }
 
 .page-noise {
     background-image: radial-gradient(rgba(255, 255, 255, 0.1) 0.5px, transparent 0.5px);
     background-size: 12px 12px;
-    opacity: 0.02;
+    opacity: 0.01;
 }
 
 .glass-filter-defs {
@@ -259,7 +259,14 @@ main {
 .contact-card::before,
 .hero-mode-switch::before,
 .button::before {
-    content: none;
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.01);
+    backdrop-filter: url(#glass-distortion) blur(0px);
+    -webkit-backdrop-filter: url(#glass-distortion) blur(0px);
 }
 
 .hero {
