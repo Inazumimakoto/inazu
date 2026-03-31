@@ -105,7 +105,6 @@ function initHeroWebGL(canvas, reducedMotion) {
         uniform vec2 u_pointer;
         uniform float u_scroll;
         uniform float u_time;
-        uniform float u_mix;
         uniform float u_mode;
         uniform float u_reduced_motion;
         uniform sampler2D u_texture_a;
@@ -185,11 +184,11 @@ function initHeroWebGL(canvas, reducedMotion) {
 
             vec3 glassBase = texture2D(u_texture_a, clamp(uv + glassOffset, 0.0, 1.0)).rgb;
             vec3 glassLayer = texture2D(u_texture_b, clamp(uv + glassOffsetWide, 0.0, 1.0)).rgb;
-            vec3 glassColor = mix(glassBase, glassLayer, 0.18 + u_mix * 0.14);
+            vec3 glassColor = mix(glassBase, glassLayer, 0.26);
 
-            vec3 imageA = texture2D(u_texture_a, clamp(uv + imageOffsetA * (0.8 + u_mix * 0.3), 0.0, 1.0)).rgb;
-            vec3 imageB = texture2D(u_texture_b, clamp(uv + imageOffsetB * (0.82 + (1.0 - u_mix) * 0.34), 0.0, 1.0)).rgb;
-            vec3 imageColor = mix(imageA, imageB, smoothstep(0.0, 1.0, u_mix));
+            vec3 imageA = texture2D(u_texture_a, clamp(uv + imageOffsetA * 1.06, 0.0, 1.0)).rgb;
+            vec3 imageB = texture2D(u_texture_b, clamp(uv + imageOffsetB * 0.92, 0.0, 1.0)).rgb;
+            vec3 imageColor = mix(imageA, imageB, 0.34);
 
             float highlight = 1.0 - smoothstep(0.0, 0.95, length(glassOffset) * 8.0);
             float streak = 1.0 - smoothstep(0.08, 0.52, abs(p.y + sin(p.x * 3.0 + t * 1.15) * 0.22));
@@ -251,7 +250,6 @@ function initHeroWebGL(canvas, reducedMotion) {
     gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
     const timeLocation = gl.getUniformLocation(program, 'u_time');
-    const mixLocation = gl.getUniformLocation(program, 'u_mix');
     const modeLocation = gl.getUniformLocation(program, 'u_mode');
     const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
     const pointerLocation = gl.getUniformLocation(program, 'u_pointer');
@@ -293,12 +291,8 @@ function initHeroWebGL(canvas, reducedMotion) {
         gl.clear(gl.COLOR_BUFFER_BIT);
         lastTime = time;
 
-        const seconds = time * 0.001;
-        const cycleDuration = reducedMotion ? 99999 : 6.8;
-        const cycle = reducedMotion ? 0 : seconds / cycleDuration;
-        const mixValue = reducedMotion ? 0 : smootherstep(fract(cycle));
-        const textureIndex = Math.floor(cycle) % textures.length;
-        const nextTextureIndex = (textureIndex + 1) % textures.length;
+        const textureIndex = currentMode === 'image' ? 1 : 0;
+        const nextTextureIndex = currentMode === 'image' ? 2 : 1;
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, textures[textureIndex]);
@@ -308,7 +302,6 @@ function initHeroWebGL(canvas, reducedMotion) {
         gl.uniform2f(pointerLocation, pointer.x, pointer.y);
         gl.uniform1f(scrollLocation, scrollValue);
         gl.uniform1f(timeLocation, time * 0.001);
-        gl.uniform1f(mixLocation, mixValue);
         gl.uniform1f(modeLocation, currentMode === 'image' ? 1.0 : 0.0);
         gl.uniform1f(reducedMotionLocation, reducedMotion ? 1.0 : 0.0);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -422,13 +415,4 @@ function loadTexture(gl, url) {
         image.onerror = reject;
         image.src = url;
     });
-}
-
-function fract(value) {
-    return value - Math.floor(value);
-}
-
-function smootherstep(value) {
-    const t = Math.min(Math.max(value, 0), 1);
-    return t * t * t * (t * (t * 6 - 15) + 10);
 }
