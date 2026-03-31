@@ -10,14 +10,14 @@
     --accent: #c8ff6d;
     --accent-soft: rgba(200, 255, 109, 0.18);
     --shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
-    --glass-fill: rgba(9, 10, 9, 0.14);
-    --glass-fill-strong: rgba(11, 12, 11, 0.2);
-    --glass-line: rgba(255, 255, 255, 0.16);
-    --glass-highlight: rgba(255, 255, 255, 0.18);
+    --glass-fill: rgba(0, 0, 0, 0);
+    --glass-fill-strong: rgba(0, 0, 0, 0);
+    --glass-line: rgba(255, 255, 255, 0.18);
+    --glass-highlight: rgba(255, 255, 255, 0.06);
     --glass-shadow:
-        inset 0 0 12px -2px rgba(255, 255, 255, 0.48),
-        inset 0 1px 0 rgba(255, 255, 255, 0.14),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+        inset 0 0 0 0 rgba(0, 0, 0, 0),
+        inset 0 0 0 0 rgba(0, 0, 0, 0),
+        inset 0 0 0 0 rgba(0, 0, 0, 0);
 }
 
 * {
@@ -191,10 +191,8 @@ main {
     isolation: isolate;
     border: 1px solid var(--glass-line);
     border-radius: 28px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.01));
-    box-shadow:
-        var(--shadow),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.01);
+    box-shadow: 0 0 0 -50px rgba(0, 0, 0, 0.3);
 }
 
 .hero::before,
@@ -203,11 +201,10 @@ main {
     position: absolute;
     inset: 0;
     z-index: 1;
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 24%),
-        linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 34%, transparent 66%, rgba(255, 255, 255, 0.06));
+    background-color: rgba(0, 0, 0, 0);
     opacity: 0.88;
     pointer-events: none;
+    box-shadow: inset 0 0 0 -50px rgba(0, 0, 0, 0.7);
 }
 
 .hero::after,
@@ -222,13 +219,12 @@ main {
     border-radius: inherit;
     pointer-events: none;
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.025) 20%, rgba(255, 255, 255, 0) 56%),
-        radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.14), transparent 28%),
-        radial-gradient(circle at 82% 108%, rgba(255, 255, 255, 0.06), transparent 24%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015) 22%, rgba(255, 255, 255, 0) 60%),
+        radial-gradient(circle at 16% 16%, rgba(255, 255, 255, 0.06), transparent 30%),
         linear-gradient(180deg, var(--glass-fill-strong), var(--glass-fill));
     box-shadow: var(--glass-shadow);
-    backdrop-filter: blur(0px) saturate(104%);
-    -webkit-backdrop-filter: blur(0px) saturate(104%);
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
     filter: url(#glass-distortion);
     -webkit-filter: url(#glass-distortion);
 }
@@ -239,9 +235,7 @@ main {
     justify-content: flex-start;
     align-items: stretch;
     padding: clamp(32px, 5vw, 48px) clamp(24px, 4vw, 40px);
-    background:
-        radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.05), transparent 24%),
-        linear-gradient(180deg, rgba(6, 6, 6, 0.1), rgba(6, 6, 6, 0.04));
+    background: rgba(255, 255, 255, 0.01);
 }
 
 .hero::after,
@@ -324,10 +318,8 @@ main {
     border-radius: 999px;
     overflow: hidden;
     border: 1px solid var(--glass-line);
-    background: rgba(8, 9, 8, 0.08);
-    box-shadow:
-        0 16px 28px rgba(0, 0, 0, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.02);
+    box-shadow: 0 0 0 -50px rgba(0, 0, 0, 0.3);
 }
 
 .hero-mode-button {
@@ -354,9 +346,7 @@ main {
 .hero-mode-button.is-active {
     color: var(--text);
     background: linear-gradient(180deg, rgba(200, 255, 109, 0.22), rgba(200, 255, 109, 0.1));
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.16),
-        0 10px 24px rgba(200, 255, 109, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
 .button {
@@ -369,11 +359,9 @@ main {
     border-radius: 999px;
     overflow: hidden;
     border: 1px solid var(--glass-line);
-    background: rgba(10, 12, 10, 0.06);
+    background: rgba(255, 255, 255, 0.02);
     color: var(--text);
-    box-shadow:
-        0 18px 38px rgba(0, 0, 0, 0.16),
-        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0 0 -50px rgba(0, 0, 0, 0.3);
     transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
 }
 
@@ -385,9 +373,7 @@ main {
 .button:focus-visible {
     transform: translateY(-3px);
     border-color: var(--text);
-    box-shadow:
-        0 22px 44px rgba(0, 0, 0, 0.24),
-        inset 0 1px 0 rgba(255, 255, 255, 0.09);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .button-primary {
@@ -413,7 +399,7 @@ main {
 
 .panel {
     padding: 32px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.016), rgba(255, 255, 255, 0.004));
+    background: rgba(255, 255, 255, 0.008);
 }
 
 .panel > * {
@@ -466,10 +452,8 @@ main {
     padding: 22px;
     border-radius: 22px;
     border: 1px solid var(--glass-line);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0.004));
-    box-shadow:
-        0 16px 40px rgba(0, 0, 0, 0.14),
-        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    background: rgba(255, 255, 255, 0.008);
+    box-shadow: 0 0 0 -50px rgba(0, 0, 0, 0.3);
     transform-style: preserve-3d;
     transition: transform 240ms ease, border-color 240ms ease, background 240ms ease, box-shadow 240ms ease;
 }
@@ -495,10 +479,8 @@ main {
 .card-link:focus-visible,
 .contact-card:focus-visible {
     border-color: var(--text);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025));
-    box-shadow:
-        0 22px 48px rgba(0, 0, 0, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.014);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .card-link::after,
