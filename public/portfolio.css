@@ -407,13 +407,13 @@ main {
 }
 
 .contact-meta {
-    margin-bottom: 18px;
+    margin-bottom: 20px;
 }
 
 .contact-icons {
     display: inline-flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     flex-shrink: 0;
 }
 
@@ -421,22 +421,22 @@ main {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: 48px;
+    height: 48px;
     color: var(--muted);
 }
 
 .contact-logo svg {
     display: block;
-    width: 24px;
-    height: 24px;
+    width: 48px;
+    height: 48px;
     fill: currentColor;
 }
 
 .contact-avatar {
     display: inline-flex;
-    width: 24px;
-    height: 24px;
+    width: 48px;
+    height: 48px;
     border-radius: 999px;
     object-fit: cover;
     flex-shrink: 0;
