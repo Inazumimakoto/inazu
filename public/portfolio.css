@@ -262,7 +262,7 @@ main {
 }
 
 .feature-grid {
-    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .profile-grid,
