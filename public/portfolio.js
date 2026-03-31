@@ -238,6 +238,7 @@ function initPageGlassWebGL(canvas, reducedMotion) {
             float tubeBand = smoothstep(0.34, 0.96, abs(centerUv.y));
             float tubeMask = clamp(horizontalBias * tubeBand, 0.0, 1.0);
             float tubeRim = rim * tubeMask;
+            float chromaRim = pow(1.0 - smoothstep(0.0, 9.0, -nearestDist), 1.6) * tubeMask;
             vec2 tubeNormal = vec2(0.0, sign(centerUv.y));
 
             vec2 noiseUv = rectUv * 15.8 + vec2(92.0, 31.0);
@@ -266,7 +267,7 @@ function initPageGlassWebGL(canvas, reducedMotion) {
             vec3 refractedA = samplePhoto(v_uv + uvOffset);
             vec3 refractedB = samplePhoto(v_uv - uvOffset * 0.22);
             vec3 glass = mix(refractedA, refractedB, 0.22);
-            vec2 chromaOffset = (uvOffset * (0.38 + tubeRim * 1.08)) + (tubeNormal * tubeRim * 3.8 / max(u_resolution, vec2(1.0)));
+            vec2 chromaOffset = (uvOffset * (0.16 + chromaRim * 1.2)) + (tubeNormal * chromaRim * 4.2 / max(u_resolution, vec2(1.0)));
             vec3 chromaSplit = vec3(
                 samplePhoto(v_uv + uvOffset + chromaOffset).r,
                 glass.g,
@@ -274,7 +275,7 @@ function initPageGlassWebGL(canvas, reducedMotion) {
             );
 
             glass = mix(base, glass, 0.9);
-            glass = mix(glass, chromaSplit, tubeRim * 0.5);
+            glass = mix(glass, chromaSplit, chromaRim * 0.62);
             glass += vec3(0.18) * tubeRim * 0.16;
             glass += vec3(0.06) * body * 0.06;
 
