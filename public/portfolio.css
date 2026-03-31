@@ -37,6 +37,11 @@ a {
     text-decoration: none;
 }
 
+a,
+button {
+    cursor: pointer;
+}
+
 button,
 input,
 textarea {
@@ -99,12 +104,40 @@ textarea {
 }
 
 .site-nav a {
+    position: relative;
     transition: color 180ms ease;
 }
 
 .site-nav a:hover,
 .site-nav a:focus-visible {
     color: var(--text);
+}
+
+.site-nav a::after,
+.site-mark::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -0.28rem;
+    width: 100%;
+    height: 1px;
+    background: currentColor;
+    opacity: 0;
+    transform: scaleX(0.72);
+    transform-origin: left;
+    transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.site-nav a:hover::after,
+.site-nav a:focus-visible::after,
+.site-mark:hover::after,
+.site-mark:focus-visible::after {
+    opacity: 1;
+    transform: scaleX(1);
+}
+
+.site-mark {
+    position: relative;
 }
 
 main {
@@ -280,15 +313,20 @@ main {
     transition: transform 240ms ease, border-color 240ms ease, background 240ms ease;
 }
 
-.card:hover,
-.contact-card:hover,
-.card:focus-within,
-.contact-card:focus-within {
+.card-link,
+.contact-card {
     border-color: var(--line-strong);
+}
+
+.card-link:hover,
+.contact-card:hover,
+.card-link:focus-visible,
+.contact-card:focus-visible {
+    border-color: var(--text);
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
 }
 
-.card::after,
+.card-link::after,
 .contact-card::after {
     content: "";
     position: absolute;
@@ -300,9 +338,17 @@ main {
     transition: opacity 240ms ease;
 }
 
-.card:hover::after,
-.contact-card:hover::after {
+.card-link:hover::after,
+.card-link:focus-visible::after,
+.contact-card:hover::after,
+.contact-card:focus-visible::after {
     opacity: 1;
+}
+
+a:focus-visible,
+button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
 }
 
 .feature-card h3,
@@ -355,11 +401,20 @@ main {
     gap: 10px;
     margin-top: 4px;
     color: var(--accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.26em;
 }
 
 .feature-card .inline-link {
     margin-top: auto;
     padding-top: 22px;
+}
+
+.inline-link::after {
+    content: "->";
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
 }
 
 .work-more {
