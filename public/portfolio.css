@@ -227,8 +227,8 @@ main {
         radial-gradient(circle at 82% 108%, rgba(200, 255, 109, 0.08), transparent 24%),
         linear-gradient(180deg, var(--glass-fill-strong), var(--glass-fill));
     box-shadow: var(--glass-shadow);
-    backdrop-filter: blur(4px) saturate(106%);
-    -webkit-backdrop-filter: blur(4px) saturate(106%);
+    backdrop-filter: blur(0px) saturate(104%);
+    -webkit-backdrop-filter: blur(0px) saturate(104%);
     filter: url(#glass-distortion);
     -webkit-filter: url(#glass-distortion);
 }
