@@ -23,10 +23,10 @@ for (const target of revealTargets) {
 
 if (backgroundToggle) {
     backgroundToggle.addEventListener('click', () => {
-        const nextState = !document.body.classList.contains('background-reveal');
-        document.body.classList.toggle('background-reveal', nextState);
+        const nextState = !document.body.classList.contains('background-view');
+        document.body.classList.toggle('background-view', nextState);
         backgroundToggle.setAttribute('aria-pressed', nextState ? 'true' : 'false');
-        backgroundToggle.textContent = nextState ? 'hide background' : 'show background';
+        backgroundToggle.textContent = nextState ? 'back to site' : 'view photo';
     });
 }
 

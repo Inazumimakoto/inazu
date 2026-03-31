@@ -84,12 +84,12 @@ textarea {
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(180deg, rgba(5, 5, 5, 0.3), rgba(5, 5, 5, 0.62)),
-        radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.03), transparent 18%);
-    transition: opacity 220ms ease;
+        linear-gradient(180deg, rgba(5, 5, 5, 0.2), rgba(5, 5, 5, 0.5)),
+        radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.025), transparent 18%);
+    transition: opacity 220ms ease, background 220ms ease;
 }
 
-body.background-reveal .page-photo::after {
+body.background-view .page-photo::after {
     opacity: 0;
 }
 
@@ -125,7 +125,7 @@ body.background-reveal .page-photo::after {
     position: fixed;
     right: 20px;
     bottom: 20px;
-    z-index: 3;
+    z-index: 4;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -151,7 +151,7 @@ body.background-reveal .page-photo::after {
     background: rgba(0, 0, 0, 0.62);
 }
 
-body.background-reveal .background-toggle {
+body.background-view .background-toggle {
     background: rgba(255, 255, 255, 0.12);
     border-color: rgba(255, 255, 255, 0.42);
 }
@@ -162,6 +162,18 @@ body.background-reveal .background-toggle {
     width: min(1200px, calc(100vw - 40px));
     margin: 0 auto;
     padding: 24px 0 80px;
+    transition: opacity 220ms ease, transform 220ms ease;
+}
+
+body.background-view .site-shell {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.985);
+}
+
+body.background-view .page-grid,
+body.background-view .page-noise {
+    opacity: 0;
 }
 
 .site-header {
@@ -237,7 +249,7 @@ main {
     isolation: isolate;
     border: 1px solid var(--glass-line);
     border-radius: 28px;
-    background: rgba(0, 0, 0, 0);
+    background: rgba(0, 0, 0, 0.08);
     box-shadow: 0 0 0 -50px rgba(0, 0, 0, 0.3);
 }
 
@@ -278,7 +290,7 @@ main {
     justify-content: flex-start;
     align-items: stretch;
     padding: clamp(32px, 5vw, 48px) clamp(24px, 4vw, 40px);
-    background: rgba(0, 0, 0, 0);
+    background: rgba(0, 0, 0, 0.08);
 }
 
 .hero::after,
@@ -361,7 +373,7 @@ main {
     border-radius: 999px;
     overflow: hidden;
     border: 1px solid var(--glass-line);
-    background: rgba(0, 0, 0, 0);
+    background: rgba(0, 0, 0, 0.22);
     box-shadow: 0 0 0 -50px rgba(0, 0, 0, 0.3);
 }
 
@@ -402,7 +414,7 @@ main {
     border-radius: 999px;
     overflow: hidden;
     border: 1px solid var(--glass-line);
-    background: rgba(0, 0, 0, 0);
+    background: rgba(0, 0, 0, 0.18);
     color: var(--text);
     box-shadow: 0 0 0 -50px rgba(0, 0, 0, 0.3);
     transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
@@ -442,7 +454,7 @@ main {
 
 .panel {
     padding: 32px;
-    background: rgba(0, 0, 0, 0);
+    background: rgba(0, 0, 0, 0.06);
 }
 
 .panel > * {
@@ -495,7 +507,7 @@ main {
     padding: 22px;
     border-radius: 22px;
     border: 1px solid var(--glass-line);
-    background: rgba(0, 0, 0, 0);
+    background: rgba(0, 0, 0, 0.08);
     box-shadow: 0 0 0 -50px rgba(0, 0, 0, 0.3);
     transform-style: preserve-3d;
     transition: transform 240ms ease, border-color 240ms ease, background 240ms ease, box-shadow 240ms ease;
@@ -522,7 +534,7 @@ main {
 .card-link:focus-visible,
 .contact-card:focus-visible {
     border-color: rgba(255, 255, 255, 0.18);
-    background: rgba(0, 0, 0, 0);
+    background: rgba(0, 0, 0, 0.08);
     box-shadow:
         0 0 0 1px rgba(243, 243, 240, 0.95),
         inset 0 1px 0 rgba(255, 255, 255, 0.08);
