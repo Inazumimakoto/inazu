@@ -135,6 +135,9 @@ function layoutGlassCopy(target) {
     const highlight = document.createElement('span');
     highlight.className = 'text-glass-highlight';
 
+    const surfaces = document.createElement('span');
+    surfaces.className = 'text-glass-surfaces';
+
     const content = document.createElement('span');
     content.className = 'text-glass-content';
 
@@ -147,7 +150,7 @@ function layoutGlassCopy(target) {
         content.appendChild(line);
     }
 
-    target.append(shape, highlight, content);
+    target.append(surfaces, shape, highlight, content);
 
     const lineElements = Array.from(content.children);
     const padX = 10;
@@ -181,6 +184,18 @@ function layoutGlassCopy(target) {
 
     const mask = buildGlassMask(maxWidth, maxHeight, rects);
     target.style.setProperty('--text-glass-mask', mask);
+
+    surfaces.innerHTML = '';
+    for (const rect of rects) {
+        const surface = document.createElement('span');
+        surface.className = 'text-glass-surface';
+        surface.style.left = `${rect.x - padX}px`;
+        surface.style.top = `${rect.y - padY}px`;
+        surface.style.width = `${rect.width}px`;
+        surface.style.height = `${rect.height}px`;
+        surface.style.borderRadius = `${rect.radius}px`;
+        surfaces.appendChild(surface);
+    }
 }
 
 let glassCopyLayoutFrame = 0;
@@ -463,7 +478,7 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource) {
     }
 
     const MAX_GLASS_SURFACES = 24;
-    const glassTargets = Array.from(document.querySelectorAll('.hero, .panel, .card, .contact-card, .button, .background-toggle'));
+    const glassSelector = '.hero, .panel, .card, .contact-card, .button, .background-toggle, .text-glass-label, .text-glass-title, .text-glass-surface';
     const rectData = new Float32Array(MAX_GLASS_SURFACES * 4);
     const radiusData = new Float32Array(MAX_GLASS_SURFACES);
     const pointer = { x: 0.46, y: 0.34 };
@@ -776,6 +791,7 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource) {
         const scaleX = canvas.width / Math.max(window.innerWidth, 1);
         const scaleY = canvas.height / Math.max(window.innerHeight, 1);
         let index = 0;
+        const glassTargets = Array.from(document.querySelectorAll(glassSelector));
 
         for (const element of glassTargets) {
             if (index >= MAX_GLASS_SURFACES) break;

@@ -385,6 +385,20 @@ main {
     -webkit-mask-size: 100% 100%;
 }
 
+.text-glass-surfaces {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.text-glass-surface {
+    position: absolute;
+    pointer-events: none;
+    opacity: 0.03;
+    background: transparent;
+}
+
 .text-glass-shape {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(6px);
