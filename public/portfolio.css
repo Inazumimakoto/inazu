@@ -409,11 +409,35 @@ main {
 
 .contact-label {
     display: inline-flex;
-    margin-bottom: 18px;
     font-size: 0.75rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--muted);
+}
+
+.contact-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.contact-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    color: var(--muted);
+    flex-shrink: 0;
+}
+
+.contact-icon svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
 }
 
 .contact-card strong {
