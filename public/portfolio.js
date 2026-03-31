@@ -232,7 +232,7 @@ function layoutGlassCopy(target) {
     target.style.setProperty('--text-glass-mask', mask);
 
     surfaces.innerHTML = '';
-    const surfaceInset = 5;
+    const surfaceInset = 2;
     for (const rect of rects) {
         const surface = document.createElement('span');
         surface.className = 'text-glass-surface';
@@ -667,7 +667,7 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
             }
 
             float insideMask = 1.0 - step(0.0, nearestDist);
-            float innerFeather = smoothstep(0.0, 12.0, -nearestDist);
+            float innerFeather = smoothstep(0.0, 7.0, -nearestDist);
             float glassMask = insideMask * innerFeather;
 
             if (insideMask <= 0.001) {
@@ -679,13 +679,13 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
             vec2 centerUv = rectUv * 2.0 - 1.0;
             vec2 edgeDir = normalize(centerUv + vec2(0.0001));
             float edge = 1.0 - smoothstep(0.0, 26.0, -nearestDist);
-            float rim = pow(edge, 0.92) * innerFeather;
+            float rim = pow(edge, 0.92) * smoothstep(0.0, 4.0, -nearestDist);
             float body = (0.22 + (1.0 - smoothstep(18.0, 88.0, -nearestDist)) * 0.2) * innerFeather;
             float horizontalBias = smoothstep(-0.08, 0.28, abs(centerUv.y) - abs(centerUv.x) * 0.72);
             float tubeBand = smoothstep(0.34, 0.96, abs(centerUv.y));
             float tubeMask = clamp(horizontalBias * tubeBand, 0.0, 1.0);
             float tubeRim = rim * tubeMask;
-            float chromaRim = pow(1.0 - smoothstep(0.0, 9.0, -nearestDist), 1.6) * tubeMask * innerFeather;
+            float chromaRim = pow(1.0 - smoothstep(0.0, 9.0, -nearestDist), 1.6) * tubeMask * insideMask;
             vec2 tubeNormal = vec2(0.0, sign(centerUv.y));
 
             vec2 noiseUv = rectUv * 15.8 + vec2(92.0, 31.0);
