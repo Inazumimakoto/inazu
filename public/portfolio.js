@@ -527,10 +527,11 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
         return null;
     }
 
-    const MAX_GLASS_SURFACES = 24;
+    const MAX_GLASS_SURFACES = 48;
     const glassSelector = '.site-mark, .site-nav, .hero, .panel, .card, .contact-card, .button, .background-toggle, .text-glass-label, .text-glass-title, .text-glass-surface';
     const rectData = new Float32Array(MAX_GLASS_SURFACES * 4);
     const radiusData = new Float32Array(MAX_GLASS_SURFACES);
+    const priorityData = new Float32Array(MAX_GLASS_SURFACES);
     const pointer = { x: 0.46, y: 0.34 };
     const imageSize = { width: 1, height: 1 };
     let scrollAmount = window.scrollY / Math.max(window.innerHeight, 1);
@@ -566,6 +567,7 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
         uniform sampler2D u_overlay;
         uniform vec4 u_glass_rects[MAX_GLASS_SURFACES];
         uniform float u_glass_radii[MAX_GLASS_SURFACES];
+        uniform float u_glass_priority[MAX_GLASS_SURFACES];
 
         float hash(vec2 p) {
             return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -657,7 +659,9 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
 
                 vec4 rect = u_glass_rects[i];
                 float dist = sdRoundedRect(fragPx, rect, u_glass_radii[i]);
-                float score = abs(dist);
+                float absDist = abs(dist);
+                float edgePriority = (1.0 - smoothstep(0.0, 18.0, absDist)) * u_glass_priority[i] * 10.0;
+                float score = absDist - edgePriority;
 
                 if (score < nearestScore) {
                     nearestScore = score;
@@ -774,6 +778,7 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
     const glassCountLocation = gl.getUniformLocation(program, 'u_glass_count');
     const glassRectsLocation = gl.getUniformLocation(program, 'u_glass_rects[0]');
     const glassRadiiLocation = gl.getUniformLocation(program, 'u_glass_radii[0]');
+    const glassPriorityLocation = gl.getUniformLocation(program, 'u_glass_priority[0]');
 
     const photoTexture = gl.createTexture();
     gl.activeTexture(gl.TEXTURE0);
@@ -839,6 +844,7 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
 
         rectData.fill(0);
         radiusData.fill(0);
+        priorityData.fill(0);
 
         const scaleX = canvas.width / Math.max(window.innerWidth, 1);
         const scaleY = canvas.height / Math.max(window.innerHeight, 1);
@@ -871,6 +877,7 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
             rectData[dataIndex + 2] = rect.width * scaleX;
             rectData[dataIndex + 3] = rect.height * scaleY;
             radiusData[index] = radius * Math.min(scaleX, scaleY);
+            priorityData[index] = element.matches('.site-mark, .site-nav, .hero, .panel') ? 1 : 0;
             index += 1;
         }
 
@@ -906,6 +913,7 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
         gl.uniform1f(glassCountLocation, glassCount);
         gl.uniform4fv(glassRectsLocation, rectData);
         gl.uniform1fv(glassRadiiLocation, radiusData);
+        gl.uniform1fv(glassPriorityLocation, priorityData);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
         lastFrameTime = time;
     }
