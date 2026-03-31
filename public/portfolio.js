@@ -482,7 +482,7 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource) {
     }
 
     const MAX_GLASS_SURFACES = 24;
-    const glassSelector = '.hero, .panel, .card, .contact-card, .button, .background-toggle, .text-glass-label, .text-glass-title, .text-glass-surface';
+    const glassSelector = '.site-mark, .site-nav, .hero, .panel, .card, .contact-card, .button, .background-toggle, .text-glass-label, .text-glass-title, .text-glass-surface';
     const rectData = new Float32Array(MAX_GLASS_SURFACES * 4);
     const radiusData = new Float32Array(MAX_GLASS_SURFACES);
     const pointer = { x: 0.46, y: 0.34 };

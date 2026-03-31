@@ -192,6 +192,19 @@ body.background-view .page-noise {
 }
 
 .site-mark {
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        0 10px 28px rgba(0, 0, 0, 0.12);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     font-size: 1rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -200,7 +213,17 @@ body.background-view .page-noise {
 .site-nav {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 14px;
+    padding: 12px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        0 10px 28px rgba(0, 0, 0, 0.12);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     color: var(--text);
     font-size: 0.84rem;
     letter-spacing: 0.08em;
@@ -232,16 +255,18 @@ body.background-view .page-noise {
     transition: opacity 180ms ease, transform 180ms ease;
 }
 
+.site-mark::after {
+    left: 16px;
+    bottom: 0.48rem;
+    width: calc(100% - 32px);
+}
+
 .site-nav a:hover::after,
 .site-nav a:focus-visible::after,
 .site-mark:hover::after,
 .site-mark:focus-visible::after {
     opacity: 1;
     transform: scaleX(1);
-}
-
-.site-mark {
-    position: relative;
 }
 
 main {
