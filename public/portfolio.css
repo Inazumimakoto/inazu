@@ -75,7 +75,7 @@ textarea {
 
 .page-photo {
     background: url("assets/hero-dinner.jpg") center center / cover no-repeat;
-    filter: brightness(1.08) saturate(1.02);
+    filter: brightness(1.16) saturate(1.04);
     transform: scale(1.03);
 }
 
@@ -90,13 +90,13 @@ textarea {
         linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
     background-size: 72px 72px;
     mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent 92%);
-    opacity: 0.05;
+    opacity: 0;
 }
 
 .page-noise {
     background-image: radial-gradient(rgba(255, 255, 255, 0.1) 0.5px, transparent 0.5px);
     background-size: 12px 12px;
-    opacity: 0.01;
+    opacity: 0;
 }
 
 .glass-filter-defs {
@@ -119,14 +119,14 @@ textarea {
     padding: 12px 16px;
     border: 1px solid rgba(255, 255, 255, 0.22);
     border-radius: 999px;
-    background: rgba(0, 0, 0, 0.48);
+    background: rgba(255, 255, 255, 0.1);
     color: var(--text);
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.72rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, color 180ms ease;
 }
 
@@ -134,7 +134,7 @@ textarea {
 .background-toggle:focus-visible {
     transform: translateY(-2px);
     border-color: rgba(255, 255, 255, 0.4);
-    background: rgba(0, 0, 0, 0.62);
+    background: rgba(255, 255, 255, 0.18);
 }
 
 body.background-view .background-toggle {
@@ -174,7 +174,6 @@ body.background-view .page-noise {
     font-size: 1rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
 }
 
 .site-nav {
@@ -185,7 +184,6 @@ body.background-view .page-noise {
     font-size: 0.84rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
 }
 
 .site-nav a {
@@ -327,7 +325,6 @@ main {
     font-size: clamp(4.4rem, 17vw, 12rem);
     line-height: 0.9;
     letter-spacing: -0.06em;
-    text-shadow: 0 10px 28px rgba(0, 0, 0, 0.42);
     transform: translate3d(var(--hero-shift-x, 0px), var(--hero-shift-y, 0px), 0);
     transition: transform 320ms ease;
     will-change: transform;
@@ -338,8 +335,7 @@ main {
     margin: 26px 0 0;
     font-size: clamp(1.05rem, 2.1vw, 1.35rem);
     line-height: 1.75;
-    color: rgba(243, 243, 240, 0.84);
-    text-shadow: 0 4px 18px rgba(0, 0, 0, 0.44);
+    color: rgba(243, 243, 240, 0.94);
 }
 
 .hero-actions {
@@ -462,14 +458,12 @@ main {
     font-size: clamp(1.8rem, 4vw, 3.1rem);
     line-height: 1.02;
     letter-spacing: -0.04em;
-    text-shadow: 0 6px 20px rgba(0, 0, 0, 0.38);
 }
 
 .panel-copy {
     max-width: 460px;
-    color: var(--muted);
+    color: rgba(243, 243, 240, 0.76);
     line-height: 1.75;
-    text-shadow: 0 4px 14px rgba(0, 0, 0, 0.32);
 }
 
 .feature-grid,
@@ -559,7 +553,6 @@ button:focus-visible {
     margin: 10px 0 14px;
     font-size: clamp(1.7rem, 3vw, 2.5rem);
     letter-spacing: -0.04em;
-    text-shadow: 0 4px 16px rgba(0, 0, 0, 0.34);
 }
 
 .feature-card {
@@ -587,8 +580,7 @@ button:focus-visible {
 .contact-card p {
     margin: 0;
     line-height: 1.75;
-    color: rgba(243, 243, 240, 0.84);
-    text-shadow: 0 3px 12px rgba(0, 0, 0, 0.26);
+    color: rgba(243, 243, 240, 0.9);
 }
 
 .feature-flow {
@@ -737,7 +729,6 @@ button:focus-visible {
     font-size: 1.4rem;
     line-height: 1.15;
     letter-spacing: -0.04em;
-    text-shadow: 0 4px 14px rgba(0, 0, 0, 0.34);
 }
 
 .contact-card p {
