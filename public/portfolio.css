@@ -348,6 +348,7 @@ main {
 }
 
 .text-glass-copy.is-line-built {
+    position: relative;
     display: inline-flex;
     flex-direction: column;
     align-items: flex-start;
@@ -358,6 +359,7 @@ main {
     box-shadow: none;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+    overflow: visible;
 }
 
 .text-glass-measure {
@@ -368,23 +370,50 @@ main {
     box-shadow: none;
 }
 
-.text-glass-line {
-    display: inline-flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    padding: 0.2rem 0.62rem 0.28rem;
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.18),
-        0 10px 28px rgba(0, 0, 0, 0.12);
+.text-glass-shape,
+.text-glass-highlight {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 1;
+    mask-image: var(--text-glass-mask);
+    mask-repeat: no-repeat;
+    mask-size: 100% 100%;
+    -webkit-mask-image: var(--text-glass-mask);
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
+}
+
+.text-glass-shape {
+    background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
 }
 
+.text-glass-highlight {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
+    opacity: 0.72;
+}
+
+.text-glass-content {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.text-glass-line {
+    display: inline-flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    padding: 0;
+}
+
 .text-glass-line + .text-glass-line {
-    margin-top: -0.16rem;
+    margin-top: 0;
 }
 
 .hero-title-wrap {

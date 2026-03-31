@@ -83,6 +83,15 @@ function extractGlassTokens(node) {
     return tokens;
 }
 
+function buildGlassMask(width, height, rects) {
+    const svgRects = rects.map((rect) => {
+        return `<rect x="${rect.x.toFixed(1)}" y="${rect.y.toFixed(1)}" width="${rect.width.toFixed(1)}" height="${rect.height.toFixed(1)}" rx="${rect.radius.toFixed(1)}" ry="${rect.radius.toFixed(1)}" fill="white"/>`;
+    }).join('');
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width.toFixed(1)} ${height.toFixed(1)}">${svgRects}</svg>`;
+    return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
+}
+
 function layoutGlassCopy(target) {
     if (!target.dataset.originalHtml) {
         target.dataset.originalHtml = target.innerHTML;
@@ -120,14 +129,58 @@ function layoutGlassCopy(target) {
     target.innerHTML = '';
     target.classList.add('is-line-built');
 
+    const shape = document.createElement('span');
+    shape.className = 'text-glass-shape';
+
+    const highlight = document.createElement('span');
+    highlight.className = 'text-glass-highlight';
+
+    const content = document.createElement('span');
+    content.className = 'text-glass-content';
+
     for (const lineTokens of lines) {
         const line = document.createElement('span');
         line.className = 'text-glass-line';
         for (const token of lineTokens) {
             appendGlassToken(line, token);
         }
-        target.appendChild(line);
+        content.appendChild(line);
     }
+
+    target.append(shape, highlight, content);
+
+    const lineElements = Array.from(content.children);
+    const padX = 10;
+    const padY = 4;
+    const joinOverlap = 12;
+    const maxWidth = Math.ceil(content.offsetWidth + padX * 2);
+    const maxHeight = Math.ceil(content.offsetHeight + padY * 2);
+
+    shape.style.left = `${-padX}px`;
+    shape.style.top = `${-padY}px`;
+    shape.style.width = `${maxWidth}px`;
+    shape.style.height = `${maxHeight}px`;
+
+    highlight.style.left = `${-padX}px`;
+    highlight.style.top = `${-padY}px`;
+    highlight.style.width = `${maxWidth}px`;
+    highlight.style.height = `${maxHeight}px`;
+
+    const rects = lineElements.map((line, index) => {
+        const x = line.offsetLeft;
+        const y = Math.max(0, line.offsetTop - (index === 0 ? 0 : joinOverlap));
+        const height = line.offsetHeight + padY * 2 + (index === 0 ? 0 : joinOverlap);
+        return {
+            x,
+            y,
+            width: line.offsetWidth + padX * 2,
+            height,
+            radius: Math.min((line.offsetHeight + padY * 2) * 0.5, 30)
+        };
+    });
+
+    const mask = buildGlassMask(maxWidth, maxHeight, rects);
+    target.style.setProperty('--text-glass-mask', mask);
 }
 
 let glassCopyLayoutFrame = 0;
