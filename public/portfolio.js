@@ -235,17 +235,22 @@ function initPageGlassWebGL(canvas, reducedMotion) {
             float rim = pow(edge, 0.92);
             float body = 0.28 + (1.0 - smoothstep(22.0, 120.0, -nearestDist)) * 0.22;
 
-            vec2 noiseUv = rectUv * 11.4 + vec2(92.0, 31.0);
+            vec2 noiseUv = rectUv * 15.8 + vec2(92.0, 31.0);
             float nA = fbm(noiseUv);
             float nB = fbm(noiseUv + vec2(7.4, -3.8));
-            float nC = fbm(noiseUv * 2.35 + vec2(-4.1, 6.2));
-            float nD = fbm(noiseUv * 2.35 + vec2(5.6, -7.1));
+            float nC = fbm(noiseUv * 3.05 + vec2(-4.1, 6.2));
+            float nD = fbm(noiseUv * 3.05 + vec2(5.6, -7.1));
             vec2 turbulence = vec2((nA + nC * 0.5) / 1.5, (nB + nD * 0.5) / 1.5) - 0.5;
             vec2 softened = vec2(
-                fbm(noiseUv * 1.18 + vec2(0.35, 0.0)),
-                fbm(noiseUv * 1.18 + vec2(7.75, -3.45))
+                fbm(noiseUv * 1.32 + vec2(0.35, 0.0)),
+                fbm(noiseUv * 1.32 + vec2(7.75, -3.45))
             ) - 0.5;
-            turbulence = mix(turbulence, softened, 0.4);
+            vec2 fineNoise = vec2(
+                fbm(noiseUv * 4.6 + vec2(-1.8, 2.3)),
+                fbm(noiseUv * 4.6 + vec2(3.6, -2.1))
+            ) - 0.5;
+            turbulence = mix(turbulence, softened, 0.42);
+            turbulence = mix(turbulence, fineNoise, 0.24);
 
             vec2 pxOffset =
                 turbulence * (4.0 + body * 4.0 + rim * 22.0) +
@@ -255,8 +260,15 @@ function initPageGlassWebGL(canvas, reducedMotion) {
             vec3 refractedA = samplePhoto(v_uv + uvOffset);
             vec3 refractedB = samplePhoto(v_uv - uvOffset * 0.22);
             vec3 glass = mix(refractedA, refractedB, 0.18);
+            vec2 chromaOffset = (uvOffset * (0.55 + rim * 0.95)) + (edgeDir * rim * 3.2 / max(u_resolution, vec2(1.0)));
+            vec3 chromaSplit = vec3(
+                samplePhoto(v_uv + uvOffset + chromaOffset).r,
+                glass.g,
+                samplePhoto(v_uv + uvOffset - chromaOffset).b
+            );
 
             glass = mix(base, glass, 0.84);
+            glass = mix(glass, chromaSplit, rim * 0.38);
             glass += vec3(0.14) * rim * 0.12;
             glass += vec3(0.04) * body * 0.04;
 
