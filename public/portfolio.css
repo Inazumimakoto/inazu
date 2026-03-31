@@ -74,10 +74,8 @@ textarea {
 }
 
 .page-photo {
-    background:
-        linear-gradient(180deg, rgba(5, 5, 5, 0.42), rgba(5, 5, 5, 0.78)),
-        url("assets/hero-dinner.jpg") center center / cover no-repeat;
-    filter: saturate(0.82) brightness(0.68) contrast(1.04);
+    background: url("assets/hero-dinner.jpg") center center / cover no-repeat;
+    filter: none;
     transform: scale(1.03);
 }
 
