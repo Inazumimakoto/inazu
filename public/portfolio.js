@@ -667,6 +667,8 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
             }
 
             float insideMask = 1.0 - step(0.0, nearestDist);
+            float innerFeather = smoothstep(0.0, 12.0, -nearestDist);
+            float glassMask = insideMask * innerFeather;
 
             if (insideMask <= 0.001) {
                 gl_FragColor = vec4(base, 1.0);
@@ -677,13 +679,13 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
             vec2 centerUv = rectUv * 2.0 - 1.0;
             vec2 edgeDir = normalize(centerUv + vec2(0.0001));
             float edge = 1.0 - smoothstep(0.0, 26.0, -nearestDist);
-            float rim = pow(edge, 0.92);
-            float body = 0.22 + (1.0 - smoothstep(18.0, 88.0, -nearestDist)) * 0.2;
+            float rim = pow(edge, 0.92) * innerFeather;
+            float body = (0.22 + (1.0 - smoothstep(18.0, 88.0, -nearestDist)) * 0.2) * innerFeather;
             float horizontalBias = smoothstep(-0.08, 0.28, abs(centerUv.y) - abs(centerUv.x) * 0.72);
             float tubeBand = smoothstep(0.34, 0.96, abs(centerUv.y));
             float tubeMask = clamp(horizontalBias * tubeBand, 0.0, 1.0);
             float tubeRim = rim * tubeMask;
-            float chromaRim = pow(1.0 - smoothstep(0.0, 9.0, -nearestDist), 1.6) * tubeMask;
+            float chromaRim = pow(1.0 - smoothstep(0.0, 9.0, -nearestDist), 1.6) * tubeMask * innerFeather;
             vec2 tubeNormal = vec2(0.0, sign(centerUv.y));
 
             vec2 noiseUv = rectUv * 15.8 + vec2(92.0, 31.0);
@@ -719,12 +721,12 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
                 sampleScene(v_uv + uvOffset - chromaOffset).b
             );
 
-            glass = mix(base, glass, 0.9);
+            glass = mix(base, glass, 0.9 * glassMask);
             glass = mix(glass, chromaSplit, chromaRim * 0.62);
             glass += vec3(0.18) * tubeRim * 0.16;
             glass += vec3(0.06) * body * 0.06;
 
-            vec3 color = mix(base, glass, insideMask);
+            vec3 color = mix(base, glass, glassMask);
             gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
         }
     `;
