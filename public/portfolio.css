@@ -79,20 +79,6 @@ textarea {
     transform: scale(1.03);
 }
 
-.page-photo::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-        linear-gradient(180deg, rgba(5, 5, 5, 0.36), rgba(5, 5, 5, 0.7)),
-        radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.025), transparent 18%);
-    transition: opacity 220ms ease, background 220ms ease;
-}
-
-body.background-view .page-photo::after {
-    opacity: 0;
-}
-
 .page-grid,
 .page-noise {
     z-index: 1;
