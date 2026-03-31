@@ -4,93 +4,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>chat.inazu.me - Verify</title>
-    <meta name="description" content="Human verification for chat.inazu.me">
+    <title>inazu.me</title>
+    <meta name="description" content="Portfolio for Makoto Inazumi: network research, security work, and local AI experiments from a home Mac.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-    <style>
-        .verify-container {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 2rem;
-        }
-
-        .verify-title {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: var(--text-primary);
-        }
-
-        .verify-message {
-            color: var(--text-secondary);
-            margin-bottom: 1.5rem;
-            line-height: 1.6;
-        }
-
-        .cf-turnstile {
-            margin-bottom: 1rem;
-        }
-
-        .error-message {
-            color: #ff6b6b;
-            margin-top: 1rem;
-            display: none;
-        }
-    </style>
+    <link rel="stylesheet" href="portfolio.css">
 </head>
 
 <body>
-    <div class="verify-container">
-        <h1 class="verify-title">chat.inazu.me</h1>
-        <p class="verify-message">認証中...</p>
+    <div class="page-grid"></div>
+    <div class="page-noise"></div>
 
-        <div class="cf-turnstile" data-sitekey="0x4AAAAAACM0Q7wG9YXHLd8_" data-callback="onVerifySuccess"
-            data-error-callback="onVerifyError">
-        </div>
+    <div class="site-shell">
+        <header class="site-header reveal">
+            <a class="site-mark" href="/">inazu.me</a>
+            <nav class="site-nav">
+                <a href="#work">work</a>
+                <a href="#profile">profile</a>
+                <a href="#links">links</a>
+            </nav>
+        </header>
 
-        <p id="error-message" class="error-message">検証に失敗しました。もう一度お試しください。</p>
+        <main>
+            <section class="hero reveal" data-hero>
+                <p class="eyebrow">network / security / home lab</p>
+                <div class="hero-title-wrap">
+                    <h1 class="hero-title">inazu.me</h1>
+                </div>
+                <p class="hero-copy">ネットワークの研究をしながら、家のMacでローカルLLMやセキュリティ寄りの実験をしています。シンプルだけど、ちゃんと動く変なものを作るのが好きです。</p>
+                <div class="hero-actions">
+                    <a class="button button-primary" href="https://chat.inazu.me">Open chat</a>
+                    <a class="button" href="https://github.com/Inazumimakoto" target="_blank" rel="noreferrer">GitHub</a>
+                </div>
+                <div class="hero-strip">
+                    <span class="chip">home Mac</span>
+                    <span class="chip">local LLM</span>
+                    <span class="chip">Cloudflare Tunnel</span>
+                    <span class="chip">Turnstile</span>
+                    <span class="chip">network research</span>
+                </div>
+            </section>
+
+            <section class="panel reveal" id="work">
+                <div class="panel-header">
+                    <div>
+                        <p class="section-kicker">Selected Work</p>
+                        <h2 class="panel-title">家の中の実験を、ちゃんと外へ出す。</h2>
+                    </div>
+                    <p class="panel-copy">いまの代表作は <code>chat.inazu.me</code> です。自宅のMacで動くローカルLLMを、ポート開放なしで外から叩けるようにしています。</p>
+                </div>
+
+                <div class="feature-grid">
+                    <article class="card feature-card" data-tilt>
+                        <p class="card-kicker">Featured System</p>
+                        <h3>chat.inazu.me</h3>
+                        <p>ローカルLLMを Cloudflare Tunnel 経由で公開し、Cloudflare Turnstile で Bot をふるいにかけてからチャットに流す構成です。家のMacがそのまま実験機材であり、本番環境でもあります。</p>
+                        <div class="feature-flow">
+                            <span class="process-step"><small>01</small> Browser</span>
+                            <span class="process-arrow">→</span>
+                            <span class="process-step"><small>02</small> Turnstile</span>
+                            <span class="process-arrow">→</span>
+                            <span class="process-step"><small>03</small> Cloudflare Tunnel</span>
+                            <span class="process-arrow">→</span>
+                            <span class="process-step"><small>04</small> Home Mac + Ollama</span>
+                        </div>
+                        <a class="inline-link" href="https://chat.inazu.me">Launch chat</a>
+                    </article>
+
+                    <article class="card profile-card" data-tilt>
+                        <p class="card-kicker">What I Like</p>
+                        <h3>Quiet interface, loud machinery.</h3>
+                        <p>見た目は静かに、裏側はちゃんと面白く。ネットワーク、セキュリティ、運用、ローカルLLMの境目にある実装が好きです。</p>
+                        <ul class="list">
+                            <li><span>network systems</span><span>research</span></li>
+                            <li><span>security experiments</span><span>practice</span></li>
+                            <li><span>home lab deployment</span><span>ongoing</span></li>
+                        </ul>
+                    </article>
+                </div>
+            </section>
+
+            <section class="panel reveal" id="profile">
+                <div class="panel-header">
+                    <div>
+                        <p class="section-kicker">Profile</p>
+                        <h2 class="panel-title">研究、キャンプ、資格。</h2>
+                    </div>
+                    <p class="panel-copy">肩書きの数より、何に手を動かしてきたかを出したいので、情報は絞って置いています。</p>
+                </div>
+
+                <div class="profile-grid">
+                    <article class="card profile-card" data-tilt>
+                        <p class="card-kicker">Research</p>
+                        <h3>Network</h3>
+                        <p>大学ではネットワーク系の研究に取り組んでいます。通信、構成、運用のあいだにある実装を触るのが好きです。</p>
+                    </article>
+
+                    <article class="card profile-card" data-tilt>
+                        <p class="card-kicker">Highlight</p>
+                        <h3>Security Camp 2026 Connect</h3>
+                        <p>AIレッドチーミングクラス修了。</p>
+                        <span class="timeline-date">March 26-29, 2026</span>
+                    </article>
+
+                    <article class="card notes-card" data-tilt>
+                        <p class="card-kicker">Credentials</p>
+                        <h3>資格</h3>
+                        <ul class="list">
+                            <li><span>基本情報技術者</span><span>2025-10-15</span></li>
+                            <li><span>応用情報技術者</span><span>2025-12-25</span></li>
+                        </ul>
+                    </article>
+                </div>
+            </section>
+
+            <section class="panel reveal">
+                <div class="panel-header">
+                    <div>
+                        <p class="section-kicker">Notes</p>
+                        <h2 class="panel-title">まだ書いていないけど、書く場所は作る。</h2>
+                    </div>
+                    <p class="panel-copy">ブログはまだ空です。研究や制作メモ、ローカルLLMを家で運用したときの話は今後ここに増やしていく予定です。</p>
+                </div>
+
+                <article class="card notes-card" data-tilt>
+                    <p class="card-kicker">Status</p>
+                    <h3>Writing soon.</h3>
+                    <p>公開できる形になったものから、短くても残していきます。</p>
+                    <span class="status">coming soon</span>
+                </article>
+            </section>
+
+            <section class="panel reveal" id="links">
+                <div class="panel-header">
+                    <div>
+                        <p class="section-kicker">Links</p>
+                        <h2 class="panel-title">連絡先と外部リンク。</h2>
+                    </div>
+                    <p class="panel-copy">大学メールは切り替わる可能性があるので載せず、個人で長く使える連絡先だけを出しています。</p>
+                </div>
+
+                <div class="contact-grid">
+                    <a class="contact-card" href="mailto:makoto@inazu.me" data-tilt>
+                        <span class="contact-label">Email</span>
+                        <strong>makoto@inazu.me</strong>
+                        <p>まずはここから。</p>
+                        <span class="inline-link">Send mail</span>
+                    </a>
+
+                    <a class="contact-card" href="https://github.com/Inazumimakoto" target="_blank" rel="noreferrer" data-tilt>
+                        <span class="contact-label">GitHub</span>
+                        <strong>Inazumimakoto</strong>
+                        <p>コードと制作物。</p>
+                        <span class="inline-link">Open profile</span>
+                    </a>
+
+                    <a class="contact-card" href="https://x.com/makoto0109a" target="_blank" rel="noreferrer" data-tilt>
+                        <span class="contact-label">X</span>
+                        <strong>@makoto0109a</strong>
+                        <p>更新や雑多な記録。</p>
+                        <span class="inline-link">Open X</span>
+                    </a>
+
+                    <a class="contact-card" href="https://instagram.com/inazutagram" target="_blank" rel="noreferrer" data-tilt>
+                        <span class="contact-label">Instagram</span>
+                        <strong>@inazutagram</strong>
+                        <p>写真と軽めの断片。</p>
+                        <span class="inline-link">Open Instagram</span>
+                    </a>
+
+                    <a class="contact-card" href="https://chat.inazu.me" data-tilt>
+                        <span class="contact-label">Chat</span>
+                        <strong>chat.inazu.me</strong>
+                        <p>家のMacにつながるローカルLLMチャット。</p>
+                        <span class="inline-link">Open chat</span>
+                    </a>
+
+                    <a class="contact-card" href="mailto:inazumimakoto@gmail.com" data-tilt>
+                        <span class="contact-label">Backup</span>
+                        <strong>inazumimakoto@gmail.com</strong>
+                        <p>メインが届かないとき用の予備。</p>
+                        <span class="inline-link">Use backup mail</span>
+                    </a>
+                </div>
+
+                <p class="footer-note">Built around the same black palette as <a href="https://chat.inazu.me">chat.inazu.me</a>, but with more motion.</p>
+            </section>
+        </main>
     </div>
 
-    <script>
-        async function onVerifySuccess(token) {
-            console.log('Turnstile success, verifying with server...');
-
-            try {
-                const response = await fetch('/api/verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ turnstileToken: token })
-                });
-
-                if (response.ok) {
-                    console.log('Server session created, redirecting...');
-                    window.location.replace('/chat.html');
-                } else {
-                    const data = await response.json();
-                    console.error('Server verification failed:', data);
-                    document.getElementById('error-message').textContent = data.error || '検証に失敗しました';
-                    document.getElementById('error-message').style.display = 'block';
-                }
-            } catch (e) {
-                console.error('Verification error:', e);
-                document.getElementById('error-message').style.display = 'block';
-            }
-        }
-
-        function onVerifyError() {
-            console.log('Turnstile error');
-            document.getElementById('error-message').style.display = 'block';
-        }
-    </script>
+    <script src="portfolio.js"></script>
 </body>
 
 </html>

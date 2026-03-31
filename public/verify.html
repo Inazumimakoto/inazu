@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>chat.inazu.me - Verify</title>
+    <meta name="description" content="Human verification for chat.inazu.me">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <style>
+        .verify-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .verify-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .verify-message {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .cf-turnstile {
+            margin-bottom: 1rem;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            margin-top: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="verify-container">
+        <h1 class="verify-title">chat.inazu.me</h1>
+        <p class="verify-message">認証中...</p>
+
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAACM0Q7wG9YXHLd8_" data-callback="onVerifySuccess"
+            data-error-callback="onVerifyError">
+        </div>
+
+        <p id="error-message" class="error-message">検証に失敗しました。もう一度お試しください。</p>
+    </div>
+
+    <script>
+        async function onVerifySuccess(token) {
+            try {
+                const response = await fetch('/api/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ turnstileToken: token })
+                });
+
+                if (response.ok) {
+                    window.location.replace('/chat.html');
+                } else {
+                    const data = await response.json();
+                    document.getElementById('error-message').textContent = data.error || '検証に失敗しました';
+                    document.getElementById('error-message').style.display = 'block';
+                }
+            } catch (e) {
+                document.getElementById('error-message').style.display = 'block';
+            }
+        }
+
+        function onVerifyError() {
+            document.getElementById('error-message').style.display = 'block';
+        }
+    </script>
+</body>
+
+</html>

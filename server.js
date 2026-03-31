@@ -11,8 +11,12 @@ const app = express();
 const PORT = 3000;
 const OLLAMA_URL = 'http://localhost:11434';
 const LOG_FILE = path.join(__dirname, 'usage.log');
+const PUBLIC_DIR = path.join(__dirname, 'public');
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET;
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+
+const CHAT_HOSTS = new Set(['chat.inazu.me']);
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
 
 // Trust proxy (for Cloudflare)
 app.set('trust proxy', 1);
@@ -69,7 +73,50 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
+function getHostname(req) {
+    const forwardedHost = req.headers['x-forwarded-host'];
+    const rawHost = (Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost) || req.headers.host || req.hostname || '';
+
+    return rawHost.split(',')[0].trim().split(':')[0].toLowerCase();
+}
+
+function isChatHost(req) {
+    return CHAT_HOSTS.has(getHostname(req));
+}
+
+function isLocalHost(req) {
+    return LOCAL_HOSTS.has(getHostname(req));
+}
+
+function sendPublicFile(res, file) {
+    return res.sendFile(path.join(PUBLIC_DIR, file));
+}
+
+app.get(['/', '/index.html'], (req, res) => {
+    if (isChatHost(req)) {
+        return sendPublicFile(res, 'verify.html');
+    }
+
+    return sendPublicFile(res, 'index.html');
+});
+
+app.get(['/verify', '/verify.html'], (req, res) => {
+    if (!isChatHost(req) && !isLocalHost(req)) {
+        return res.redirect(302, 'https://chat.inazu.me/');
+    }
+
+    return sendPublicFile(res, 'verify.html');
+});
+
+app.get(['/chat', '/chat.html'], (req, res) => {
+    if (!isChatHost(req) && !isLocalHost(req)) {
+        return res.redirect(302, 'https://chat.inazu.me/chat.html');
+    }
+
+    return sendPublicFile(res, 'chat.html');
+});
+
+app.use(express.static(PUBLIC_DIR, { index: false }));
 app.use('/scripts', express.static(path.join(__dirname, 'node_modules/marked')));
 
 // Logging function
