@@ -136,8 +136,8 @@ main {
     min-height: 72vh;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
-    padding: 40px;
+    justify-content: center;
+    padding: 48px 40px;
 }
 
 .eyebrow,
@@ -489,6 +489,7 @@ main {
 
     .hero {
         min-height: 66vh;
+        padding: 36px 24px;
     }
 
     .hero-title {
