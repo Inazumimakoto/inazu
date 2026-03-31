@@ -84,7 +84,7 @@ textarea {
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(180deg, rgba(5, 5, 5, 0.2), rgba(5, 5, 5, 0.5)),
+        linear-gradient(180deg, rgba(5, 5, 5, 0.36), rgba(5, 5, 5, 0.7)),
         radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.025), transparent 18%);
     transition: opacity 220ms ease, background 220ms ease;
 }
@@ -249,7 +249,7 @@ main {
     isolation: isolate;
     border: 1px solid var(--glass-line);
     border-radius: 28px;
-    background: rgba(0, 0, 0, 0.08);
+    background: rgba(0, 0, 0, 0);
     box-shadow: 0 0 0 -50px rgba(0, 0, 0, 0.3);
 }
 
@@ -290,7 +290,7 @@ main {
     justify-content: flex-start;
     align-items: stretch;
     padding: clamp(32px, 5vw, 48px) clamp(24px, 4vw, 40px);
-    background: rgba(0, 0, 0, 0.08);
+    background: rgba(0, 0, 0, 0);
 }
 
 .hero::after,
@@ -373,7 +373,7 @@ main {
     border-radius: 999px;
     overflow: hidden;
     border: 1px solid var(--glass-line);
-    background: rgba(0, 0, 0, 0.22);
+    background: rgba(255, 255, 255, 0.02);
     box-shadow: 0 0 0 -50px rgba(0, 0, 0, 0.3);
 }
 
@@ -414,7 +414,7 @@ main {
     border-radius: 999px;
     overflow: hidden;
     border: 1px solid var(--glass-line);
-    background: rgba(0, 0, 0, 0.18);
+    background: rgba(255, 255, 255, 0.02);
     color: var(--text);
     box-shadow: 0 0 0 -50px rgba(0, 0, 0, 0.3);
     transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
@@ -454,7 +454,7 @@ main {
 
 .panel {
     padding: 32px;
-    background: rgba(0, 0, 0, 0.06);
+    background: rgba(0, 0, 0, 0);
 }
 
 .panel > * {
@@ -507,7 +507,7 @@ main {
     padding: 22px;
     border-radius: 22px;
     border: 1px solid var(--glass-line);
-    background: rgba(0, 0, 0, 0.08);
+    background: rgba(0, 0, 0, 0);
     box-shadow: 0 0 0 -50px rgba(0, 0, 0, 0.3);
     transform-style: preserve-3d;
     transition: transform 240ms ease, border-color 240ms ease, background 240ms ease, box-shadow 240ms ease;
@@ -534,7 +534,7 @@ main {
 .card-link:focus-visible,
 .contact-card:focus-visible {
     border-color: rgba(255, 255, 255, 0.18);
-    background: rgba(0, 0, 0, 0.08);
+    background: rgba(0, 0, 0, 0);
     box-shadow:
         0 0 0 1px rgba(243, 243, 240, 0.95),
         inset 0 1px 0 rgba(255, 255, 255, 0.08);
