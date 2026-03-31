@@ -1,7 +1,7 @@
 const revealTargets = document.querySelectorAll('.reveal');
 const tiltTargets = document.querySelectorAll('[data-tilt]');
 const hero = document.querySelector('[data-hero]');
-const heroCanvas = document.querySelector('[data-hero-canvas]');
+const pageCanvas = document.querySelector('[data-page-canvas]');
 const heroModeButtons = document.querySelectorAll('[data-hero-mode]');
 const heroModeSwitch = document.querySelector('.hero-mode-switch');
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -54,8 +54,8 @@ if (hero) {
 
 let heroBackground = null;
 
-if (hero && heroCanvas) {
-    heroBackground = initHeroWebGL(heroCanvas, hero, prefersReducedMotion.matches);
+if (pageCanvas) {
+    heroBackground = initHeroWebGL(pageCanvas, prefersReducedMotion.matches);
 }
 
 if (heroBackground && heroModeButtons.length > 0) {
@@ -73,7 +73,7 @@ if (heroBackground && heroModeButtons.length > 0) {
     }
 }
 
-function initHeroWebGL(canvas, host, reducedMotion) {
+function initHeroWebGL(canvas, reducedMotion) {
     const gl = canvas.getContext('webgl', {
         alpha: true,
         antialias: true,
@@ -103,6 +103,7 @@ function initHeroWebGL(canvas, host, reducedMotion) {
 
         uniform vec2 u_resolution;
         uniform vec2 u_pointer;
+        uniform float u_scroll;
         uniform float u_time;
         uniform float u_mix;
         uniform float u_mode;
@@ -164,17 +165,23 @@ function initHeroWebGL(canvas, host, reducedMotion) {
             vec2 pointer = u_pointer * 2.0 - 1.0;
             pointer.x *= aspect;
 
-            float t = u_time * mix(0.22, 0.05, u_reduced_motion);
+            float scrollWave = u_scroll * mix(1.4, 0.45, u_reduced_motion);
+            float t = u_time * mix(0.18, 0.04, u_reduced_motion) + scrollWave;
             float fieldA = fbm(p * 1.25 + vec2(t, -t * 0.55));
             float fieldB = fbm((p + vec2(1.4, -0.4)) * 1.85 - vec2(t * 1.2, t * 0.4));
             vec2 flow = vec2(fieldA - 0.5, fieldB - 0.5);
             float ring = 1.0 - smoothstep(0.0, 0.7, length(p - pointer * vec2(0.65, 0.48)));
             float pulse = 0.5 + 0.5 * sin(t * 1.7);
+            float scrollBand = 1.0 - smoothstep(0.04, 0.36, abs(p.y + sin(p.x * 2.2 + scrollWave * 2.4) * 0.18));
 
-            vec2 glassOffset = flow * 0.1 + normalize(p - pointer + vec2(0.001)) * ring * 0.04;
-            vec2 glassOffsetWide = flow * 0.16 - normalize(p - pointer + vec2(0.001)) * ring * 0.025;
-            vec2 imageOffsetA = flow * 0.15 + vec2(sin(t * 0.8 + p.y * 3.8), cos(t * 0.6 + p.x * 3.0)) * 0.016;
-            vec2 imageOffsetB = -flow * 0.17 + vec2(cos(t * 0.9 - p.y * 4.4), sin(t * 0.7 - p.x * 3.6)) * 0.014;
+            vec2 scrollVector = vec2(
+                sin(scrollWave + p.y * 3.2) * 0.02,
+                cos(scrollWave * 0.85 + p.x * 2.8) * 0.018
+            );
+            vec2 glassOffset = flow * 0.1 + scrollVector * (0.6 + scrollBand * 0.55) + normalize(p - pointer + vec2(0.001)) * ring * 0.04;
+            vec2 glassOffsetWide = flow * 0.16 - scrollVector * 0.7 - normalize(p - pointer + vec2(0.001)) * ring * 0.025;
+            vec2 imageOffsetA = flow * 0.15 + scrollVector * 1.1 + vec2(sin(t * 0.8 + p.y * 3.8), cos(t * 0.6 + p.x * 3.0)) * 0.016;
+            vec2 imageOffsetB = -flow * 0.17 - scrollVector * 1.2 + vec2(cos(t * 0.9 - p.y * 4.4), sin(t * 0.7 - p.x * 3.6)) * 0.014;
 
             vec3 glassBase = texture2D(u_texture_a, clamp(uv + glassOffset, 0.0, 1.0)).rgb;
             vec3 glassLayer = texture2D(u_texture_b, clamp(uv + glassOffsetWide, 0.0, 1.0)).rgb;
@@ -191,8 +198,10 @@ function initHeroWebGL(canvas, host, reducedMotion) {
             glassColor += vec3(0.12, 0.16, 0.11) * highlight * 0.55;
             glassColor += vec3(0.14, 0.18, 0.1) * streak * 0.12;
             glassColor += vec3(0.16, 0.24, 0.13) * ring * (0.18 + pulse * 0.12);
+            glassColor += vec3(0.1, 0.14, 0.09) * scrollBand * 0.22;
 
             imageColor += vec3(0.08, 0.12, 0.08) * ring * 0.12;
+            imageColor += vec3(0.09, 0.13, 0.08) * scrollBand * 0.16;
 
             vec3 color = mix(glassColor, imageColor, u_mode);
             color += vec3(0.07, 0.08, 0.06) * grain * 0.08;
@@ -246,6 +255,7 @@ function initHeroWebGL(canvas, host, reducedMotion) {
     const modeLocation = gl.getUniformLocation(program, 'u_mode');
     const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
     const pointerLocation = gl.getUniformLocation(program, 'u_pointer');
+    const scrollLocation = gl.getUniformLocation(program, 'u_scroll');
     const reducedMotionLocation = gl.getUniformLocation(program, 'u_reduced_motion');
     const textureALocation = gl.getUniformLocation(program, 'u_texture_a');
     const textureBLocation = gl.getUniformLocation(program, 'u_texture_b');
@@ -254,6 +264,7 @@ function initHeroWebGL(canvas, host, reducedMotion) {
     gl.uniform1i(textureBLocation, 1);
 
     const pointer = { x: 0.42, y: 0.34 };
+    let scrollValue = 0;
     const textureUrls = [
         'assets/hero-scene-1.svg',
         'assets/hero-scene-2.svg',
@@ -265,11 +276,14 @@ function initHeroWebGL(canvas, host, reducedMotion) {
     let lastTime = 0;
 
     function updateSize() {
-        const rect = host.getBoundingClientRect();
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        canvas.width = Math.max(1, Math.round(rect.width * dpr));
-        canvas.height = Math.max(1, Math.round(rect.height * dpr));
+        canvas.width = Math.max(1, Math.round(window.innerWidth * dpr));
+        canvas.height = Math.max(1, Math.round(window.innerHeight * dpr));
         gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+
+    function updateScroll() {
+        scrollValue = window.scrollY * 0.0014;
     }
 
     function render(time) {
@@ -292,6 +306,7 @@ function initHeroWebGL(canvas, host, reducedMotion) {
         gl.bindTexture(gl.TEXTURE_2D, textures[nextTextureIndex]);
         gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
         gl.uniform2f(pointerLocation, pointer.x, pointer.y);
+        gl.uniform1f(scrollLocation, scrollValue);
         gl.uniform1f(timeLocation, time * 0.001);
         gl.uniform1f(mixLocation, mixValue);
         gl.uniform1f(modeLocation, currentMode === 'image' ? 1.0 : 0.0);
@@ -309,9 +324,8 @@ function initHeroWebGL(canvas, host, reducedMotion) {
     }
 
     function updatePointer(event) {
-        const rect = host.getBoundingClientRect();
-        pointer.x = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0.0), 1.0);
-        pointer.y = 1.0 - Math.min(Math.max((event.clientY - rect.top) / rect.height, 0.0), 1.0);
+        pointer.x = Math.min(Math.max(event.clientX / window.innerWidth, 0.0), 1.0);
+        pointer.y = 1.0 - Math.min(Math.max(event.clientY / window.innerHeight, 0.0), 1.0);
     }
 
     function resetPointer() {
@@ -319,22 +333,19 @@ function initHeroWebGL(canvas, host, reducedMotion) {
         pointer.y = 0.34;
     }
 
-    host.addEventListener('pointermove', updatePointer);
-    host.addEventListener('pointerleave', resetPointer);
+    window.addEventListener('pointermove', updatePointer);
+    window.addEventListener('pointerleave', resetPointer);
     window.addEventListener('resize', updateSize);
-
-    if (window.ResizeObserver) {
-        const resizeObserver = new ResizeObserver(updateSize);
-        resizeObserver.observe(host);
-    }
+    window.addEventListener('scroll', updateScroll, { passive: true });
 
     updateSize();
+    updateScroll();
 
     Promise.all(textureUrls.map((url) => loadTexture(gl, url)))
         .then((loadedTextures) => {
             textures.push(...loadedTextures);
             isReady = true;
-            host.classList.add('is-webgl-ready');
+            document.body.classList.add('is-webgl-ready');
 
             if (reducedMotion) {
                 render(0);

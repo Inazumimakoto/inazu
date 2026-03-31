@@ -49,11 +49,24 @@ textarea {
 }
 
 .page-grid,
-.page-noise {
+.page-noise,
+.page-webgl {
     pointer-events: none;
     position: fixed;
     inset: 0;
+}
+
+.page-webgl {
     z-index: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    opacity: 0.92;
+}
+
+.page-grid,
+.page-noise {
+    z-index: 1;
 }
 
 .page-grid {
@@ -73,7 +86,7 @@ textarea {
 
 .site-shell {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     width: min(1200px, calc(100vw - 40px));
     margin: 0 auto;
     padding: 24px 0 80px;
@@ -179,17 +192,6 @@ main {
 
 .hero::before {
     z-index: 1;
-}
-
-.hero-webgl {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
-    z-index: 0;
-    opacity: 0.94;
-    pointer-events: none;
 }
 
 .hero-content {
@@ -665,7 +667,7 @@ button:focus-visible {
         padding: 36px 24px;
     }
 
-    .hero-webgl {
+    .page-webgl {
         opacity: 0.9;
     }
 
@@ -728,7 +730,7 @@ button:focus-visible {
         transform: none;
     }
 
-    .hero-webgl {
+    .page-webgl {
         opacity: 0.88;
     }
 }
