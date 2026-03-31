@@ -32,7 +32,7 @@ body {
     margin: 0;
     min-height: 100vh;
     background:
-        radial-gradient(circle at top left, rgba(200, 255, 109, 0.09), transparent 28%),
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.05), transparent 28%),
         radial-gradient(circle at 85% 15%, rgba(255, 255, 255, 0.06), transparent 24%),
         var(--bg);
     color: var(--text);
@@ -205,7 +205,7 @@ main {
     z-index: 1;
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 24%),
-        linear-gradient(135deg, rgba(200, 255, 109, 0.11), transparent 34%, transparent 66%, rgba(255, 255, 255, 0.06));
+        linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 34%, transparent 66%, rgba(255, 255, 255, 0.06));
     opacity: 0.88;
     pointer-events: none;
 }
@@ -224,7 +224,7 @@ main {
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.025) 20%, rgba(255, 255, 255, 0) 56%),
         radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.14), transparent 28%),
-        radial-gradient(circle at 82% 108%, rgba(200, 255, 109, 0.08), transparent 24%),
+        radial-gradient(circle at 82% 108%, rgba(255, 255, 255, 0.06), transparent 24%),
         linear-gradient(180deg, var(--glass-fill-strong), var(--glass-fill));
     box-shadow: var(--glass-shadow);
     backdrop-filter: blur(0px) saturate(104%);
@@ -240,7 +240,7 @@ main {
     align-items: stretch;
     padding: clamp(32px, 5vw, 48px) clamp(24px, 4vw, 40px);
     background:
-        radial-gradient(circle at 18% 18%, rgba(200, 255, 109, 0.08), transparent 24%),
+        radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.05), transparent 24%),
         linear-gradient(180deg, rgba(6, 6, 6, 0.1), rgba(6, 6, 6, 0.04));
 }
 
