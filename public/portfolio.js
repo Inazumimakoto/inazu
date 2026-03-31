@@ -34,11 +34,19 @@ for (const card of tiltTargets) {
 }
 
 if (hero) {
-    window.addEventListener('pointermove', (event) => {
-        const x = (event.clientX / window.innerWidth - 0.5) * 18;
-        const y = (event.clientY / window.innerHeight - 0.5) * 14;
+    hero.addEventListener('pointermove', (event) => {
+        const rect = hero.getBoundingClientRect();
+        const px = (event.clientX - rect.left) / rect.width;
+        const py = (event.clientY - rect.top) / rect.height;
+        const x = (px - 0.42) * 44;
+        const y = (py - 0.48) * 28;
         hero.style.setProperty('--hero-shift-x', `${x}px`);
         hero.style.setProperty('--hero-shift-y', `${y}px`);
+    });
+
+    hero.addEventListener('pointerleave', () => {
+        hero.style.setProperty('--hero-shift-x', '0px');
+        hero.style.setProperty('--hero-shift-y', '0px');
     });
 }
 
@@ -116,7 +124,7 @@ function initHeroWebGL(canvas, host, reducedMotion) {
             vec2 pointer = u_pointer * 2.0 - 1.0;
             pointer.x *= aspect;
 
-            float t = u_time * mix(0.09, 0.02, u_reduced_motion);
+            float t = u_time * mix(0.18, 0.035, u_reduced_motion);
             float fieldA = fbm(p * 1.15 + vec2(t, -t * 0.7));
             float fieldB = fbm((p + vec2(1.8, -0.6)) * 1.9 - vec2(t * 1.4, t * 0.25));
             vec2 flow = vec2(fieldA - 0.5, fieldB - 0.5);

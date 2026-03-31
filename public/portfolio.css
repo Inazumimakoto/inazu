@@ -226,7 +226,9 @@ main {
 }
 
 .hero-title-wrap {
-    overflow: hidden;
+    overflow: visible;
+    padding: 18px 48px 18px 14px;
+    margin: -18px -48px -18px -14px;
 }
 
 .hero-title {
@@ -236,6 +238,7 @@ main {
     letter-spacing: -0.06em;
     transform: translate3d(var(--hero-shift-x, 0px), var(--hero-shift-y, 0px), 0);
     transition: transform 320ms ease;
+    will-change: transform;
 }
 
 .hero-copy {
@@ -631,6 +634,11 @@ button:focus-visible {
 
     .hero-title {
         font-size: clamp(3.2rem, 18vw, 5.2rem);
+    }
+
+    .hero-title-wrap {
+        padding: 12px 20px 12px 8px;
+        margin: -12px -20px -12px -8px;
     }
 
     .button {
