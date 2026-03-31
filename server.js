@@ -36,7 +36,8 @@ app.use(session({
 // Rate limiting for API endpoints
 const verifyLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,   // 15 minutes
-    max: 10,                     // 10 verify attempts per window
+    max: 30,                     // 30 failed verify attempts per window
+    skipSuccessfulRequests: true,
     message: { error: 'Too many verification attempts, please try again later' }
 });
 

@@ -48,7 +48,7 @@ header {
 }
 
 header h1 {
-    font-size: 1.25rem;
+    font-size: 2rem;
     font-weight: 500;
     letter-spacing: -0.02em;
     color: var(--text-primary);
@@ -224,11 +224,6 @@ header h1 {
     width: 18px;
     height: 18px;
     stroke-width: 2px;
-}
-
-/* Footer */
-footer {
-    display: none;
 }
 
 /* Streaming Cursor */
