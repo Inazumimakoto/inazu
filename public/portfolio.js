@@ -139,6 +139,11 @@ function initHeroWebGL(canvas, reducedMotion) {
             return value;
         }
 
+        float sdRoundedBox(vec2 p, vec2 b, float r) {
+            vec2 q = abs(p) - b + vec2(r);
+            return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+        }
+
         vec2 coverUv(vec2 uv) {
             float texAspect = 1600.0 / 900.0;
             float screenAspect = u_resolution.x / max(u_resolution.y, 1.0);
@@ -177,14 +182,29 @@ function initHeroWebGL(canvas, reducedMotion) {
                 sin(scrollWave + p.y * 3.2) * 0.02,
                 cos(scrollWave * 0.85 + p.x * 2.8) * 0.018
             );
-            vec2 glassOffset = flow * 0.1 + scrollVector * (0.6 + scrollBand * 0.55) + normalize(p - pointer + vec2(0.001)) * ring * 0.04;
-            vec2 glassOffsetWide = flow * 0.16 - scrollVector * 0.7 - normalize(p - pointer + vec2(0.001)) * ring * 0.025;
+
+            vec2 lensPoint = p - vec2(0.0, -0.02);
+            vec2 lensSize = vec2(aspect * 0.82, 0.7);
+            float lensRadius = 0.22;
+            float lensDist = sdRoundedBox(lensPoint, lensSize, lensRadius);
+            float lensMask = 1.0 - smoothstep(0.0, 0.045, lensDist);
+            float lensEdge = 1.0 - smoothstep(0.006, 0.11, abs(lensDist));
+            float lensInnerEdge = 1.0 - smoothstep(0.02, 0.16, abs(lensDist + 0.024));
+            vec2 lensNormal = normalize(vec2(
+                lensPoint.x / max(lensSize.x, 0.001),
+                lensPoint.y / max(lensSize.y, 0.001)
+            ) + vec2(0.0001));
+
+            vec2 baseOffset = scrollVector * (0.6 + scrollBand * 0.55) + normalize(p - pointer + vec2(0.001)) * ring * 0.04;
+            vec2 glassOffset = flow * 0.08 + baseOffset + lensNormal * lensEdge * 0.11;
+            vec2 glassOffsetWide = flow * 0.15 - scrollVector * 0.7 - normalize(p - pointer + vec2(0.001)) * ring * 0.025 - lensNormal * lensEdge * 0.08;
             vec2 imageOffsetA = flow * 0.15 + scrollVector * 1.1 + vec2(sin(t * 0.8 + p.y * 3.8), cos(t * 0.6 + p.x * 3.0)) * 0.016;
             vec2 imageOffsetB = -flow * 0.17 - scrollVector * 1.2 + vec2(cos(t * 0.9 - p.y * 4.4), sin(t * 0.7 - p.x * 3.6)) * 0.014;
 
+            vec3 baseScene = texture2D(u_texture_a, clamp(uv + scrollVector * 0.22, 0.0, 1.0)).rgb;
             vec3 glassBase = texture2D(u_texture_a, clamp(uv + glassOffset, 0.0, 1.0)).rgb;
             vec3 glassLayer = texture2D(u_texture_b, clamp(uv + glassOffsetWide, 0.0, 1.0)).rgb;
-            vec3 glassColor = mix(glassBase, glassLayer, 0.26);
+            vec3 glassColor = mix(baseScene, mix(glassBase, glassLayer, 0.26), lensMask);
 
             vec3 imageA = texture2D(u_texture_a, clamp(uv + imageOffsetA * 1.06, 0.0, 1.0)).rgb;
             vec3 imageB = texture2D(u_texture_b, clamp(uv + imageOffsetB * 0.92, 0.0, 1.0)).rgb;
@@ -198,6 +218,9 @@ function initHeroWebGL(canvas, reducedMotion) {
             glassColor += vec3(0.14, 0.18, 0.1) * streak * 0.12;
             glassColor += vec3(0.16, 0.24, 0.13) * ring * (0.18 + pulse * 0.12);
             glassColor += vec3(0.1, 0.14, 0.09) * scrollBand * 0.22;
+            glassColor += vec3(0.24, 0.28, 0.18) * lensEdge * 0.36;
+            glassColor += vec3(0.12, 0.15, 0.11) * lensInnerEdge * 0.14;
+            glassColor -= vec3(0.02, 0.025, 0.02) * (1.0 - lensMask) * 0.22;
 
             imageColor += vec3(0.08, 0.12, 0.08) * ring * 0.12;
             imageColor += vec3(0.09, 0.13, 0.08) * scrollBand * 0.16;
