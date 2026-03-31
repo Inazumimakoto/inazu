@@ -233,8 +233,8 @@ function initPageGlassWebGL(canvas, reducedMotion) {
             vec2 edgeDir = normalize(centerUv + vec2(0.0001));
             vec2 pointerDelta = (fragPx - vec2(u_pointer.x * u_resolution.x, u_pointer.y * u_resolution.y)) / max(u_resolution, vec2(1.0));
 
-            float edge = 1.0 - smoothstep(0.0, 34.0, abs(nearestDist));
-            float rim = pow(edge, 1.35);
+            float edge = 1.0 - smoothstep(0.0, 42.0, abs(nearestDist));
+            float rim = pow(edge, 1.12);
             float pointerField = 1.0 - smoothstep(0.04, 0.42, length(pointerDelta));
 
             float motionTime = u_time * mix(0.08, 0.38, u_motion) + u_scroll * 0.65;
@@ -248,10 +248,10 @@ function initPageGlassWebGL(canvas, reducedMotion) {
             );
 
             vec2 pxOffset =
-                flow * (1.6 + rim * 8.0) +
-                wave * (0.7 + rim * 2.8) +
-                edgeDir * rim * 11.5 +
-                normalize(pointerDelta + vec2(0.0001)) * pointerField * (1.6 + rim * 2.6);
+                flow * (1.2 + rim * 10.5) +
+                wave * (0.5 + rim * 3.6) +
+                edgeDir * rim * 17.5 +
+                normalize(pointerDelta + vec2(0.0001)) * pointerField * (1.2 + rim * 3.8);
 
             vec2 uvOffset = pxOffset / max(u_resolution, vec2(1.0));
             vec3 refractedA = samplePhoto(v_uv + uvOffset);
@@ -259,7 +259,7 @@ function initPageGlassWebGL(canvas, reducedMotion) {
             vec3 glass = mix(refractedA, refractedB, 0.24);
 
             glass = mix(base, glass, 0.82);
-            glass += vec3(0.12) * rim * 0.12;
+            glass += vec3(0.16) * rim * 0.15;
             glass += vec3(0.06) * surfaceMask * 0.03;
 
             vec3 color = mix(base, glass, surfaceMask);
