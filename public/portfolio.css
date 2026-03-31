@@ -362,6 +362,16 @@ button:focus-visible {
     flex-direction: column;
 }
 
+.feature-icon {
+    width: 68px;
+    height: 68px;
+    margin-top: 2px;
+    border-radius: 18px;
+    object-fit: cover;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.05);
+}
+
 .contact-card {
     display: flex;
     flex-direction: column;
