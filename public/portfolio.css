@@ -143,15 +143,13 @@ main {
 .card-kicker,
 .timeline-date,
 .chip,
-.process-step small,
-.footer-note {
+.process-step small {
     font-family: 'IBM Plex Mono', monospace;
 }
 
 .eyebrow,
 .section-kicker,
-.card-kicker,
-.footer-note {
+.card-kicker {
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--muted);
@@ -459,11 +457,6 @@ main {
 .contact-card .inline-link {
     margin-top: auto;
     padding-top: 22px;
-}
-
-.footer-note {
-    margin-top: 18px;
-    font-size: 0.78rem;
 }
 
 .reveal {
