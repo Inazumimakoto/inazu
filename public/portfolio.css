@@ -423,10 +423,33 @@ main {
     margin-bottom: 18px;
 }
 
+.contact-icons {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.contact-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    color: var(--muted);
+}
+
+.contact-logo svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
 .contact-avatar {
     display: inline-flex;
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     border-radius: 999px;
     object-fit: cover;
     flex-shrink: 0;
