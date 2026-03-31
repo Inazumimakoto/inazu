@@ -6,7 +6,7 @@
     --line: rgba(255, 255, 255, 0.12);
     --line-strong: rgba(255, 255, 255, 0.22);
     --text: #ffffff;
-    --muted: #c7c7c1;
+    --muted: rgba(255, 255, 255, 0.92);
     --accent: #c8ff6d;
     --accent-soft: rgba(200, 255, 109, 0.18);
     --shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
@@ -191,7 +191,7 @@ body.background-view .page-noise {
     display: flex;
     flex-wrap: wrap;
     gap: 14px;
-    color: var(--muted);
+    color: var(--text);
     font-size: 0.84rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -702,7 +702,7 @@ button:focus-visible {
     justify-content: center;
     width: 48px;
     height: 48px;
-    color: var(--muted);
+    color: var(--text);
 }
 
 .contact-logo svg {
