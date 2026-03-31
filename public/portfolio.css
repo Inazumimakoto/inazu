@@ -81,7 +81,7 @@ textarea {
 }
 
 .page-photo {
-    background: url("assets/hero-dinner.jpg") center center / cover no-repeat;
+    background: var(--page-photo-url, url("assets/hero-dinner.jpg")) center center / cover no-repeat;
     filter: brightness(1.16) saturate(0.88);
     transform: scale(1.03);
     transition: opacity 220ms ease;

@@ -6,6 +6,52 @@ const pageCanvas = document.querySelector('[data-page-canvas]');
 const celebrationCanvas = document.querySelector('[data-celebration-canvas]');
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const glassCopyTargets = Array.from(document.querySelectorAll('.text-glass-copy'));
+const FALLBACK_BACKGROUND_PHOTO = 'assets/hero-dinner.jpg';
+const BACKGROUND_PHOTOS = {
+    morning: [],
+    lunch: [],
+    night: [
+        'assets/hero-dinner.jpg'
+    ]
+};
+
+function getMealSlot(date = new Date()) {
+    const hour = date.getHours();
+
+    if (hour >= 5 && hour < 11) {
+        return 'morning';
+    }
+
+    if (hour >= 11 && hour < 17) {
+        return 'lunch';
+    }
+
+    return 'night';
+}
+
+function getMealRotationIndex(items, slot, date = new Date()) {
+    if (items.length <= 1) return 0;
+
+    const startOfYear = new Date(date.getFullYear(), 0, 0);
+    const dayOfYear = Math.floor((date - startOfYear) / 86400000);
+    const slotStep = slot === 'night'
+        ? Math.floor(date.getHours() / 2)
+        : Math.floor(date.getHours() / 3);
+
+    return (dayOfYear + slotStep) % items.length;
+}
+
+function resolveBackgroundPhoto(date = new Date()) {
+    const slot = getMealSlot(date);
+    const activeSlot = BACKGROUND_PHOTOS[slot]?.length ? slot : 'night';
+    const candidates = BACKGROUND_PHOTOS[activeSlot];
+    const photo = candidates[getMealRotationIndex(candidates, activeSlot, date)] || FALLBACK_BACKGROUND_PHOTO;
+    return { slot, activeSlot, photo };
+}
+
+const selectedBackground = resolveBackgroundPhoto();
+document.documentElement.style.setProperty('--page-photo-url', `url("${selectedBackground.photo}")`);
+document.body.dataset.mealSlot = selectedBackground.activeSlot;
 
 const observer = new IntersectionObserver((entries) => {
     for (const entry of entries) {
@@ -260,7 +306,7 @@ if (celebrationCanvas) {
 }
 
 if (pageCanvas) {
-    backgroundRenderer = initPageGlassWebGL(pageCanvas, prefersReducedMotion.matches, celebrationRenderer?.getCanvas?.() || null);
+    backgroundRenderer = initPageGlassWebGL(pageCanvas, prefersReducedMotion.matches, celebrationRenderer?.getCanvas?.() || null, selectedBackground.photo);
 }
 
 function initCelebrationCanvas(canvas, reducedMotion) {
@@ -468,7 +514,7 @@ function initCelebrationCanvas(canvas, reducedMotion) {
     };
 }
 
-function initPageGlassWebGL(canvas, reducedMotion, celebrationSource) {
+function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSource) {
     const gl = canvas.getContext('webgl', {
         alpha: true,
         antialias: true,
@@ -929,7 +975,7 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource) {
         console.warn('Page WebGL image load failed; keeping the static photo background.');
         canvas.remove();
     };
-    image.src = 'assets/hero-dinner.jpg';
+    image.src = photoSource || FALLBACK_BACKGROUND_PHOTO;
 
     return {
         renderNow,
