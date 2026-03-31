@@ -347,6 +347,46 @@ main {
     border-radius: 18px;
 }
 
+.text-glass-copy.is-line-built {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    max-width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+.text-glass-measure {
+    display: inline;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.text-glass-line {
+    display: inline-flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    padding: 0.2rem 0.62rem 0.28rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        0 10px 28px rgba(0, 0, 0, 0.12);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.text-glass-line + .text-glass-line {
+    margin-top: -0.16rem;
+}
+
 .hero-title-wrap {
     overflow: visible;
     padding: 18px 48px 18px 14px;
@@ -511,7 +551,8 @@ main {
 }
 
 .panel-copy .text-glass-copy,
-.hero-copy .text-glass-copy {
+.hero-copy .text-glass-copy,
+.text-glass-line {
     line-height: inherit;
 }
 

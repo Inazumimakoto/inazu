@@ -5,6 +5,7 @@ const backgroundToggle = document.querySelector('[data-background-toggle]');
 const pageCanvas = document.querySelector('[data-page-canvas]');
 const celebrationCanvas = document.querySelector('[data-celebration-canvas]');
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const glassCopyTargets = Array.from(document.querySelectorAll('.text-glass-copy'));
 
 const observer = new IntersectionObserver((entries) => {
     for (const entry of entries) {
@@ -42,6 +43,109 @@ if (backgroundToggle) {
 }
 
 syncBackgroundControls();
+
+function appendGlassToken(container, token) {
+    if (token.type === 'text') {
+        container.appendChild(document.createTextNode(token.value));
+        return;
+    }
+
+    const template = document.createElement('template');
+    template.innerHTML = token.html;
+    const node = template.content.firstChild;
+    if (node) {
+        container.appendChild(node);
+    }
+}
+
+function extractGlassTokens(node) {
+    const tokens = [];
+
+    for (const child of node.childNodes) {
+        if (child.nodeType === Node.TEXT_NODE) {
+            for (const char of child.textContent ?? '') {
+                tokens.push({
+                    type: 'text',
+                    value: char
+                });
+            }
+            continue;
+        }
+
+        if (child.nodeType === Node.ELEMENT_NODE) {
+            tokens.push({
+                type: 'html',
+                html: child.outerHTML
+            });
+        }
+    }
+
+    return tokens;
+}
+
+function layoutGlassCopy(target) {
+    if (!target.dataset.originalHtml) {
+        target.dataset.originalHtml = target.innerHTML;
+    }
+
+    target.classList.remove('is-line-built');
+    target.innerHTML = target.dataset.originalHtml;
+
+    const tokens = extractGlassTokens(target);
+    if (!tokens.length) return;
+
+    target.innerHTML = '';
+    const measures = [];
+
+    for (const token of tokens) {
+        const measure = document.createElement('span');
+        measure.className = 'text-glass-measure';
+        appendGlassToken(measure, token);
+        target.appendChild(measure);
+        measures.push(measure);
+    }
+
+    const lines = [];
+    let currentTop = null;
+
+    measures.forEach((measure, index) => {
+        const top = Math.round(measure.getBoundingClientRect().top);
+        if (currentTop === null || Math.abs(top - currentTop) > 2) {
+            lines.push([]);
+            currentTop = top;
+        }
+        lines[lines.length - 1].push(tokens[index]);
+    });
+
+    target.innerHTML = '';
+    target.classList.add('is-line-built');
+
+    for (const lineTokens of lines) {
+        const line = document.createElement('span');
+        line.className = 'text-glass-line';
+        for (const token of lineTokens) {
+            appendGlassToken(line, token);
+        }
+        target.appendChild(line);
+    }
+}
+
+let glassCopyLayoutFrame = 0;
+
+function scheduleGlassCopyLayout() {
+    cancelAnimationFrame(glassCopyLayoutFrame);
+    glassCopyLayoutFrame = requestAnimationFrame(() => {
+        for (const target of glassCopyTargets) {
+            layoutGlassCopy(target);
+        }
+    });
+}
+
+if (glassCopyTargets.length) {
+    scheduleGlassCopyLayout();
+    window.addEventListener('resize', scheduleGlassCopyLayout);
+    document.fonts?.ready?.then(scheduleGlassCopyLayout);
+}
 
 for (const card of tiltTargets) {
     card.addEventListener('pointermove', (event) => {
