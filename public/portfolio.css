@@ -384,9 +384,11 @@ main {
     border-radius: 999px;
     overflow: hidden;
     border: 1px solid var(--glass-line);
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.05);
     color: var(--text);
     box-shadow: 0 0 0 -50px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
 }
 
@@ -417,7 +419,9 @@ main {
     padding: 8px 12px;
     border-radius: 999px;
     border: 1px solid var(--line);
-    background: rgba(255, 255, 255, 0.025);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
     font-size: 0.74rem;
     color: var(--muted);
 }
@@ -586,7 +590,9 @@ button:focus-visible {
     padding: 10px 14px;
     border-radius: 999px;
     border: 1px solid var(--line);
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 }
 
 .process-arrow {
@@ -660,7 +666,9 @@ button:focus-visible {
     margin-top: 20px;
     padding: 7px 11px;
     border-radius: 999px;
-    background: var(--accent-soft);
+    background: rgba(200, 255, 109, 0.14);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
     color: var(--accent);
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.75rem;
