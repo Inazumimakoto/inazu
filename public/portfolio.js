@@ -3,8 +3,6 @@ const tiltTargets = document.querySelectorAll('[data-tilt]');
 const hero = document.querySelector('[data-hero]');
 const backgroundToggle = document.querySelector('[data-background-toggle]');
 const pageCanvas = document.querySelector('[data-page-canvas]');
-const heroModeButtons = document.querySelectorAll('[data-hero-mode]');
-const heroModeSwitch = document.querySelector('.hero-mode-switch');
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 const observer = new IntersectionObserver((entries) => {
@@ -21,17 +19,31 @@ for (const target of revealTargets) {
     observer.observe(target);
 }
 
+let backgroundRenderer = null;
+
+function syncBackgroundControls() {
+    if (!backgroundToggle) return;
+
+    const isBackgroundView = document.body.classList.contains('background-view');
+    backgroundToggle.setAttribute('aria-pressed', isBackgroundView ? 'true' : 'false');
+    backgroundToggle.textContent = isBackgroundView ? 'back to site' : 'view photo';
+}
+
 if (backgroundToggle) {
     backgroundToggle.addEventListener('click', () => {
         const nextState = !document.body.classList.contains('background-view');
         document.body.classList.toggle('background-view', nextState);
-        backgroundToggle.setAttribute('aria-pressed', nextState ? 'true' : 'false');
-        backgroundToggle.textContent = nextState ? 'back to site' : 'view photo';
+        syncBackgroundControls();
+        backgroundRenderer?.renderNow();
     });
 }
 
+syncBackgroundControls();
+
 for (const card of tiltTargets) {
     card.addEventListener('pointermove', (event) => {
+        if (prefersReducedMotion.matches) return;
+
         const rect = card.getBoundingClientRect();
         const x = (event.clientX - rect.left) / rect.width;
         const y = (event.clientY - rect.top) / rect.height;
@@ -47,6 +59,8 @@ for (const card of tiltTargets) {
 
 if (hero) {
     hero.addEventListener('pointermove', (event) => {
+        if (prefersReducedMotion.matches) return;
+
         const rect = hero.getBoundingClientRect();
         const px = (event.clientX - rect.left) / rect.width;
         const py = (event.clientY - rect.top) / rect.height;
@@ -62,28 +76,11 @@ if (hero) {
     });
 }
 
-let heroBackground = null;
-
 if (pageCanvas) {
-    heroBackground = initHeroWebGL(pageCanvas, prefersReducedMotion.matches);
+    backgroundRenderer = initPageGlassWebGL(pageCanvas, prefersReducedMotion.matches);
 }
 
-if (heroBackground && heroModeButtons.length > 0) {
-    for (const button of heroModeButtons) {
-        button.addEventListener('click', () => {
-            const mode = button.dataset.heroMode;
-            heroBackground.setMode(mode);
-
-            for (const otherButton of heroModeButtons) {
-                const isActive = otherButton === button;
-                otherButton.classList.toggle('is-active', isActive);
-                otherButton.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-            }
-        });
-    }
-}
-
-function initHeroWebGL(canvas, reducedMotion) {
+function initPageGlassWebGL(canvas, reducedMotion) {
     const gl = canvas.getContext('webgl', {
         alpha: true,
         antialias: true,
@@ -91,10 +88,21 @@ function initHeroWebGL(canvas, reducedMotion) {
     });
 
     if (!gl) {
-        disableHeroModes();
+        console.warn('Page WebGL is not available; falling back to the static photo.');
         canvas.remove();
         return null;
     }
+
+    const MAX_GLASS_SURFACES = 24;
+    const glassTargets = Array.from(document.querySelectorAll('.hero, .panel, .card, .contact-card, .button, .background-toggle'));
+    const rectData = new Float32Array(MAX_GLASS_SURFACES * 4);
+    const radiusData = new Float32Array(MAX_GLASS_SURFACES);
+    const pointer = { x: 0.46, y: 0.34 };
+    const imageSize = { width: 1, height: 1 };
+    let scrollAmount = window.scrollY / Math.max(window.innerHeight, 1);
+    let rafId = 0;
+    let isReady = false;
+    let lastFrameTime = 0;
 
     const vertexSource = `
         attribute vec2 a_position;
@@ -107,18 +115,22 @@ function initHeroWebGL(canvas, reducedMotion) {
     `;
 
     const fragmentSource = `
-        precision mediump float;
+        precision highp float;
+
+        const int MAX_GLASS_SURFACES = ${MAX_GLASS_SURFACES};
 
         varying vec2 v_uv;
 
         uniform vec2 u_resolution;
         uniform vec2 u_pointer;
-        uniform float u_scroll;
         uniform float u_time;
-        uniform float u_mode;
-        uniform float u_reduced_motion;
-        uniform sampler2D u_texture_a;
-        uniform sampler2D u_texture_b;
+        uniform float u_scroll;
+        uniform float u_motion;
+        uniform float u_image_aspect;
+        uniform float u_glass_count;
+        uniform sampler2D u_image;
+        uniform vec4 u_glass_rects[MAX_GLASS_SURFACES];
+        uniform float u_glass_radii[MAX_GLASS_SURFACES];
 
         float hash(vec2 p) {
             return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -142,105 +154,116 @@ function initHeroWebGL(canvas, reducedMotion) {
 
             for (int i = 0; i < 5; i++) {
                 value += amplitude * noise(p);
-                p = p * 2.03 + vec2(17.2, -9.4);
+                p = p * 2.02 + vec2(14.2, -8.9);
                 amplitude *= 0.52;
             }
 
             return value;
         }
 
-        float sdRoundedBox(vec2 p, vec2 b, float r) {
-            vec2 q = abs(p) - b + vec2(r);
-            return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+        float sdRoundedRect(vec2 point, vec4 rect, float radius) {
+            vec2 halfSize = rect.zw * 0.5;
+            vec2 local = point - (rect.xy + halfSize);
+            vec2 q = abs(local) - max(halfSize - vec2(radius), vec2(1.0));
+            return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - radius;
         }
 
         vec2 coverUv(vec2 uv) {
-            float texAspect = 1600.0 / 900.0;
-            float screenAspect = u_resolution.x / max(u_resolution.y, 1.0);
+            float viewportAspect = u_resolution.x / max(u_resolution.y, 1.0);
             vec2 adjusted = uv;
 
-            if (screenAspect > texAspect) {
-                float scale = texAspect / screenAspect;
+            if (viewportAspect > u_image_aspect) {
+                float scale = u_image_aspect / viewportAspect;
                 adjusted.y = uv.y * scale + (1.0 - scale) * 0.5;
             } else {
-                float scale = screenAspect / texAspect;
+                float scale = viewportAspect / u_image_aspect;
                 adjusted.x = uv.x * scale + (1.0 - scale) * 0.5;
             }
 
-            return adjusted;
+            adjusted = (adjusted - 0.5) / 1.03 + 0.5;
+            return clamp(adjusted, 0.0, 1.0);
+        }
+
+        vec3 gradePhoto(vec3 color) {
+            float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
+            color = mix(vec3(luma), color, 1.04);
+            return clamp(color * 1.16, 0.0, 1.0);
+        }
+
+        vec3 samplePhoto(vec2 uv) {
+            return gradePhoto(texture2D(u_image, coverUv(uv)).rgb);
         }
 
         void main() {
-            vec2 uv = coverUv(v_uv);
-            vec2 p = uv * 2.0 - 1.0;
-            float aspect = u_resolution.x / max(u_resolution.y, 1.0);
-            p.x *= aspect;
+            vec3 base = samplePhoto(v_uv);
 
-            vec2 pointer = u_pointer * 2.0 - 1.0;
-            pointer.x *= aspect;
+            if (u_glass_count < 0.5) {
+                gl_FragColor = vec4(base, 1.0);
+                return;
+            }
 
-            float scrollWave = u_scroll * mix(1.4, 0.45, u_reduced_motion);
-            float t = u_time * mix(0.18, 0.04, u_reduced_motion) + scrollWave;
-            float fieldA = fbm(p * 1.25 + vec2(t, -t * 0.55));
-            float fieldB = fbm((p + vec2(1.4, -0.4)) * 1.85 - vec2(t * 1.2, t * 0.4));
-            vec2 flow = vec2(fieldA - 0.5, fieldB - 0.5);
-            float ring = 1.0 - smoothstep(0.0, 0.7, length(p - pointer * vec2(0.65, 0.48)));
-            float pulse = 0.5 + 0.5 * sin(t * 1.7);
-            float scrollBand = 1.0 - smoothstep(0.04, 0.36, abs(p.y + sin(p.x * 2.2 + scrollWave * 2.4) * 0.18));
+            vec2 fragPx = vec2(v_uv.x * u_resolution.x, (1.0 - v_uv.y) * u_resolution.y);
+            float nearestScore = 1.0e9;
+            float nearestDist = 1.0e9;
+            vec4 nearestRect = vec4(0.0);
 
-            vec2 scrollVector = vec2(
-                sin(scrollWave + p.y * 3.2) * 0.02,
-                cos(scrollWave * 0.85 + p.x * 2.8) * 0.018
+            for (int i = 0; i < MAX_GLASS_SURFACES; i++) {
+                if (float(i) >= u_glass_count) break;
+
+                vec4 rect = u_glass_rects[i];
+                float dist = sdRoundedRect(fragPx, rect, u_glass_radii[i]);
+                float score = abs(dist);
+
+                if (score < nearestScore) {
+                    nearestScore = score;
+                    nearestDist = dist;
+                    nearestRect = rect;
+                }
+            }
+
+            float surfaceMask = 1.0 - smoothstep(0.0, 26.0, nearestDist);
+
+            if (surfaceMask <= 0.001) {
+                gl_FragColor = vec4(base, 1.0);
+                return;
+            }
+
+            vec2 rectUv = clamp((fragPx - nearestRect.xy) / max(nearestRect.zw, vec2(1.0)), 0.0, 1.0);
+            vec2 centerUv = rectUv * 2.0 - 1.0;
+            vec2 edgeDir = normalize(centerUv + vec2(0.0001));
+            vec2 pointerDelta = (fragPx - vec2(u_pointer.x * u_resolution.x, u_pointer.y * u_resolution.y)) / max(u_resolution, vec2(1.0));
+
+            float edge = 1.0 - smoothstep(0.0, 34.0, abs(nearestDist));
+            float rim = pow(edge, 1.35);
+            float pointerField = 1.0 - smoothstep(0.04, 0.42, length(pointerDelta));
+
+            float motionTime = u_time * mix(0.08, 0.38, u_motion) + u_scroll * 0.65;
+            vec2 noiseUv = rectUv * 3.8 + vec2(motionTime * 0.22, -motionTime * 0.18);
+            float nA = fbm(noiseUv);
+            float nB = fbm(noiseUv * 1.72 + vec2(3.1, -2.4));
+            vec2 flow = vec2(nA - 0.5, nB - 0.5);
+            vec2 wave = vec2(
+                sin(motionTime + rectUv.y * 5.2 + centerUv.x * 1.8),
+                cos(motionTime * 0.9 + rectUv.x * 4.6 - centerUv.y * 1.5)
             );
 
-            vec2 lensPoint = p - vec2(0.0, -0.02);
-            vec2 lensSize = vec2(aspect * 0.82, 0.7);
-            float lensRadius = 0.22;
-            float lensDist = sdRoundedBox(lensPoint, lensSize, lensRadius);
-            float lensMask = 1.0 - smoothstep(0.0, 0.045, lensDist);
-            float lensEdge = 1.0 - smoothstep(0.006, 0.11, abs(lensDist));
-            float lensInnerEdge = 1.0 - smoothstep(0.02, 0.16, abs(lensDist + 0.024));
-            vec2 lensNormal = normalize(vec2(
-                lensPoint.x / max(lensSize.x, 0.001),
-                lensPoint.y / max(lensSize.y, 0.001)
-            ) + vec2(0.0001));
+            vec2 pxOffset =
+                flow * (1.6 + rim * 8.0) +
+                wave * (0.7 + rim * 2.8) +
+                edgeDir * rim * 11.5 +
+                normalize(pointerDelta + vec2(0.0001)) * pointerField * (1.6 + rim * 2.6);
 
-            vec2 baseOffset = scrollVector * (0.6 + scrollBand * 0.55) + normalize(p - pointer + vec2(0.001)) * ring * 0.04;
-            vec2 glassOffset = flow * 0.08 + baseOffset + lensNormal * lensEdge * 0.11;
-            vec2 glassOffsetWide = flow * 0.15 - scrollVector * 0.7 - normalize(p - pointer + vec2(0.001)) * ring * 0.025 - lensNormal * lensEdge * 0.08;
-            vec2 imageOffsetA = flow * 0.15 + scrollVector * 1.1 + vec2(sin(t * 0.8 + p.y * 3.8), cos(t * 0.6 + p.x * 3.0)) * 0.016;
-            vec2 imageOffsetB = -flow * 0.17 - scrollVector * 1.2 + vec2(cos(t * 0.9 - p.y * 4.4), sin(t * 0.7 - p.x * 3.6)) * 0.014;
+            vec2 uvOffset = pxOffset / max(u_resolution, vec2(1.0));
+            vec3 refractedA = samplePhoto(v_uv + uvOffset);
+            vec3 refractedB = samplePhoto(v_uv - uvOffset * 0.45);
+            vec3 glass = mix(refractedA, refractedB, 0.24);
 
-            vec3 baseScene = texture2D(u_texture_a, clamp(uv + scrollVector * 0.22, 0.0, 1.0)).rgb;
-            vec3 glassBase = texture2D(u_texture_a, clamp(uv + glassOffset, 0.0, 1.0)).rgb;
-            vec3 glassLayer = texture2D(u_texture_b, clamp(uv + glassOffsetWide, 0.0, 1.0)).rgb;
-            vec3 glassColor = mix(baseScene, mix(glassBase, glassLayer, 0.26), lensMask);
+            glass = mix(base, glass, 0.82);
+            glass += vec3(0.12) * rim * 0.12;
+            glass += vec3(0.06) * surfaceMask * 0.03;
 
-            vec3 imageA = texture2D(u_texture_a, clamp(uv + imageOffsetA * 1.06, 0.0, 1.0)).rgb;
-            vec3 imageB = texture2D(u_texture_b, clamp(uv + imageOffsetB * 0.92, 0.0, 1.0)).rgb;
-            vec3 imageColor = mix(imageA, imageB, 0.34);
-
-            float highlight = 1.0 - smoothstep(0.0, 0.95, length(glassOffset) * 8.0);
-            float streak = 1.0 - smoothstep(0.08, 0.52, abs(p.y + sin(p.x * 3.0 + t * 1.15) * 0.22));
-            float grain = fbm((p + flow) * 3.2 + vec2(6.0, -3.0));
-
-            glassColor += vec3(0.12, 0.16, 0.11) * highlight * 0.55;
-            glassColor += vec3(0.14, 0.18, 0.1) * streak * 0.12;
-            glassColor += vec3(0.16, 0.24, 0.13) * ring * (0.18 + pulse * 0.12);
-            glassColor += vec3(0.1, 0.14, 0.09) * scrollBand * 0.22;
-            glassColor += vec3(0.24, 0.28, 0.18) * lensEdge * 0.36;
-            glassColor += vec3(0.12, 0.15, 0.11) * lensInnerEdge * 0.14;
-            glassColor -= vec3(0.02, 0.025, 0.02) * (1.0 - lensMask) * 0.22;
-
-            imageColor += vec3(0.08, 0.12, 0.08) * ring * 0.12;
-            imageColor += vec3(0.09, 0.13, 0.08) * scrollBand * 0.16;
-
-            vec3 color = mix(glassColor, imageColor, u_mode);
-            color += vec3(0.07, 0.08, 0.06) * grain * 0.08;
-
-            float vignette = smoothstep(1.7, 0.32, length(p));
-            color *= mix(0.76, 1.04, vignette);
-            gl_FragColor = vec4(clamp(color, 0.0, 1.0), 0.98);
+            vec3 color = mix(base, glass, surfaceMask);
+            gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
         }
     `;
 
@@ -248,7 +271,6 @@ function initHeroWebGL(canvas, reducedMotion) {
     const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
 
     if (!vertexShader || !fragmentShader) {
-        disableHeroModes();
         canvas.remove();
         return null;
     }
@@ -256,7 +278,6 @@ function initHeroWebGL(canvas, reducedMotion) {
     const program = createProgram(gl, vertexShader, fragmentShader);
 
     if (!program) {
-        disableHeroModes();
         canvas.remove();
         return null;
     }
@@ -265,133 +286,209 @@ function initHeroWebGL(canvas, reducedMotion) {
 
     const positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        new Float32Array([
-            -1, -1,
-             1, -1,
-            -1,  1,
-            -1,  1,
-             1, -1,
-             1,  1
-        ]),
-        gl.STATIC_DRAW
-    );
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        -1, -1,
+         1, -1,
+        -1,  1,
+        -1,  1,
+         1, -1,
+         1,  1
+    ]), gl.STATIC_DRAW);
 
     const positionLocation = gl.getAttribLocation(program, 'a_position');
     gl.enableVertexAttribArray(positionLocation);
     gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
-    const timeLocation = gl.getUniformLocation(program, 'u_time');
-    const modeLocation = gl.getUniformLocation(program, 'u_mode');
     const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
     const pointerLocation = gl.getUniformLocation(program, 'u_pointer');
+    const timeLocation = gl.getUniformLocation(program, 'u_time');
     const scrollLocation = gl.getUniformLocation(program, 'u_scroll');
-    const reducedMotionLocation = gl.getUniformLocation(program, 'u_reduced_motion');
-    const textureALocation = gl.getUniformLocation(program, 'u_texture_a');
-    const textureBLocation = gl.getUniformLocation(program, 'u_texture_b');
+    const motionLocation = gl.getUniformLocation(program, 'u_motion');
+    const imageAspectLocation = gl.getUniformLocation(program, 'u_image_aspect');
+    const imageLocation = gl.getUniformLocation(program, 'u_image');
+    const glassCountLocation = gl.getUniformLocation(program, 'u_glass_count');
+    const glassRectsLocation = gl.getUniformLocation(program, 'u_glass_rects[0]');
+    const glassRadiiLocation = gl.getUniformLocation(program, 'u_glass_radii[0]');
 
-    gl.uniform1i(textureALocation, 0);
-    gl.uniform1i(textureBLocation, 1);
+    const photoTexture = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, photoTexture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        1,
+        1,
+        0,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        new Uint8Array([18, 18, 18, 255])
+    );
 
-    const pointer = { x: 0.42, y: 0.34 };
-    let scrollValue = 0;
-    const textureUrls = [
-        'assets/hero-scene-1.svg',
-        'assets/hero-scene-2.svg',
-        'assets/hero-scene-3.svg'
-    ];
-    const textures = [];
-    let currentMode = 'glass';
-    let isReady = false;
-    let lastTime = 0;
+    gl.uniform1i(imageLocation, 0);
 
-    function updateSize() {
+    function resizeCanvas() {
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        canvas.width = Math.max(1, Math.round(window.innerWidth * dpr));
-        canvas.height = Math.max(1, Math.round(window.innerHeight * dpr));
-        gl.viewport(0, 0, canvas.width, canvas.height);
+        const width = Math.max(1, Math.round(window.innerWidth * dpr));
+        const height = Math.max(1, Math.round(window.innerHeight * dpr));
+
+        if (canvas.width === width && canvas.height === height) {
+            return;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        gl.viewport(0, 0, width, height);
     }
 
-    function updateScroll() {
-        scrollValue = window.scrollY * 0.0014;
+    function collectGlassSurfaces() {
+        if (document.body.classList.contains('background-view')) {
+            return 0;
+        }
+
+        rectData.fill(0);
+        radiusData.fill(0);
+
+        const scaleX = canvas.width / Math.max(window.innerWidth, 1);
+        const scaleY = canvas.height / Math.max(window.innerHeight, 1);
+        let index = 0;
+
+        for (const element of glassTargets) {
+            if (index >= MAX_GLASS_SURFACES) break;
+
+            const style = window.getComputedStyle(element);
+            if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity || '1') < 0.02) {
+                continue;
+            }
+
+            const rect = element.getBoundingClientRect();
+            if (rect.width < 4 || rect.height < 4) continue;
+            if (rect.right <= 0 || rect.bottom <= 0 || rect.left >= window.innerWidth || rect.top >= window.innerHeight) {
+                continue;
+            }
+
+            const radius = Math.min(
+                parseFloat(style.borderTopLeftRadius) || 0,
+                rect.width * 0.5,
+                rect.height * 0.5
+            );
+
+            const dataIndex = index * 4;
+            rectData[dataIndex] = rect.left * scaleX;
+            rectData[dataIndex + 1] = rect.top * scaleY;
+            rectData[dataIndex + 2] = rect.width * scaleX;
+            rectData[dataIndex + 3] = rect.height * scaleY;
+            radiusData[index] = radius * Math.min(scaleX, scaleY);
+            index += 1;
+        }
+
+        return index;
     }
 
-    function render(time) {
+    function render(time = performance.now()) {
         if (!isReady) return;
 
-        gl.clearColor(0.0, 0.0, 0.0, 0.0);
+        resizeCanvas();
+
+        const glassCount = collectGlassSurfaces();
+
+        gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
-        lastTime = time;
-
-        const textureIndex = currentMode === 'image' ? 1 : 0;
-        const nextTextureIndex = currentMode === 'image' ? 2 : 1;
-
+        gl.useProgram(program);
         gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, textures[textureIndex]);
-        gl.activeTexture(gl.TEXTURE1);
-        gl.bindTexture(gl.TEXTURE_2D, textures[nextTextureIndex]);
+        gl.bindTexture(gl.TEXTURE_2D, photoTexture);
         gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
         gl.uniform2f(pointerLocation, pointer.x, pointer.y);
-        gl.uniform1f(scrollLocation, scrollValue);
         gl.uniform1f(timeLocation, time * 0.001);
-        gl.uniform1f(modeLocation, currentMode === 'image' ? 1.0 : 0.0);
-        gl.uniform1f(reducedMotionLocation, reducedMotion ? 1.0 : 0.0);
+        gl.uniform1f(scrollLocation, scrollAmount);
+        gl.uniform1f(motionLocation, reducedMotion ? 0.22 : 1.0);
+        gl.uniform1f(imageAspectLocation, imageSize.width / Math.max(imageSize.height, 1));
+        gl.uniform1f(glassCountLocation, glassCount);
+        gl.uniform4fv(glassRectsLocation, rectData);
+        gl.uniform1fv(glassRadiiLocation, radiusData);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
+        lastFrameTime = time;
     }
-
-    let frameId = 0;
 
     function loop(time) {
         render(time);
-        if (!reducedMotion) {
-            frameId = window.requestAnimationFrame(loop);
-        }
+        rafId = window.requestAnimationFrame(loop);
+    }
+
+    function renderNow() {
+        render(lastFrameTime || performance.now());
     }
 
     function updatePointer(event) {
-        pointer.x = Math.min(Math.max(event.clientX / window.innerWidth, 0.0), 1.0);
-        pointer.y = 1.0 - Math.min(Math.max(event.clientY / window.innerHeight, 0.0), 1.0);
+        pointer.x = Math.min(Math.max(event.clientX / Math.max(window.innerWidth, 1), 0), 1);
+        pointer.y = Math.min(Math.max(event.clientY / Math.max(window.innerHeight, 1), 0), 1);
+
+        if (reducedMotion) {
+            renderNow();
+        }
     }
 
     function resetPointer() {
-        pointer.x = 0.42;
+        pointer.x = 0.46;
         pointer.y = 0.34;
+
+        if (reducedMotion) {
+            renderNow();
+        }
     }
 
-    window.addEventListener('pointermove', updatePointer);
-    window.addEventListener('pointerleave', resetPointer);
-    window.addEventListener('resize', updateSize);
+    function updateScroll() {
+        scrollAmount = window.scrollY / Math.max(window.innerHeight, 1);
+
+        if (reducedMotion) {
+            renderNow();
+        }
+    }
+
+    window.addEventListener('resize', () => {
+        resizeCanvas();
+        renderNow();
+    });
     window.addEventListener('scroll', updateScroll, { passive: true });
+    window.addEventListener('pointermove', updatePointer, { passive: true });
+    window.addEventListener('pointerleave', resetPointer);
 
-    updateSize();
-    updateScroll();
+    resizeCanvas();
 
-    Promise.all(textureUrls.map((url) => loadTexture(gl, url)))
-        .then((loadedTextures) => {
-            textures.push(...loadedTextures);
-            isReady = true;
-            document.body.classList.add('is-webgl-ready');
+    const image = new Image();
+    image.decoding = 'async';
+    image.onload = () => {
+        imageSize.width = image.naturalWidth || 1;
+        imageSize.height = image.naturalHeight || 1;
 
-            if (reducedMotion) {
-                render(0);
-                return;
-            }
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, photoTexture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
-            frameId = window.requestAnimationFrame(loop);
-        })
-        .catch((error) => {
-            console.warn('Hero WebGL texture load failed:', error);
-            disableHeroModes();
-            canvas.remove();
-        });
+        isReady = true;
+        document.body.classList.add('is-webgl-ready');
+        renderNow();
+
+        if (!reducedMotion) {
+            rafId = window.requestAnimationFrame(loop);
+        }
+    };
+    image.onerror = () => {
+        console.warn('Page WebGL image load failed; keeping the static photo background.');
+        canvas.remove();
+    };
+    image.src = 'assets/hero-dinner.jpg';
 
     return {
-        setMode(mode) {
-            currentMode = mode === 'image' ? 'image' : 'glass';
-
-            if (isReady) {
-                render(lastTime);
+        renderNow,
+        destroy() {
+            if (rafId) {
+                window.cancelAnimationFrame(rafId);
             }
         }
     };
@@ -406,7 +503,7 @@ function createShader(gl, type, source) {
         return shader;
     }
 
-    console.warn('Hero WebGL shader compile failed:', gl.getShaderInfoLog(shader));
+    console.warn('Page WebGL shader compile failed:', gl.getShaderInfoLog(shader));
     gl.deleteShader(shader);
     return null;
 }
@@ -421,31 +518,7 @@ function createProgram(gl, vertexShader, fragmentShader) {
         return program;
     }
 
-    console.warn('Hero WebGL program link failed:', gl.getProgramInfoLog(program));
+    console.warn('Page WebGL program link failed:', gl.getProgramInfoLog(program));
     gl.deleteProgram(program);
     return null;
-}
-
-function disableHeroModes() {
-    heroModeSwitch?.remove();
-}
-
-function loadTexture(gl, url) {
-    return new Promise((resolve, reject) => {
-        const image = new Image();
-        image.decoding = 'async';
-        image.onload = () => {
-            const texture = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-            resolve(texture);
-        };
-        image.onerror = reject;
-        image.src = url;
-    });
 }

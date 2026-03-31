@@ -6,7 +6,7 @@
     --line: rgba(255, 255, 255, 0.12);
     --line-strong: rgba(255, 255, 255, 0.22);
     --text: #f3f3f0;
-    --muted: #9d9d97;
+    --muted: #c7c7c1;
     --accent: #c8ff6d;
     --accent-soft: rgba(200, 255, 109, 0.18);
     --shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
@@ -73,10 +73,16 @@ textarea {
     display: block;
 }
 
+.page-webgl {
+    opacity: 0;
+    transition: opacity 220ms ease;
+}
+
 .page-photo {
     background: url("assets/hero-dinner.jpg") center center / cover no-repeat;
     filter: brightness(1.16) saturate(1.04);
     transform: scale(1.03);
+    transition: opacity 220ms ease;
 }
 
 .page-grid,
@@ -99,19 +105,26 @@ textarea {
     opacity: 0;
 }
 
-.glass-filter-defs {
-    position: absolute;
-    width: 0;
-    height: 0;
-    overflow: hidden;
-    pointer-events: none;
+body.is-webgl-ready .page-webgl {
+    opacity: 1;
 }
 
-.background-toggle {
+body.is-webgl-ready .page-photo {
+    opacity: 0;
+}
+
+.background-controls {
     position: fixed;
     right: 20px;
     bottom: 20px;
     z-index: 4;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.background-toggle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -119,14 +132,12 @@ textarea {
     padding: 12px 16px;
     border: 1px solid rgba(255, 255, 255, 0.22);
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     color: var(--text);
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.72rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
     transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, color 180ms ease;
 }
 
@@ -239,32 +250,13 @@ main {
     box-shadow: 0 0 0 -50px rgba(0, 0, 0, 0.3);
 }
 
-.hero::before,
-.panel::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background-color: rgba(0, 0, 0, 0);
-    opacity: 0.88;
-    pointer-events: none;
-    box-shadow: inset 0 0 0 -50px rgba(0, 0, 0, 0.7);
-}
-
 .hero::after,
 .panel::after,
 .card::before,
 .contact-card::before,
 .hero-mode-switch::before,
 .button::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    pointer-events: none;
-    background: rgba(255, 255, 255, 0.01);
-    backdrop-filter: url(#glass-distortion) blur(0px);
-    -webkit-backdrop-filter: url(#glass-distortion) blur(0px);
+    content: none;
 }
 
 .hero {
@@ -274,11 +266,6 @@ main {
     align-items: stretch;
     padding: clamp(32px, 5vw, 48px) clamp(24px, 4vw, 40px);
     background: rgba(0, 0, 0, 0);
-}
-
-.hero::after,
-.panel::after {
-    z-index: 0;
 }
 
 .hero-content {
@@ -462,7 +449,7 @@ main {
 
 .panel-copy {
     max-width: 460px;
-    color: rgba(243, 243, 240, 0.76);
+    color: rgba(243, 243, 240, 0.84);
     line-height: 1.75;
 }
 
@@ -530,7 +517,7 @@ main {
     inset: auto -20% -55% auto;
     width: 220px;
     height: 220px;
-    background: radial-gradient(circle, rgba(200, 255, 109, 0.16), transparent 70%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.14), transparent 70%);
     opacity: 0;
     transition: opacity 240ms ease;
 }
@@ -732,7 +719,7 @@ button:focus-visible {
 }
 
 .contact-card p {
-    color: var(--muted);
+    color: rgba(243, 243, 240, 0.88);
 }
 
 .contact-card .inline-link {
@@ -791,18 +778,18 @@ button:focus-visible {
         padding: 36px 24px;
     }
 
-    .page-webgl {
-        opacity: 0.9;
-    }
-
     .page-photo {
         transform: none;
         background-position: center top;
     }
 
-    .background-toggle {
+    .background-controls {
         right: 12px;
         bottom: 12px;
+        left: 12px;
+    }
+
+    .background-toggle {
         min-width: 132px;
         padding: 10px 14px;
         font-size: 0.66rem;
@@ -867,7 +854,4 @@ button:focus-visible {
         transform: none;
     }
 
-    .page-webgl {
-        opacity: 0.88;
-    }
 }
