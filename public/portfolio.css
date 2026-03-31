@@ -304,7 +304,6 @@ main {
 .contact-card {
     position: relative;
     overflow: hidden;
-    min-height: 100%;
     padding: 22px;
     border-radius: 22px;
     border: 1px solid var(--line);
@@ -359,6 +358,11 @@ button:focus-visible {
 }
 
 .feature-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.contact-card {
     display: flex;
     flex-direction: column;
 }
