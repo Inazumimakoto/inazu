@@ -122,9 +122,9 @@ function initHeroWebGL(canvas, host, reducedMotion) {
             vec2 flow = vec2(fieldA - 0.5, fieldB - 0.5);
             vec2 warped = p + flow * 0.52;
 
-            float orbA = smoothstep(0.98, 0.08, length(warped - vec2(-0.75 + sin(t * 1.4) * 0.08, -0.12 + cos(t * 1.3) * 0.07)));
-            float orbB = smoothstep(1.02, 0.14, length(warped - vec2(0.78 + cos(t * 0.9) * 0.06, 0.34 + sin(t * 1.1) * 0.05)));
-            float beam = smoothstep(0.28, -0.28, abs(warped.y + sin(warped.x * 1.8 + t * 1.5) * 0.26));
+            float orbA = 1.0 - smoothstep(0.08, 0.98, length(warped - vec2(-0.75 + sin(t * 1.4) * 0.08, -0.12 + cos(t * 1.3) * 0.07)));
+            float orbB = 1.0 - smoothstep(0.14, 1.02, length(warped - vec2(0.78 + cos(t * 0.9) * 0.06, 0.34 + sin(t * 1.1) * 0.05)));
+            float beam = 1.0 - smoothstep(-0.28, 0.28, abs(warped.y + sin(warped.x * 1.8 + t * 1.5) * 0.26));
             float grain = fbm(warped * 2.8 + vec2(4.0, -3.0));
             float pointerGlow = smoothstep(0.56, 0.0, length(warped - pointer * vec2(0.5, 0.36))) * (1.0 - u_reduced_motion);
 
@@ -195,6 +195,8 @@ function initHeroWebGL(canvas, host, reducedMotion) {
     }
 
     function render(time) {
+        gl.clearColor(0.0, 0.0, 0.0, 0.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
         gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
         gl.uniform2f(pointerLocation, pointer.x, pointer.y);
         gl.uniform1f(timeLocation, time * 0.001);
@@ -250,6 +252,7 @@ function createShader(gl, type, source) {
         return shader;
     }
 
+    console.warn('Hero WebGL shader compile failed:', gl.getShaderInfoLog(shader));
     gl.deleteShader(shader);
     return null;
 }
@@ -264,6 +267,7 @@ function createProgram(gl, vertexShader, fragmentShader) {
         return program;
     }
 
+    console.warn('Hero WebGL program link failed:', gl.getProgramInfoLog(program));
     gl.deleteProgram(program);
     return null;
 }
