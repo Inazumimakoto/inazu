@@ -3,6 +3,7 @@ const tiltTargets = document.querySelectorAll('[data-tilt]');
 const hero = document.querySelector('[data-hero]');
 const backgroundToggle = document.querySelector('[data-background-toggle]');
 const pageCanvas = document.querySelector('[data-page-canvas]');
+const celebrationCanvas = document.querySelector('[data-celebration-canvas]');
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 const observer = new IntersectionObserver((entries) => {
@@ -20,6 +21,7 @@ for (const target of revealTargets) {
 }
 
 let backgroundRenderer = null;
+let celebrationRenderer = null;
 
 function syncBackgroundControls() {
     if (!backgroundToggle) return;
@@ -78,6 +80,190 @@ if (hero) {
 
 if (pageCanvas) {
     backgroundRenderer = initPageGlassWebGL(pageCanvas, prefersReducedMotion.matches);
+}
+
+if (celebrationCanvas) {
+    celebrationRenderer = initCelebrationCanvas(celebrationCanvas, prefersReducedMotion.matches);
+}
+
+function initCelebrationCanvas(canvas, reducedMotion) {
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+        canvas.remove();
+        return null;
+    }
+
+    const particleCount = reducedMotion ? 42 : 120;
+    const particles = [];
+    let width = 0;
+    let height = 0;
+    let dpr = 1;
+    let rafId = 0;
+    let lastTime = performance.now();
+
+    function rand(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    function pick(array) {
+        return array[Math.floor(Math.random() * array.length)];
+    }
+
+    function spawnParticle(initial = false) {
+        const kind = Math.random() < 0.64 ? 'petal' : 'confetti';
+        const baseSize = kind === 'petal' ? rand(10, 22) : rand(5, 14);
+        const y = initial ? rand(-height * 0.15, height + height * 0.1) : rand(-height * 0.28, -20);
+        const x = rand(-width * 0.08, width * 1.08);
+
+        return {
+            kind,
+            x,
+            y,
+            size: baseSize,
+            speedY: rand(26, 78),
+            speedX: rand(-10, 10),
+            swing: rand(0.8, 2.2),
+            swingRange: rand(10, 42),
+            phase: rand(0, Math.PI * 2),
+            rotation: rand(0, Math.PI * 2),
+            spin: rand(-1.8, 1.8),
+            flip: rand(0.45, 1),
+            alpha: kind === 'petal' ? rand(0.45, 0.92) : rand(0.35, 0.84),
+            color: kind === 'petal'
+                ? pick([
+                    '255, 228, 236',
+                    '255, 213, 226',
+                    '255, 241, 246',
+                    '255, 232, 216'
+                ])
+                : pick([
+                    '255, 242, 248',
+                    '255, 214, 230',
+                    '255, 255, 255',
+                    '214, 240, 255',
+                    '255, 231, 181'
+                ])
+        };
+    }
+
+    function resetParticle(particle) {
+        Object.assign(particle, spawnParticle(false));
+        particle.y = rand(-height * 0.35, -20);
+    }
+
+    function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = Math.max(1, Math.round(width * dpr));
+        canvas.height = Math.max(1, Math.round(height * dpr));
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function drawPetal(particle) {
+        const flutter = 0.68 + Math.sin(particle.phase + particle.rotation * 1.2) * 0.22;
+
+        ctx.save();
+        ctx.translate(particle.x, particle.y);
+        ctx.rotate(particle.rotation);
+        ctx.scale(1, flutter * particle.flip);
+        ctx.beginPath();
+        ctx.moveTo(0, -particle.size * 0.58);
+        ctx.bezierCurveTo(
+            particle.size * 0.52, -particle.size * 0.98,
+            particle.size * 0.94, -particle.size * 0.02,
+            0, particle.size * 0.42
+        );
+        ctx.bezierCurveTo(
+            -particle.size * 0.94, -particle.size * 0.02,
+            -particle.size * 0.52, -particle.size * 0.98,
+            0, -particle.size * 0.58
+        );
+        ctx.fillStyle = `rgba(${particle.color}, ${particle.alpha})`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(255, 255, 255, ${particle.alpha * 0.22})`;
+        ctx.lineWidth = 0.9;
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    function drawConfetti(particle) {
+        const widthScale = 0.45 + Math.sin(particle.phase + particle.rotation * 1.8) * 0.3;
+        const drawWidth = Math.max(particle.size * (0.65 + widthScale), 2.4);
+        const drawHeight = Math.max(particle.size * 0.44, 1.6);
+
+        ctx.save();
+        ctx.translate(particle.x, particle.y);
+        ctx.rotate(particle.rotation);
+        ctx.fillStyle = `rgba(${particle.color}, ${particle.alpha})`;
+        ctx.fillRect(-drawWidth * 0.5, -drawHeight * 0.5, drawWidth, drawHeight);
+        ctx.restore();
+    }
+
+    function renderFrame() {
+        ctx.clearRect(0, 0, width, height);
+
+        if (document.body.classList.contains('background-view')) {
+            return;
+        }
+
+        for (const particle of particles) {
+            if (particle.kind === 'petal') {
+                drawPetal(particle);
+            } else {
+                drawConfetti(particle);
+            }
+        }
+    }
+
+    function update(deltaSeconds) {
+        const time = performance.now() * 0.001;
+        const wind = Math.sin(time * 0.55 + window.scrollY * 0.003) * 14;
+
+        for (const particle of particles) {
+            particle.phase += deltaSeconds * particle.swing;
+            particle.rotation += deltaSeconds * particle.spin;
+
+            const drift = Math.sin(particle.phase) * particle.swingRange;
+            particle.x += (particle.speedX + wind + drift * 0.14) * deltaSeconds;
+            particle.y += particle.speedY * deltaSeconds;
+
+            if (particle.y > height + 40 || particle.x < -width * 0.16 || particle.x > width * 1.16) {
+                resetParticle(particle);
+            }
+        }
+    }
+
+    function loop(now) {
+        const deltaSeconds = Math.min((now - lastTime) / 1000, 0.033);
+        lastTime = now;
+        update(deltaSeconds);
+        renderFrame();
+        rafId = window.requestAnimationFrame(loop);
+    }
+
+    resize();
+
+    for (let i = 0; i < particleCount; i += 1) {
+        particles.push(spawnParticle(true));
+    }
+
+    renderFrame();
+    rafId = window.requestAnimationFrame(loop);
+
+    window.addEventListener('resize', () => {
+        resize();
+        renderFrame();
+    }, { passive: true });
+
+    return {
+        destroy() {
+            if (rafId) {
+                window.cancelAnimationFrame(rafId);
+            }
+        }
+    };
 }
 
 function initPageGlassWebGL(canvas, reducedMotion) {

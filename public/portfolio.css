@@ -59,14 +59,16 @@ textarea {
 .page-photo,
 .page-grid,
 .page-noise,
-.page-webgl {
+.page-webgl,
+.page-celebration {
     pointer-events: none;
     position: fixed;
     inset: 0;
 }
 
 .page-photo,
-.page-webgl {
+.page-webgl,
+.page-celebration {
     z-index: 0;
     width: 100%;
     height: 100%;
@@ -82,6 +84,12 @@ textarea {
     background: url("assets/hero-dinner.jpg") center center / cover no-repeat;
     filter: brightness(1.16) saturate(0.88);
     transform: scale(1.03);
+    transition: opacity 220ms ease;
+}
+
+.page-celebration {
+    z-index: 1;
+    opacity: 0.96;
     transition: opacity 220ms ease;
 }
 
@@ -172,7 +180,8 @@ body.background-view .site-shell {
 }
 
 body.background-view .page-grid,
-body.background-view .page-noise {
+body.background-view .page-noise,
+body.background-view .page-celebration {
     opacity: 0;
 }
 
