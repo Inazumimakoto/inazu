@@ -259,7 +259,7 @@ main {
 }
 
 .feature-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
 .profile-grid,
@@ -312,6 +312,11 @@ main {
     letter-spacing: -0.04em;
 }
 
+.feature-card {
+    display: flex;
+    flex-direction: column;
+}
+
 .feature-card p,
 .profile-card p,
 .contact-card p {
@@ -350,6 +355,11 @@ main {
     gap: 10px;
     margin-top: 4px;
     color: var(--accent);
+}
+
+.feature-card .inline-link {
+    margin-top: auto;
+    padding-top: 22px;
 }
 
 .list {
