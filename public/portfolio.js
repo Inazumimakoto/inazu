@@ -233,7 +233,12 @@ function initPageGlassWebGL(canvas, reducedMotion) {
             vec2 edgeDir = normalize(centerUv + vec2(0.0001));
             float edge = 1.0 - smoothstep(0.0, 26.0, -nearestDist);
             float rim = pow(edge, 0.92);
-            float body = 0.28 + (1.0 - smoothstep(22.0, 120.0, -nearestDist)) * 0.22;
+            float body = 0.16 + (1.0 - smoothstep(20.0, 96.0, -nearestDist)) * 0.14;
+            float horizontalBias = smoothstep(-0.08, 0.28, abs(centerUv.y) - abs(centerUv.x) * 0.72);
+            float tubeBand = smoothstep(0.34, 0.96, abs(centerUv.y));
+            float tubeMask = clamp(horizontalBias * tubeBand, 0.0, 1.0);
+            float tubeRim = rim * tubeMask;
+            vec2 tubeNormal = vec2(0.0, sign(centerUv.y));
 
             vec2 noiseUv = rectUv * 15.8 + vec2(92.0, 31.0);
             float nA = fbm(noiseUv);
@@ -253,14 +258,15 @@ function initPageGlassWebGL(canvas, reducedMotion) {
             turbulence = mix(turbulence, fineNoise, 0.24);
 
             vec2 pxOffset =
-                turbulence * (4.0 + body * 4.0 + rim * 22.0) +
-                edgeDir * rim * 12.5;
+                vec2(turbulence.x * 0.45, turbulence.y) * (1.8 + body * 2.2 + tubeRim * 16.0) +
+                tubeNormal * tubeRim * 10.0 +
+                edgeDir * tubeRim * 3.0;
 
             vec2 uvOffset = pxOffset / max(u_resolution, vec2(1.0));
             vec3 refractedA = samplePhoto(v_uv + uvOffset);
             vec3 refractedB = samplePhoto(v_uv - uvOffset * 0.22);
             vec3 glass = mix(refractedA, refractedB, 0.18);
-            vec2 chromaOffset = (uvOffset * (0.55 + rim * 0.95)) + (edgeDir * rim * 3.2 / max(u_resolution, vec2(1.0)));
+            vec2 chromaOffset = (uvOffset * (0.32 + tubeRim * 0.95)) + (tubeNormal * tubeRim * 3.0 / max(u_resolution, vec2(1.0)));
             vec3 chromaSplit = vec3(
                 samplePhoto(v_uv + uvOffset + chromaOffset).r,
                 glass.g,
@@ -268,8 +274,8 @@ function initPageGlassWebGL(canvas, reducedMotion) {
             );
 
             glass = mix(base, glass, 0.84);
-            glass = mix(glass, chromaSplit, rim * 0.38);
-            glass += vec3(0.14) * rim * 0.12;
+            glass = mix(glass, chromaSplit, tubeRim * 0.44);
+            glass += vec3(0.14) * tubeRim * 0.12;
             glass += vec3(0.04) * body * 0.04;
 
             vec3 color = mix(base, glass, insideMask);
