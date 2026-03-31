@@ -256,6 +256,43 @@ main {
     margin-top: 32px;
 }
 
+.hero-mode-switch {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+    padding: 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(6, 8, 7, 0.38);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+.hero-mode-button {
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.hero-mode-button:hover,
+.hero-mode-button:focus-visible {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.hero-mode-button.is-active {
+    color: var(--bg);
+    background: var(--accent);
+}
+
 .button {
     display: inline-flex;
     align-items: center;
@@ -644,6 +681,16 @@ button:focus-visible {
     .button {
         width: 100%;
         justify-content: center;
+    }
+
+    .hero-mode-switch {
+        width: 100%;
+        border-radius: 22px;
+    }
+
+    .hero-mode-button {
+        flex: 1 1 160px;
+        text-align: center;
     }
 
     .feature-flow {

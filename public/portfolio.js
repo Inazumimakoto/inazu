@@ -2,6 +2,8 @@ const revealTargets = document.querySelectorAll('.reveal');
 const tiltTargets = document.querySelectorAll('[data-tilt]');
 const hero = document.querySelector('[data-hero]');
 const heroCanvas = document.querySelector('[data-hero-canvas]');
+const heroModeButtons = document.querySelectorAll('[data-hero-mode]');
+const heroModeSwitch = document.querySelector('.hero-mode-switch');
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 const observer = new IntersectionObserver((entries) => {
@@ -50,8 +52,25 @@ if (hero) {
     });
 }
 
+let heroBackground = null;
+
 if (hero && heroCanvas) {
-    initHeroWebGL(heroCanvas, hero, prefersReducedMotion.matches);
+    heroBackground = initHeroWebGL(heroCanvas, hero, prefersReducedMotion.matches);
+}
+
+if (heroBackground && heroModeButtons.length > 0) {
+    for (const button of heroModeButtons) {
+        button.addEventListener('click', () => {
+            const mode = button.dataset.heroMode;
+            heroBackground.setMode(mode);
+
+            for (const otherButton of heroModeButtons) {
+                const isActive = otherButton === button;
+                otherButton.classList.toggle('is-active', isActive);
+                otherButton.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            }
+        });
+    }
 }
 
 function initHeroWebGL(canvas, host, reducedMotion) {
@@ -62,8 +81,9 @@ function initHeroWebGL(canvas, host, reducedMotion) {
     });
 
     if (!gl) {
+        disableHeroModes();
         canvas.remove();
-        return;
+        return null;
     }
 
     const vertexSource = `
@@ -84,7 +104,11 @@ function initHeroWebGL(canvas, host, reducedMotion) {
         uniform vec2 u_resolution;
         uniform vec2 u_pointer;
         uniform float u_time;
+        uniform float u_mix;
+        uniform float u_mode;
         uniform float u_reduced_motion;
+        uniform sampler2D u_texture_a;
+        uniform sampler2D u_texture_b;
 
         float hash(vec2 p) {
             return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -115,8 +139,24 @@ function initHeroWebGL(canvas, host, reducedMotion) {
             return value;
         }
 
+        vec2 coverUv(vec2 uv) {
+            float texAspect = 1600.0 / 900.0;
+            float screenAspect = u_resolution.x / max(u_resolution.y, 1.0);
+            vec2 adjusted = uv;
+
+            if (screenAspect > texAspect) {
+                float scale = texAspect / screenAspect;
+                adjusted.y = uv.y * scale + (1.0 - scale) * 0.5;
+            } else {
+                float scale = screenAspect / texAspect;
+                adjusted.x = uv.x * scale + (1.0 - scale) * 0.5;
+            }
+
+            return adjusted;
+        }
+
         void main() {
-            vec2 uv = v_uv;
+            vec2 uv = coverUv(v_uv);
             vec2 p = uv * 2.0 - 1.0;
             float aspect = u_resolution.x / max(u_resolution.y, 1.0);
             p.x *= aspect;
@@ -124,30 +164,42 @@ function initHeroWebGL(canvas, host, reducedMotion) {
             vec2 pointer = u_pointer * 2.0 - 1.0;
             pointer.x *= aspect;
 
-            float t = u_time * mix(0.18, 0.035, u_reduced_motion);
-            float fieldA = fbm(p * 1.15 + vec2(t, -t * 0.7));
-            float fieldB = fbm((p + vec2(1.8, -0.6)) * 1.9 - vec2(t * 1.4, t * 0.25));
+            float t = u_time * mix(0.22, 0.05, u_reduced_motion);
+            float fieldA = fbm(p * 1.25 + vec2(t, -t * 0.55));
+            float fieldB = fbm((p + vec2(1.4, -0.4)) * 1.85 - vec2(t * 1.2, t * 0.4));
             vec2 flow = vec2(fieldA - 0.5, fieldB - 0.5);
-            vec2 warped = p + flow * 0.52;
+            float ring = 1.0 - smoothstep(0.0, 0.7, length(p - pointer * vec2(0.65, 0.48)));
+            float pulse = 0.5 + 0.5 * sin(t * 1.7);
 
-            float orbA = 1.0 - smoothstep(0.08, 0.98, length(warped - vec2(-0.75 + sin(t * 1.4) * 0.08, -0.12 + cos(t * 1.3) * 0.07)));
-            float orbB = 1.0 - smoothstep(0.14, 1.02, length(warped - vec2(0.78 + cos(t * 0.9) * 0.06, 0.34 + sin(t * 1.1) * 0.05)));
-            float beam = 1.0 - smoothstep(-0.28, 0.28, abs(warped.y + sin(warped.x * 1.8 + t * 1.5) * 0.26));
-            float grain = fbm(warped * 2.8 + vec2(4.0, -3.0));
-            float pointerGlow = smoothstep(0.56, 0.0, length(warped - pointer * vec2(0.5, 0.36))) * (1.0 - u_reduced_motion);
+            vec2 glassOffset = flow * 0.1 + normalize(p - pointer + vec2(0.001)) * ring * 0.04;
+            vec2 glassOffsetWide = flow * 0.16 - normalize(p - pointer + vec2(0.001)) * ring * 0.025;
+            vec2 imageOffsetA = flow * 0.15 + vec2(sin(t * 0.8 + p.y * 3.8), cos(t * 0.6 + p.x * 3.0)) * 0.016;
+            vec2 imageOffsetB = -flow * 0.17 + vec2(cos(t * 0.9 - p.y * 4.4), sin(t * 0.7 - p.x * 3.6)) * 0.014;
 
-            vec3 color = vec3(0.03, 0.035, 0.03);
-            color += vec3(0.13, 0.18, 0.08) * orbA;
-            color += vec3(0.06, 0.09, 0.07) * orbB;
-            color += vec3(0.18, 0.22, 0.12) * beam * 0.42;
-            color += vec3(0.14, 0.2, 0.1) * pointerGlow * 0.9;
-            color += vec3(0.08, 0.1, 0.08) * grain * 0.16;
+            vec3 glassBase = texture2D(u_texture_a, clamp(uv + glassOffset, 0.0, 1.0)).rgb;
+            vec3 glassLayer = texture2D(u_texture_b, clamp(uv + glassOffsetWide, 0.0, 1.0)).rgb;
+            vec3 glassColor = mix(glassBase, glassLayer, 0.18 + u_mix * 0.14);
 
-            float vignette = smoothstep(1.55, 0.2, length(p));
-            color *= mix(0.72, 1.0, vignette);
-            color = clamp(color, 0.0, 1.0);
+            vec3 imageA = texture2D(u_texture_a, clamp(uv + imageOffsetA * (0.8 + u_mix * 0.3), 0.0, 1.0)).rgb;
+            vec3 imageB = texture2D(u_texture_b, clamp(uv + imageOffsetB * (0.82 + (1.0 - u_mix) * 0.34), 0.0, 1.0)).rgb;
+            vec3 imageColor = mix(imageA, imageB, smoothstep(0.0, 1.0, u_mix));
 
-            gl_FragColor = vec4(color, 0.98);
+            float highlight = 1.0 - smoothstep(0.0, 0.95, length(glassOffset) * 8.0);
+            float streak = 1.0 - smoothstep(0.08, 0.52, abs(p.y + sin(p.x * 3.0 + t * 1.15) * 0.22));
+            float grain = fbm((p + flow) * 3.2 + vec2(6.0, -3.0));
+
+            glassColor += vec3(0.12, 0.16, 0.11) * highlight * 0.55;
+            glassColor += vec3(0.14, 0.18, 0.1) * streak * 0.12;
+            glassColor += vec3(0.16, 0.24, 0.13) * ring * (0.18 + pulse * 0.12);
+
+            imageColor += vec3(0.08, 0.12, 0.08) * ring * 0.12;
+
+            vec3 color = mix(glassColor, imageColor, u_mode);
+            color += vec3(0.07, 0.08, 0.06) * grain * 0.08;
+
+            float vignette = smoothstep(1.7, 0.32, length(p));
+            color *= mix(0.76, 1.04, vignette);
+            gl_FragColor = vec4(clamp(color, 0.0, 1.0), 0.98);
         }
     `;
 
@@ -155,15 +207,17 @@ function initHeroWebGL(canvas, host, reducedMotion) {
     const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
 
     if (!vertexShader || !fragmentShader) {
+        disableHeroModes();
         canvas.remove();
-        return;
+        return null;
     }
 
     const program = createProgram(gl, vertexShader, fragmentShader);
 
     if (!program) {
+        disableHeroModes();
         canvas.remove();
-        return;
+        return null;
     }
 
     gl.useProgram(program);
@@ -188,11 +242,27 @@ function initHeroWebGL(canvas, host, reducedMotion) {
     gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
     const timeLocation = gl.getUniformLocation(program, 'u_time');
+    const mixLocation = gl.getUniformLocation(program, 'u_mix');
+    const modeLocation = gl.getUniformLocation(program, 'u_mode');
     const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
     const pointerLocation = gl.getUniformLocation(program, 'u_pointer');
     const reducedMotionLocation = gl.getUniformLocation(program, 'u_reduced_motion');
+    const textureALocation = gl.getUniformLocation(program, 'u_texture_a');
+    const textureBLocation = gl.getUniformLocation(program, 'u_texture_b');
+
+    gl.uniform1i(textureALocation, 0);
+    gl.uniform1i(textureBLocation, 1);
 
     const pointer = { x: 0.42, y: 0.34 };
+    const textureUrls = [
+        'assets/hero-scene-1.svg',
+        'assets/hero-scene-2.svg',
+        'assets/hero-scene-3.svg'
+    ];
+    const textures = [];
+    let currentMode = 'glass';
+    let isReady = false;
+    let lastTime = 0;
 
     function updateSize() {
         const rect = host.getBoundingClientRect();
@@ -203,11 +273,28 @@ function initHeroWebGL(canvas, host, reducedMotion) {
     }
 
     function render(time) {
+        if (!isReady) return;
+
         gl.clearColor(0.0, 0.0, 0.0, 0.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
+        lastTime = time;
+
+        const seconds = time * 0.001;
+        const cycleDuration = reducedMotion ? 99999 : 6.8;
+        const cycle = reducedMotion ? 0 : seconds / cycleDuration;
+        const mixValue = reducedMotion ? 0 : smootherstep(fract(cycle));
+        const textureIndex = Math.floor(cycle) % textures.length;
+        const nextTextureIndex = (textureIndex + 1) % textures.length;
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, textures[textureIndex]);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, textures[nextTextureIndex]);
         gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
         gl.uniform2f(pointerLocation, pointer.x, pointer.y);
         gl.uniform1f(timeLocation, time * 0.001);
+        gl.uniform1f(mixLocation, mixValue);
+        gl.uniform1f(modeLocation, currentMode === 'image' ? 1.0 : 0.0);
         gl.uniform1f(reducedMotionLocation, reducedMotion ? 1.0 : 0.0);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
@@ -237,18 +324,40 @@ function initHeroWebGL(canvas, host, reducedMotion) {
     window.addEventListener('resize', updateSize);
 
     if (window.ResizeObserver) {
-        const observer = new ResizeObserver(updateSize);
-        observer.observe(host);
+        const resizeObserver = new ResizeObserver(updateSize);
+        resizeObserver.observe(host);
     }
 
     updateSize();
 
-    if (reducedMotion) {
-        render(0);
-        return;
-    }
+    Promise.all(textureUrls.map((url) => loadTexture(gl, url)))
+        .then((loadedTextures) => {
+            textures.push(...loadedTextures);
+            isReady = true;
+            host.classList.add('is-webgl-ready');
 
-    frameId = window.requestAnimationFrame(loop);
+            if (reducedMotion) {
+                render(0);
+                return;
+            }
+
+            frameId = window.requestAnimationFrame(loop);
+        })
+        .catch((error) => {
+            console.warn('Hero WebGL texture load failed:', error);
+            disableHeroModes();
+            canvas.remove();
+        });
+
+    return {
+        setMode(mode) {
+            currentMode = mode === 'image' ? 'image' : 'glass';
+
+            if (isReady) {
+                render(lastTime);
+            }
+        }
+    };
 }
 
 function createShader(gl, type, source) {
@@ -278,4 +387,37 @@ function createProgram(gl, vertexShader, fragmentShader) {
     console.warn('Hero WebGL program link failed:', gl.getProgramInfoLog(program));
     gl.deleteProgram(program);
     return null;
+}
+
+function disableHeroModes() {
+    heroModeSwitch?.remove();
+}
+
+function loadTexture(gl, url) {
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.decoding = 'async';
+        image.onload = () => {
+            const texture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            resolve(texture);
+        };
+        image.onerror = reject;
+        image.src = url;
+    });
+}
+
+function fract(value) {
+    return value - Math.floor(value);
+}
+
+function smootherstep(value) {
+    const t = Math.min(Math.max(value, 0), 1);
+    return t * t * t * (t * (t * 6 - 15) + 10);
 }
