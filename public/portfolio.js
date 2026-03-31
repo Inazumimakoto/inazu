@@ -221,9 +221,9 @@ function initPageGlassWebGL(canvas, reducedMotion) {
                 }
             }
 
-            float surfaceMask = 1.0 - smoothstep(0.0, 26.0, nearestDist);
+            float insideMask = 1.0 - step(0.0, nearestDist);
 
-            if (surfaceMask <= 0.001) {
+            if (insideMask <= 0.001) {
                 gl_FragColor = vec4(base, 1.0);
                 return;
             }
@@ -231,38 +231,36 @@ function initPageGlassWebGL(canvas, reducedMotion) {
             vec2 rectUv = clamp((fragPx - nearestRect.xy) / max(nearestRect.zw, vec2(1.0)), 0.0, 1.0);
             vec2 centerUv = rectUv * 2.0 - 1.0;
             vec2 edgeDir = normalize(centerUv + vec2(0.0001));
-            vec2 pointerDelta = (fragPx - vec2(u_pointer.x * u_resolution.x, u_pointer.y * u_resolution.y)) / max(u_resolution, vec2(1.0));
+            float edge = 1.0 - smoothstep(0.0, 26.0, -nearestDist);
+            float rim = pow(edge, 0.92);
+            float body = 0.28 + (1.0 - smoothstep(22.0, 120.0, -nearestDist)) * 0.22;
 
-            float edge = 1.0 - smoothstep(0.0, 42.0, abs(nearestDist));
-            float rim = pow(edge, 1.12);
-            float pointerField = 1.0 - smoothstep(0.04, 0.42, length(pointerDelta));
-
-            float motionTime = u_time * mix(0.08, 0.38, u_motion) + u_scroll * 0.65;
-            vec2 noiseUv = rectUv * 3.8 + vec2(motionTime * 0.22, -motionTime * 0.18);
+            vec2 noiseUv = rectUv * 7.6 + vec2(92.0, 31.0);
             float nA = fbm(noiseUv);
-            float nB = fbm(noiseUv * 1.72 + vec2(3.1, -2.4));
-            vec2 flow = vec2(nA - 0.5, nB - 0.5);
-            vec2 wave = vec2(
-                sin(motionTime + rectUv.y * 5.2 + centerUv.x * 1.8),
-                cos(motionTime * 0.9 + rectUv.x * 4.6 - centerUv.y * 1.5)
-            );
+            float nB = fbm(noiseUv + vec2(7.4, -3.8));
+            float nC = fbm(noiseUv * 1.82 + vec2(-4.1, 6.2));
+            float nD = fbm(noiseUv * 1.82 + vec2(5.6, -7.1));
+            vec2 turbulence = vec2((nA + nC * 0.5) / 1.5, (nB + nD * 0.5) / 1.5) - 0.5;
+            vec2 softened = vec2(
+                fbm(noiseUv + vec2(0.35, 0.0)),
+                fbm(noiseUv + vec2(7.75, -3.45))
+            ) - 0.5;
+            turbulence = mix(turbulence, softened, 0.4);
 
             vec2 pxOffset =
-                flow * (1.2 + rim * 10.5) +
-                wave * (0.5 + rim * 3.6) +
-                edgeDir * rim * 17.5 +
-                normalize(pointerDelta + vec2(0.0001)) * pointerField * (1.2 + rim * 3.8);
+                turbulence * (4.0 + body * 4.0 + rim * 22.0) +
+                edgeDir * rim * 12.5;
 
             vec2 uvOffset = pxOffset / max(u_resolution, vec2(1.0));
             vec3 refractedA = samplePhoto(v_uv + uvOffset);
-            vec3 refractedB = samplePhoto(v_uv - uvOffset * 0.45);
-            vec3 glass = mix(refractedA, refractedB, 0.24);
+            vec3 refractedB = samplePhoto(v_uv - uvOffset * 0.22);
+            vec3 glass = mix(refractedA, refractedB, 0.18);
 
-            glass = mix(base, glass, 0.82);
-            glass += vec3(0.16) * rim * 0.15;
-            glass += vec3(0.06) * surfaceMask * 0.03;
+            glass = mix(base, glass, 0.84);
+            glass += vec3(0.14) * rim * 0.12;
+            glass += vec3(0.04) * body * 0.04;
 
-            vec3 color = mix(base, glass, surfaceMask);
+            vec3 color = mix(base, glass, insideMask);
             gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
         }
     `;
