@@ -235,15 +235,15 @@ function initPageGlassWebGL(canvas, reducedMotion) {
             float rim = pow(edge, 0.92);
             float body = 0.28 + (1.0 - smoothstep(22.0, 120.0, -nearestDist)) * 0.22;
 
-            vec2 noiseUv = rectUv * 7.6 + vec2(92.0, 31.0);
+            vec2 noiseUv = rectUv * 11.4 + vec2(92.0, 31.0);
             float nA = fbm(noiseUv);
             float nB = fbm(noiseUv + vec2(7.4, -3.8));
-            float nC = fbm(noiseUv * 1.82 + vec2(-4.1, 6.2));
-            float nD = fbm(noiseUv * 1.82 + vec2(5.6, -7.1));
+            float nC = fbm(noiseUv * 2.35 + vec2(-4.1, 6.2));
+            float nD = fbm(noiseUv * 2.35 + vec2(5.6, -7.1));
             vec2 turbulence = vec2((nA + nC * 0.5) / 1.5, (nB + nD * 0.5) / 1.5) - 0.5;
             vec2 softened = vec2(
-                fbm(noiseUv + vec2(0.35, 0.0)),
-                fbm(noiseUv + vec2(7.75, -3.45))
+                fbm(noiseUv * 1.18 + vec2(0.35, 0.0)),
+                fbm(noiseUv * 1.18 + vec2(7.75, -3.45))
             ) - 0.5;
             turbulence = mix(turbulence, softened, 0.4);
 
