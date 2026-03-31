@@ -10,6 +10,14 @@
     --accent: #c8ff6d;
     --accent-soft: rgba(200, 255, 109, 0.18);
     --shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+    --glass-fill: rgba(12, 14, 12, 0.2);
+    --glass-fill-strong: rgba(12, 14, 12, 0.28);
+    --glass-line: rgba(255, 255, 255, 0.16);
+    --glass-highlight: rgba(255, 255, 255, 0.18);
+    --glass-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        inset 0 -14px 28px rgba(255, 255, 255, 0.025),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 * {
@@ -82,6 +90,14 @@ textarea {
     background-image: radial-gradient(rgba(255, 255, 255, 0.1) 0.5px, transparent 0.5px);
     background-size: 12px 12px;
     opacity: 0.03;
+}
+
+.glass-filter-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    pointer-events: none;
 }
 
 .site-shell {
@@ -162,10 +178,13 @@ main {
 .panel {
     position: relative;
     overflow: hidden;
-    border: 1px solid var(--line);
+    isolation: isolate;
+    border: 1px solid var(--glass-line);
     border-radius: 28px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015));
-    box-shadow: var(--shadow);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.01));
+    box-shadow:
+        var(--shadow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .hero::before,
@@ -173,9 +192,35 @@ main {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(200, 255, 109, 0.09), transparent 35%, transparent 65%, rgba(255, 255, 255, 0.04));
-    opacity: 0.8;
+    z-index: 1;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 24%),
+        linear-gradient(135deg, rgba(200, 255, 109, 0.11), transparent 34%, transparent 66%, rgba(255, 255, 255, 0.06));
+    opacity: 0.88;
     pointer-events: none;
+}
+
+.hero::after,
+.panel::after,
+.card::before,
+.contact-card::before,
+.hero-mode-switch::before,
+.button::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+        linear-gradient(180deg, var(--glass-highlight), rgba(255, 255, 255, 0.03) 22%, rgba(255, 255, 255, 0.01) 60%),
+        radial-gradient(circle at 16% 16%, rgba(255, 255, 255, 0.16), transparent 32%),
+        radial-gradient(circle at 86% 110%, rgba(200, 255, 109, 0.1), transparent 28%),
+        linear-gradient(180deg, var(--glass-fill-strong), var(--glass-fill));
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(18px) saturate(150%) brightness(1.06);
+    -webkit-backdrop-filter: blur(18px) saturate(150%) brightness(1.06);
+    filter: url(#glass-distortion);
+    -webkit-filter: url(#glass-distortion);
 }
 
 .hero {
@@ -184,14 +229,14 @@ main {
     justify-content: flex-start;
     align-items: stretch;
     padding: clamp(32px, 5vw, 48px) clamp(24px, 4vw, 40px);
-    isolation: isolate;
     background:
-        radial-gradient(circle at 18% 18%, rgba(200, 255, 109, 0.12), transparent 24%),
-        linear-gradient(180deg, rgba(10, 12, 8, 0.82), rgba(6, 7, 6, 0.88));
+        radial-gradient(circle at 18% 18%, rgba(200, 255, 109, 0.08), transparent 24%),
+        linear-gradient(180deg, rgba(10, 12, 8, 0.3), rgba(6, 7, 6, 0.24));
 }
 
-.hero::before {
-    z-index: 1;
+.hero::after,
+.panel::after {
+    z-index: 0;
 }
 
 .hero-content {
@@ -259,19 +304,25 @@ main {
 }
 
 .hero-mode-switch {
+    position: relative;
+    isolation: isolate;
     display: inline-flex;
     flex-wrap: wrap;
     gap: 8px;
     margin-top: 18px;
     padding: 8px;
     border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(6, 8, 7, 0.38);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    overflow: hidden;
+    border: 1px solid var(--glass-line);
+    background: rgba(8, 9, 8, 0.08);
+    box-shadow:
+        0 16px 28px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .hero-mode-button {
+    position: relative;
+    z-index: 1;
     border: 0;
     background: transparent;
     color: var(--muted);
@@ -287,29 +338,46 @@ main {
 .hero-mode-button:hover,
 .hero-mode-button:focus-visible {
     color: var(--text);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.06);
 }
 
 .hero-mode-button.is-active {
-    color: var(--bg);
-    background: var(--accent);
+    color: var(--text);
+    background: linear-gradient(180deg, rgba(200, 255, 109, 0.22), rgba(200, 255, 109, 0.1));
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.16),
+        0 10px 24px rgba(200, 255, 109, 0.08);
 }
 
 .button {
+    position: relative;
+    z-index: 0;
     display: inline-flex;
     align-items: center;
     gap: 10px;
     padding: 15px 20px;
     border-radius: 999px;
-    border: 1px solid var(--line-strong);
+    overflow: hidden;
+    border: 1px solid var(--glass-line);
+    background: rgba(10, 12, 10, 0.08);
     color: var(--text);
-    transition: transform 220ms ease, border-color 220ms ease, background 220ms ease;
+    box-shadow:
+        0 18px 38px rgba(0, 0, 0, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+}
+
+.button::before {
+    z-index: -1;
 }
 
 .button:hover,
 .button:focus-visible {
     transform: translateY(-3px);
     border-color: var(--text);
+    box-shadow:
+        0 22px 44px rgba(0, 0, 0, 0.24),
+        inset 0 1px 0 rgba(255, 255, 255, 0.09);
 }
 
 .button-primary {
@@ -335,6 +403,12 @@ main {
 
 .panel {
     padding: 32px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+}
+
+.panel > * {
+    position: relative;
+    z-index: 2;
 }
 
 .panel-header {
@@ -377,18 +451,33 @@ main {
 .card,
 .contact-card {
     position: relative;
+    isolation: isolate;
     overflow: hidden;
     padding: 22px;
     border-radius: 22px;
-    border: 1px solid var(--line);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+    border: 1px solid var(--glass-line);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+    box-shadow:
+        0 16px 40px rgba(0, 0, 0, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
     transform-style: preserve-3d;
-    transition: transform 240ms ease, border-color 240ms ease, background 240ms ease;
+    transition: transform 240ms ease, border-color 240ms ease, background 240ms ease, box-shadow 240ms ease;
+}
+
+.card > *,
+.contact-card > * {
+    position: relative;
+    z-index: 2;
+}
+
+.card::before,
+.contact-card::before {
+    z-index: 0;
 }
 
 .card-link,
 .contact-card {
-    border-color: var(--line-strong);
+    border-color: rgba(255, 255, 255, 0.18);
 }
 
 .card-link:hover,
@@ -396,7 +485,10 @@ main {
 .card-link:focus-visible,
 .contact-card:focus-visible {
     border-color: var(--text);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025));
+    box-shadow:
+        0 22px 48px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .card-link::after,
