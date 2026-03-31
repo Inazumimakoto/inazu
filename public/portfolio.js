@@ -36,6 +36,7 @@ if (backgroundToggle) {
         const nextState = !document.body.classList.contains('background-view');
         document.body.classList.toggle('background-view', nextState);
         syncBackgroundControls();
+        celebrationRenderer?.setSpawnEnabled(!nextState);
         backgroundRenderer?.renderNow();
     });
 }
@@ -78,12 +79,12 @@ if (hero) {
     });
 }
 
-if (pageCanvas) {
-    backgroundRenderer = initPageGlassWebGL(pageCanvas, prefersReducedMotion.matches);
-}
-
 if (celebrationCanvas) {
     celebrationRenderer = initCelebrationCanvas(celebrationCanvas, prefersReducedMotion.matches);
+}
+
+if (pageCanvas) {
+    backgroundRenderer = initPageGlassWebGL(pageCanvas, prefersReducedMotion.matches, celebrationRenderer?.getCanvas?.() || null);
 }
 
 function initCelebrationCanvas(canvas, reducedMotion) {
@@ -94,13 +95,14 @@ function initCelebrationCanvas(canvas, reducedMotion) {
         return null;
     }
 
-    const particleCount = reducedMotion ? 42 : 120;
+    const particleCount = reducedMotion ? 80 : 220;
     const particles = [];
     let width = 0;
     let height = 0;
     let dpr = 1;
     let rafId = 0;
     let lastTime = performance.now();
+    let spawnEnabled = !document.body.classList.contains('background-view');
 
     function rand(min, max) {
         return Math.random() * (max - min) + min;
@@ -112,7 +114,7 @@ function initCelebrationCanvas(canvas, reducedMotion) {
 
     function spawnParticle(initial = false) {
         const kind = Math.random() < 0.64 ? 'petal' : 'confetti';
-        const baseSize = kind === 'petal' ? rand(10, 22) : rand(5, 14);
+        const baseSize = kind === 'petal' ? rand(12, 24) : rand(5, 16);
         const y = initial ? rand(-height * 0.15, height + height * 0.1) : rand(-height * 0.28, -20);
         const x = rand(-width * 0.08, width * 1.08);
 
@@ -130,19 +132,24 @@ function initCelebrationCanvas(canvas, reducedMotion) {
             spin: rand(-1.8, 1.8),
             flip: rand(0.45, 1),
             alpha: kind === 'petal' ? rand(0.45, 0.92) : rand(0.35, 0.84),
+            active: true,
             color: kind === 'petal'
                 ? pick([
                     '255, 228, 236',
                     '255, 213, 226',
                     '255, 241, 246',
-                    '255, 232, 216'
+                    '255, 232, 216',
+                    '255, 219, 238'
                 ])
                 : pick([
-                    '255, 242, 248',
-                    '255, 214, 230',
+                    '255, 91, 179',
+                    '255, 210, 26',
+                    '90, 206, 255',
+                    '143, 122, 255',
+                    '93, 255, 187',
+                    '255, 129, 73',
                     '255, 255, 255',
-                    '214, 240, 255',
-                    '255, 231, 181'
+                    '255, 78, 122'
                 ])
         };
     }
@@ -150,6 +157,12 @@ function initCelebrationCanvas(canvas, reducedMotion) {
     function resetParticle(particle) {
         Object.assign(particle, spawnParticle(false));
         particle.y = rand(-height * 0.35, -20);
+        particle.active = true;
+    }
+
+    function retireParticle(particle) {
+        particle.active = false;
+        particle.y = height + 200;
     }
 
     function resize() {
@@ -162,29 +175,25 @@ function initCelebrationCanvas(canvas, reducedMotion) {
     }
 
     function drawPetal(particle) {
-        const flutter = 0.68 + Math.sin(particle.phase + particle.rotation * 1.2) * 0.22;
+        const flutter = 0.78 + Math.sin(particle.phase + particle.rotation * 1.2) * 0.16;
 
         ctx.save();
         ctx.translate(particle.x, particle.y);
         ctx.rotate(particle.rotation);
         ctx.scale(1, flutter * particle.flip);
+        for (let i = 0; i < 5; i += 1) {
+            ctx.save();
+            ctx.rotate((Math.PI * 2 * i) / 5);
+            ctx.beginPath();
+            ctx.ellipse(0, -particle.size * 0.26, particle.size * 0.16, particle.size * 0.34, 0, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${particle.color}, ${particle.alpha})`;
+            ctx.fill();
+            ctx.restore();
+        }
         ctx.beginPath();
-        ctx.moveTo(0, -particle.size * 0.58);
-        ctx.bezierCurveTo(
-            particle.size * 0.52, -particle.size * 0.98,
-            particle.size * 0.94, -particle.size * 0.02,
-            0, particle.size * 0.42
-        );
-        ctx.bezierCurveTo(
-            -particle.size * 0.94, -particle.size * 0.02,
-            -particle.size * 0.52, -particle.size * 0.98,
-            0, -particle.size * 0.58
-        );
-        ctx.fillStyle = `rgba(${particle.color}, ${particle.alpha})`;
+        ctx.arc(0, 0, particle.size * 0.11, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 235, 164, ${particle.alpha * 0.85})`;
         ctx.fill();
-        ctx.strokeStyle = `rgba(255, 255, 255, ${particle.alpha * 0.22})`;
-        ctx.lineWidth = 0.9;
-        ctx.stroke();
         ctx.restore();
     }
 
@@ -204,11 +213,8 @@ function initCelebrationCanvas(canvas, reducedMotion) {
     function renderFrame() {
         ctx.clearRect(0, 0, width, height);
 
-        if (document.body.classList.contains('background-view')) {
-            return;
-        }
-
         for (const particle of particles) {
+            if (!particle.active) continue;
             if (particle.kind === 'petal') {
                 drawPetal(particle);
             } else {
@@ -222,6 +228,8 @@ function initCelebrationCanvas(canvas, reducedMotion) {
         const wind = Math.sin(time * 0.55 + window.scrollY * 0.003) * 14;
 
         for (const particle of particles) {
+            if (!particle.active) continue;
+
             particle.phase += deltaSeconds * particle.swing;
             particle.rotation += deltaSeconds * particle.spin;
 
@@ -230,7 +238,11 @@ function initCelebrationCanvas(canvas, reducedMotion) {
             particle.y += particle.speedY * deltaSeconds;
 
             if (particle.y > height + 40 || particle.x < -width * 0.16 || particle.x > width * 1.16) {
-                resetParticle(particle);
+                if (spawnEnabled) {
+                    resetParticle(particle);
+                } else {
+                    retireParticle(particle);
+                }
             }
         }
     }
@@ -258,6 +270,20 @@ function initCelebrationCanvas(canvas, reducedMotion) {
     }, { passive: true });
 
     return {
+        getCanvas() {
+            return canvas;
+        },
+        setSpawnEnabled(nextEnabled) {
+            spawnEnabled = nextEnabled;
+
+            if (spawnEnabled) {
+                for (const particle of particles) {
+                    if (!particle.active) {
+                        resetParticle(particle);
+                    }
+                }
+            }
+        },
         destroy() {
             if (rafId) {
                 window.cancelAnimationFrame(rafId);
@@ -266,7 +292,7 @@ function initCelebrationCanvas(canvas, reducedMotion) {
     };
 }
 
-function initPageGlassWebGL(canvas, reducedMotion) {
+function initPageGlassWebGL(canvas, reducedMotion, celebrationSource) {
     const gl = canvas.getContext('webgl', {
         alpha: true,
         antialias: true,
@@ -315,6 +341,7 @@ function initPageGlassWebGL(canvas, reducedMotion) {
         uniform float u_image_aspect;
         uniform float u_glass_count;
         uniform sampler2D u_image;
+        uniform sampler2D u_overlay;
         uniform vec4 u_glass_rects[MAX_GLASS_SURFACES];
         uniform float u_glass_radii[MAX_GLASS_SURFACES];
 
@@ -380,8 +407,18 @@ function initPageGlassWebGL(canvas, reducedMotion) {
             return gradePhoto(texture2D(u_image, coverUv(uv)).rgb);
         }
 
+        vec4 sampleOverlay(vec2 uv) {
+            return texture2D(u_overlay, clamp(uv, 0.0, 1.0));
+        }
+
+        vec3 sampleScene(vec2 uv) {
+            vec3 photo = samplePhoto(uv);
+            vec4 overlay = sampleOverlay(uv);
+            return mix(photo, overlay.rgb, overlay.a);
+        }
+
         void main() {
-            vec3 base = samplePhoto(v_uv);
+            vec3 base = sampleScene(v_uv);
 
             if (u_glass_count < 0.5) {
                 gl_FragColor = vec4(base, 1.0);
@@ -450,14 +487,14 @@ function initPageGlassWebGL(canvas, reducedMotion) {
                 edgeDir * tubeRim * 4.0;
 
             vec2 uvOffset = pxOffset / max(u_resolution, vec2(1.0));
-            vec3 refractedA = samplePhoto(v_uv + uvOffset);
-            vec3 refractedB = samplePhoto(v_uv - uvOffset * 0.22);
+            vec3 refractedA = sampleScene(v_uv + uvOffset);
+            vec3 refractedB = sampleScene(v_uv - uvOffset * 0.22);
             vec3 glass = mix(refractedA, refractedB, 0.22);
             vec2 chromaOffset = (uvOffset * (0.16 + chromaRim * 1.2)) + (tubeNormal * chromaRim * 4.2 / max(u_resolution, vec2(1.0)));
             vec3 chromaSplit = vec3(
-                samplePhoto(v_uv + uvOffset + chromaOffset).r,
+                sampleScene(v_uv + uvOffset + chromaOffset).r,
                 glass.g,
-                samplePhoto(v_uv + uvOffset - chromaOffset).b
+                sampleScene(v_uv + uvOffset - chromaOffset).b
             );
 
             glass = mix(base, glass, 0.9);
@@ -509,6 +546,7 @@ function initPageGlassWebGL(canvas, reducedMotion) {
     const motionLocation = gl.getUniformLocation(program, 'u_motion');
     const imageAspectLocation = gl.getUniformLocation(program, 'u_image_aspect');
     const imageLocation = gl.getUniformLocation(program, 'u_image');
+    const overlayLocation = gl.getUniformLocation(program, 'u_overlay');
     const glassCountLocation = gl.getUniformLocation(program, 'u_glass_count');
     const glassRectsLocation = gl.getUniformLocation(program, 'u_glass_rects[0]');
     const glassRadiiLocation = gl.getUniformLocation(program, 'u_glass_radii[0]');
@@ -534,6 +572,27 @@ function initPageGlassWebGL(canvas, reducedMotion) {
     );
 
     gl.uniform1i(imageLocation, 0);
+
+    const overlayTexture = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, overlayTexture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        1,
+        1,
+        0,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        new Uint8Array([0, 0, 0, 0])
+    );
+
+    gl.uniform1i(overlayLocation, 1);
 
     function resizeCanvas() {
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -605,6 +664,14 @@ function initPageGlassWebGL(canvas, reducedMotion) {
         gl.useProgram(program);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, photoTexture);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, overlayTexture);
+
+        if (celebrationSource) {
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, celebrationSource);
+        }
+
         gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
         gl.uniform2f(pointerLocation, pointer.x, pointer.y);
         gl.uniform1f(timeLocation, time * 0.001);
