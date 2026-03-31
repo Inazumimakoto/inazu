@@ -5,7 +5,7 @@
     --panel-strong: rgba(255, 255, 255, 0.08);
     --line: rgba(255, 255, 255, 0.12);
     --line-strong: rgba(255, 255, 255, 0.22);
-    --text: #f3f3f0;
+    --text: #ffffff;
     --muted: #c7c7c1;
     --accent: #c8ff6d;
     --accent-soft: rgba(200, 255, 109, 0.18);
@@ -80,7 +80,7 @@ textarea {
 
 .page-photo {
     background: url("assets/hero-dinner.jpg") center center / cover no-repeat;
-    filter: brightness(1.16) saturate(1.04);
+    filter: brightness(1.16) saturate(0.88);
     transform: scale(1.03);
     transition: opacity 220ms ease;
 }
@@ -321,8 +321,9 @@ main {
     max-width: 640px;
     margin: 26px 0 0;
     font-size: clamp(1.05rem, 2.1vw, 1.35rem);
+    font-weight: 500;
     line-height: 1.75;
-    color: rgba(243, 243, 240, 0.94);
+    color: rgba(255, 255, 255, 0.98);
 }
 
 .hero-actions {
@@ -453,7 +454,8 @@ main {
 
 .panel-copy {
     max-width: 460px;
-    color: rgba(243, 243, 240, 0.84);
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.92);
     line-height: 1.75;
 }
 
@@ -572,8 +574,9 @@ button:focus-visible {
 .profile-card p,
 .contact-card p {
     margin: 0;
+    font-weight: 500;
     line-height: 1.75;
-    color: rgba(243, 243, 240, 0.9);
+    color: rgba(255, 255, 255, 0.95);
 }
 
 .feature-flow {
@@ -729,7 +732,7 @@ button:focus-visible {
 }
 
 .contact-card p {
-    color: rgba(243, 243, 240, 0.88);
+    color: rgba(255, 255, 255, 0.95);
 }
 
 .contact-card .inline-link {

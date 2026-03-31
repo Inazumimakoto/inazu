@@ -186,7 +186,7 @@ function initPageGlassWebGL(canvas, reducedMotion) {
 
         vec3 gradePhoto(vec3 color) {
             float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
-            color = mix(vec3(luma), color, 1.04);
+            color = mix(vec3(luma), color, 0.88);
             return clamp(color * 1.16, 0.0, 1.0);
         }
 
