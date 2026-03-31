@@ -186,14 +186,18 @@ function layoutGlassCopy(target) {
     target.style.setProperty('--text-glass-mask', mask);
 
     surfaces.innerHTML = '';
+    const surfaceInset = 5;
     for (const rect of rects) {
         const surface = document.createElement('span');
         surface.className = 'text-glass-surface';
-        surface.style.left = `${rect.x - padX}px`;
-        surface.style.top = `${rect.y - padY}px`;
-        surface.style.width = `${rect.width}px`;
-        surface.style.height = `${rect.height}px`;
-        surface.style.borderRadius = `${rect.radius}px`;
+        const insetWidth = Math.max(rect.width - surfaceInset * 2, 8);
+        const insetHeight = Math.max(rect.height - surfaceInset * 2, 8);
+        const insetRadius = Math.max(rect.radius - surfaceInset, 8);
+        surface.style.left = `${rect.x - padX + surfaceInset}px`;
+        surface.style.top = `${rect.y - padY + surfaceInset}px`;
+        surface.style.width = `${insetWidth}px`;
+        surface.style.height = `${insetHeight}px`;
+        surface.style.borderRadius = `${insetRadius}px`;
         surfaces.appendChild(surface);
     }
 }
