@@ -259,17 +259,7 @@ main {
 .contact-card::before,
 .hero-mode-switch::before,
 .button::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    pointer-events: none;
-    background: linear-gradient(180deg, var(--glass-fill-strong), var(--glass-fill));
-    box-shadow: var(--glass-shadow);
-    backdrop-filter: blur(0px);
-    -webkit-backdrop-filter: blur(0px);
-    filter: url(#glass-distortion);
-    -webkit-filter: url(#glass-distortion);
+    content: none;
 }
 
 .hero {
