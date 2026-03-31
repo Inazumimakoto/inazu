@@ -578,6 +578,18 @@ button:focus-visible {
     flex-direction: column;
 }
 
+.feature-card-lead {
+    grid-column: 1 / -1;
+}
+
+.feature-card-lead h3 {
+    font-size: clamp(2.1rem, 4vw, 3.4rem);
+}
+
+.feature-card-lead p {
+    max-width: 760px;
+}
+
 .feature-icon {
     width: 68px;
     height: 68px;
