@@ -641,55 +641,26 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
             return mix(photo, overlay.rgb, overlay.a);
         }
 
-        void main() {
-            vec3 base = sampleScene(v_uv);
-
-            if (u_glass_count < 0.5) {
-                gl_FragColor = vec4(base, 1.0);
-                return;
-            }
-
-            vec2 fragPx = vec2(v_uv.x * u_resolution.x, (1.0 - v_uv.y) * u_resolution.y);
-            float nearestScore = 1.0e9;
-            float nearestDist = 1.0e9;
-            vec4 nearestRect = vec4(0.0);
-
-            for (int i = 0; i < MAX_GLASS_SURFACES; i++) {
-                if (float(i) >= u_glass_count) break;
-
-                vec4 rect = u_glass_rects[i];
-                float dist = sdRoundedRect(fragPx, rect, u_glass_radii[i]);
-                float absDist = abs(dist);
-                float edgePriority = (1.0 - smoothstep(0.0, 18.0, absDist)) * u_glass_priority[i] * 10.0;
-                float score = absDist - edgePriority;
-
-                if (score < nearestScore) {
-                    nearestScore = score;
-                    nearestDist = dist;
-                    nearestRect = rect;
-                }
-            }
-
-            float insideMask = 1.0 - step(0.0, nearestDist);
-            float innerFeather = smoothstep(0.0, 7.0, -nearestDist);
-            float glassMask = insideMask * innerFeather;
+        vec4 renderGlassSurface(vec2 fragPx, vec2 uv, vec3 baseColor, vec4 rect, float radius, float dist) {
+            float insideMask = 1.0 - step(0.0, dist);
 
             if (insideMask <= 0.001) {
-                gl_FragColor = vec4(base, 1.0);
-                return;
+                return vec4(baseColor, 0.0);
             }
 
-            vec2 rectUv = clamp((fragPx - nearestRect.xy) / max(nearestRect.zw, vec2(1.0)), 0.0, 1.0);
+            float innerFeather = smoothstep(0.0, 7.0, -dist);
+            float glassMask = insideMask * innerFeather;
+            vec2 rectUv = clamp((fragPx - rect.xy) / max(rect.zw, vec2(1.0)), 0.0, 1.0);
             vec2 centerUv = rectUv * 2.0 - 1.0;
             vec2 edgeDir = normalize(centerUv + vec2(0.0001));
-            float edge = 1.0 - smoothstep(0.0, 26.0, -nearestDist);
-            float rim = pow(edge, 0.92) * smoothstep(0.0, 4.0, -nearestDist);
-            float body = (0.22 + (1.0 - smoothstep(18.0, 88.0, -nearestDist)) * 0.2) * innerFeather;
+            float edge = 1.0 - smoothstep(0.0, 26.0, -dist);
+            float rim = pow(edge, 0.92) * smoothstep(0.0, 4.0, -dist);
+            float body = (0.22 + (1.0 - smoothstep(18.0, 88.0, -dist)) * 0.2) * innerFeather;
             float horizontalBias = smoothstep(-0.08, 0.28, abs(centerUv.y) - abs(centerUv.x) * 0.72);
             float tubeBand = smoothstep(0.34, 0.96, abs(centerUv.y));
             float tubeMask = clamp(horizontalBias * tubeBand, 0.0, 1.0);
             float tubeRim = rim * tubeMask;
-            float chromaRim = pow(1.0 - smoothstep(0.0, 9.0, -nearestDist), 1.6) * tubeMask * insideMask;
+            float chromaRim = pow(1.0 - smoothstep(0.0, 9.0, -dist), 1.6) * tubeMask * insideMask;
             vec2 tubeNormal = vec2(0.0, sign(centerUv.y));
 
             vec2 noiseUv = rectUv * 15.8 + vec2(92.0, 31.0);
@@ -715,22 +686,87 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
                 edgeDir * tubeRim * 4.0;
 
             vec2 uvOffset = pxOffset / max(u_resolution, vec2(1.0));
-            vec3 refractedA = sampleScene(v_uv + uvOffset);
-            vec3 refractedB = sampleScene(v_uv - uvOffset * 0.22);
+            vec3 refractedA = sampleScene(uv + uvOffset);
+            vec3 refractedB = sampleScene(uv - uvOffset * 0.22);
             vec3 glass = mix(refractedA, refractedB, 0.22);
             vec2 chromaOffset = (uvOffset * (0.16 + chromaRim * 1.2)) + (tubeNormal * chromaRim * 4.2 / max(u_resolution, vec2(1.0)));
             vec3 chromaSplit = vec3(
-                sampleScene(v_uv + uvOffset + chromaOffset).r,
+                sampleScene(uv + uvOffset + chromaOffset).r,
                 glass.g,
-                sampleScene(v_uv + uvOffset - chromaOffset).b
+                sampleScene(uv + uvOffset - chromaOffset).b
             );
 
-            glass = mix(base, glass, 0.9 * glassMask);
+            glass = mix(baseColor, glass, 0.9 * glassMask);
             glass = mix(glass, chromaSplit, chromaRim * 0.62);
             glass += vec3(0.18) * tubeRim * 0.16;
             glass += vec3(0.06) * body * 0.06;
 
-            vec3 color = mix(base, glass, glassMask);
+            return vec4(clamp(glass, 0.0, 1.0), glassMask);
+        }
+
+        void main() {
+            vec3 base = sampleScene(v_uv);
+
+            if (u_glass_count < 0.5) {
+                gl_FragColor = vec4(base, 1.0);
+                return;
+            }
+
+            vec2 fragPx = vec2(v_uv.x * u_resolution.x, (1.0 - v_uv.y) * u_resolution.y);
+            float nearestScoreA = 1.0e9;
+            float nearestScoreB = 1.0e9;
+            float nearestDistA = 1.0e9;
+            float nearestDistB = 1.0e9;
+            float nearestRadiusA = 0.0;
+            float nearestRadiusB = 0.0;
+            vec4 nearestRectA = vec4(0.0);
+            vec4 nearestRectB = vec4(0.0);
+
+            for (int i = 0; i < MAX_GLASS_SURFACES; i++) {
+                if (float(i) >= u_glass_count) break;
+
+                vec4 rect = u_glass_rects[i];
+                float dist = sdRoundedRect(fragPx, rect, u_glass_radii[i]);
+                float absDist = abs(dist);
+                float edgePriority = (1.0 - smoothstep(0.0, 18.0, absDist)) * u_glass_priority[i] * 10.0;
+                float score = absDist - edgePriority;
+
+                if (score < nearestScoreA) {
+                    nearestScoreB = nearestScoreA;
+                    nearestDistB = nearestDistA;
+                    nearestRadiusB = nearestRadiusA;
+                    nearestRectB = nearestRectA;
+
+                    nearestScoreA = score;
+                    nearestDistA = dist;
+                    nearestRadiusA = u_glass_radii[i];
+                    nearestRectA = rect;
+                } else if (score < nearestScoreB) {
+                    nearestScoreB = score;
+                    nearestDistB = dist;
+                    nearestRadiusB = u_glass_radii[i];
+                    nearestRectB = rect;
+                }
+            }
+
+            vec4 surfaceA = renderGlassSurface(fragPx, v_uv, base, nearestRectA, nearestRadiusA, nearestDistA);
+            if (surfaceA.a <= 0.001) {
+                gl_FragColor = vec4(base, 1.0);
+                return;
+            }
+
+            vec3 accumColor = surfaceA.rgb * surfaceA.a;
+            float accumMask = surfaceA.a;
+
+            if (nearestScoreB < 1.0e8) {
+                vec4 surfaceB = renderGlassSurface(fragPx, v_uv, base, nearestRectB, nearestRadiusB, nearestDistB);
+                float secondaryMask = surfaceB.a * (1.0 - surfaceA.a * 0.35);
+                accumColor += surfaceB.rgb * secondaryMask;
+                accumMask += secondaryMask;
+            }
+
+            vec3 mixedGlass = accumColor / max(accumMask, 0.0001);
+            vec3 color = mix(base, mixedGlass, clamp(accumMask, 0.0, 1.0));
             gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
         }
     `;
