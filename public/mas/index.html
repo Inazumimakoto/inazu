@@ -16,84 +16,86 @@
 
 <body>
     <div class="app-shell">
-        <header class="site-header">
-            <a class="site-mark" href="/mas" aria-current="page">mas.inazu.me</a>
-            <a class="site-link" href="/">back to inazu.me</a>
-        </header>
+        <main class="stage-shell">
+            <canvas class="scene-canvas" data-scene-canvas aria-label="MAS simulation stage"></canvas>
 
-        <main class="layout">
-            <div class="main-column">
-                <section class="panel topic-panel">
-                    <div class="panel-header compact">
-                        <div>
-                            <p class="section-label">Topic</p>
-                            <h2>Discussion seed</h2>
-                        </div>
+            <div class="scene-overlay">
+                <header class="site-header">
+                    <a class="site-mark" href="/mas" aria-current="page">mas.inazu.me</a>
+
+                    <div class="header-actions">
+                        <button class="menu-toggle" type="button" data-menu-toggle aria-controls="control-panel"
+                            aria-expanded="false">menu</button>
+                        <a class="site-link" href="/">back to inazu.me</a>
                     </div>
+                </header>
 
-                    <form class="topic-form" data-topic-form>
-                        <label class="input-label" for="topic-input">議題</label>
-                        <textarea id="topic-input" name="topic" rows="4" placeholder="例: ローカルMASはどこまで遊べるか">ローカルMASはどこまで遊べるか</textarea>
-                        <button type="submit">start prototype</button>
-                    </form>
+                <section class="scene-brief">
+                    <p class="section-label">Stage</p>
+                    <h1>Agents in motion</h1>
+                    <p class="scene-topic" data-scene-topic>No topic loaded.</p>
+                    <p class="scene-copy" data-scene-hint>メニューから議題を入力すると、止まっていたエージェントが動き出します。</p>
+                    <p class="scene-controls">drag to pan / wheel or pinch to zoom</p>
                 </section>
 
-                <section class="panel stage-panel">
-                    <div class="panel-header">
-                        <div>
-                            <p class="section-label">Stage</p>
-                            <h2>Agents in motion</h2>
+                <aside id="control-panel" class="control-panel" data-control-panel aria-hidden="true">
+                    <section class="panel topic-panel">
+                        <div class="panel-header compact">
+                            <div>
+                                <p class="section-label">Topic</p>
+                                <h2>Discussion seed</h2>
+                            </div>
+                            <p class="panel-status" data-menu-status>Waiting for topic input.</p>
                         </div>
-                        <p class="panel-copy">まずは 3 体のエージェントを置いて、題材を元に近づいて話す最小デモを作る。</p>
-                    </div>
 
-                    <div class="scene-shell">
-                        <canvas class="scene-canvas" data-scene-canvas aria-label="MAS simulation stage"></canvas>
-                        <div class="scene-overlay">
-                            <div class="hud-layer" data-hud-layer></div>
+                        <form class="topic-form" data-topic-form>
+                            <label class="input-label" for="topic-input">議題</label>
+                            <textarea id="topic-input" name="topic" rows="4" placeholder="例: ローカルMASはどこまで遊べるか"></textarea>
+                            <p class="topic-note">空欄で送ると、エージェントは停止状態に戻ります。</p>
+                            <button type="submit">apply topic</button>
+                        </form>
+                    </section>
+
+                    <section class="panel agents-panel">
+                        <div class="panel-header compact">
+                            <div>
+                                <p class="section-label">Agents</p>
+                                <h2>Initial cast</h2>
+                            </div>
                         </div>
-                    </div>
-                </section>
+
+                        <ul class="agent-list">
+                            <li>
+                                <strong>Pulse</strong>
+                                <span>肯定派。面白さ優先で前へ進める。</span>
+                            </li>
+                            <li>
+                                <strong>Shard</strong>
+                                <span>懐疑派。破綻点と重さを突く。</span>
+                            </li>
+                            <li>
+                                <strong>Mica</strong>
+                                <span>要約役。論点を整理して収束させる。</span>
+                            </li>
+                        </ul>
+                    </section>
+
+                    <section class="panel history-panel">
+                        <div class="panel-header compact">
+                            <div>
+                                <p class="section-label">Log</p>
+                                <h2>Conversation stream</h2>
+                            </div>
+                        </div>
+
+                        <ol class="log-list" data-log-list>
+                            <li>まだ会話は始まっていません。</li>
+                        </ol>
+                    </section>
+                </aside>
+
+                <div class="hud-layer" data-hud-layer></div>
             </div>
-
-            <aside class="sidebar">
-                <section class="panel">
-                    <div class="panel-header compact">
-                        <div>
-                            <p class="section-label">Agents</p>
-                            <h2>Initial cast</h2>
-                        </div>
-                    </div>
-
-                    <ul class="agent-list">
-                        <li>
-                            <strong>Pulse</strong>
-                            <span>肯定派。面白さ優先で前へ進める。</span>
-                        </li>
-                        <li>
-                            <strong>Shard</strong>
-                            <span>懐疑派。破綻点と重さを突く。</span>
-                        </li>
-                        <li>
-                            <strong>Mica</strong>
-                            <span>要約役。論点を整理して収束させる。</span>
-                        </li>
-                    </ul>
-                </section>
-
-                <section class="panel">
-                    <div class="panel-header compact">
-                        <div>
-                            <p class="section-label">Log</p>
-                            <h2>Conversation stream</h2>
-                        </div>
-                    </div>
-
-                    <ol class="log-list" data-log-list>
-                        <li>Prototype waiting for topic input.</li>
-                    </ol>
-                </section>
-            </aside>
         </main>
     </div>
 

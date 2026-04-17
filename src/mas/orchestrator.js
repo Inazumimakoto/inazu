@@ -45,7 +45,7 @@ const MAX_LOG_ENTRIES = 10;
 
 function normalizeTopic(topic) {
     const value = typeof topic === 'string' ? topic.trim().replace(/\s+/g, ' ') : '';
-    return value || 'ローカルMASの最初の遊び方';
+    return value;
 }
 
 function clonePoint(point) {
@@ -133,9 +133,9 @@ class MasWorld {
         this.lastSnapshot = '';
         this.lastSubscriberAt = Date.now();
         this.lastActivityAt = Date.now();
-        this.topic = normalizeTopic('');
-        this.status = 'connecting server orchestrator';
-        this.phase = 'idle';
+        this.topic = '';
+        this.status = 'awaiting topic input';
+        this.phase = 'waiting_topic';
         this.isRunning = false;
         this.turnIndex = 0;
         this.activeTurn = null;
@@ -153,11 +153,17 @@ class MasWorld {
         this.interval = setInterval(() => this.tick(), TICK_MS);
     }
 
-    destroy() {
-        if (this.interval) {
-            clearInterval(this.interval);
-            this.interval = null;
+    stopInterval() {
+        if (!this.interval) {
+            return;
         }
+
+        clearInterval(this.interval);
+        this.interval = null;
+    }
+
+    destroy() {
+        this.stopInterval();
 
         for (const response of this.subscribers) {
             try {
@@ -209,8 +215,31 @@ class MasWorld {
         this.touch();
     }
 
+    awaitTopic() {
+        this.stopInterval();
+        this.topic = '';
+        this.status = 'awaiting topic input';
+        this.phase = 'waiting_topic';
+        this.isRunning = false;
+        this.turnIndex = 0;
+        this.activeTurn = null;
+        this.phaseEndsAt = 0;
+        this.log = [];
+        this.backendLabel = getMasBackendLabel();
+        this.agents = AGENT_BLUEPRINTS.map(createAgentState);
+        this.hideBubbles();
+        this.resetTargets();
+        this.touch();
+        this.broadcast(true);
+    }
+
     reset(topic) {
         this.topic = normalizeTopic(topic);
+        if (!this.topic) {
+            this.awaitTopic();
+            return;
+        }
+
         this.status = `topic loaded: ${this.topic}`;
         this.phase = 'queued';
         this.isRunning = true;
@@ -394,6 +423,7 @@ class MasWorld {
     completeDiscussion() {
         this.hideBubbles();
         this.resetTargets();
+        this.stopInterval();
         this.isRunning = false;
         this.phase = 'complete';
         this.activeTurn = null;

@@ -5,25 +5,58 @@ const hudLayer = document.querySelector('[data-hud-layer]');
 const topicForm = document.querySelector('[data-topic-form]');
 const topicInput = document.querySelector('#topic-input');
 const logList = document.querySelector('[data-log-list]');
+const menuButtons = Array.from(document.querySelectorAll('[data-menu-toggle]'));
+const controlPanel = document.querySelector('[data-control-panel]');
+const sceneTopic = document.querySelector('[data-scene-topic]');
+const sceneHint = document.querySelector('[data-scene-hint]');
+const menuStatus = document.querySelector('[data-menu-status]');
 
 const clock = new THREE.Clock();
 const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2(10, 10);
+const hoverPointer = new THREE.Vector2(10, 10);
+const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const hoveredRoot = { current: null };
 const agents = [];
 const agentById = new Map();
+const cameraOffset = new THREE.Vector3(16, 15, 16);
+const interactionState = {
+    activePointerId: null,
+    pointerPanning: false,
+    panStartPoint: null,
+    panStartTarget: null,
+    touchMode: 'none',
+    touchPanStartPoint: null,
+    touchPanStartTarget: null,
+    pinchStartDistance: 0,
+    pinchStartZoom: 1,
+    pinchStartPoint: null,
+    pinchStartTarget: null
+};
+
 const worldState = {
     worldId: null,
     topic: '',
     status: 'connecting server orchestrator',
+    phase: 'waiting_topic',
+    isRunning: false,
     llmMode: 'server orchestrator / mock utterances',
     log: [],
     activeSpeakerId: null,
     activeListenerId: null
 };
+
 const clientState = {
     stream: null,
-    initializing: false
+    initializing: false,
+    menuOpen: false
+};
+
+const cameraState = {
+    target: new THREE.Vector3(0, 1.4, 0),
+    zoom: 1.02,
+    minZoom: 0.72,
+    maxZoom: 2.6,
+    frustumHeight: 28
 };
 
 const renderer = new THREE.WebGLRenderer({
@@ -35,10 +68,9 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x051018);
-scene.fog = new THREE.Fog(0x051018, 14, 34);
+scene.fog = new THREE.Fog(0x051018, 24, 48);
 
-const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 80);
-camera.position.set(0, 9, 18);
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 120);
 
 const worldGroup = new THREE.Group();
 scene.add(worldGroup);
@@ -46,12 +78,61 @@ scene.add(worldGroup);
 const hoverLift = 0.28;
 const agentScaleActive = 1.04;
 
+function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+}
+
 function setWorldStatus(text) {
     worldState.status = text;
+    if (menuStatus) {
+        menuStatus.textContent = text;
+    }
+    updateSceneMeta();
 }
 
 function setWorldMode(text) {
     worldState.llmMode = text;
+}
+
+function updateSceneMeta() {
+    if (sceneTopic) {
+        sceneTopic.textContent = worldState.topic
+            ? `Topic: ${worldState.topic}`
+            : 'No topic loaded.';
+    }
+
+    if (!sceneHint) {
+        return;
+    }
+
+    if (!worldState.topic) {
+        sceneHint.textContent = 'メニューから議題を入力すると、止まっていたエージェントが動き出します。';
+        return;
+    }
+
+    if (worldState.isRunning) {
+        sceneHint.textContent = worldState.status;
+        return;
+    }
+
+    if (worldState.phase === 'complete') {
+        sceneHint.textContent = '会話は一周しました。メニューから別の議題を入れると再開します。';
+        return;
+    }
+
+    sceneHint.textContent = worldState.status;
+}
+
+function getEmptyLogMessage() {
+    if (!worldState.topic) {
+        return 'まだ会話は始まっていません。menu から議題を入力するとエージェントが動き出します。';
+    }
+
+    if (worldState.phase === 'complete') {
+        return 'この議題の会話は完了しました。別の議題を入れると新しく始まります。';
+    }
+
+    return 'サーバーからの会話を待っています。';
 }
 
 function renderLog(logEntries) {
@@ -62,13 +143,28 @@ function renderLog(logEntries) {
     logList.innerHTML = '';
     const entries = Array.isArray(logEntries) && logEntries.length
         ? logEntries
-        : ['Prototype waiting for server state.'];
+        : [getEmptyLogMessage()];
 
     for (const entry of entries) {
         const item = document.createElement('li');
         item.textContent = entry;
         logList.appendChild(item);
     }
+}
+
+function setMenuOpen(isOpen) {
+    clientState.menuOpen = isOpen;
+    controlPanel?.classList.toggle('is-open', isOpen);
+    controlPanel?.setAttribute('aria-hidden', String(!isOpen));
+
+    for (const button of menuButtons) {
+        button.textContent = isOpen ? 'close' : 'menu';
+        button.setAttribute('aria-expanded', String(isOpen));
+    }
+}
+
+function toggleMenu() {
+    setMenuOpen(!clientState.menuOpen);
 }
 
 function createHudTag(className, color) {
@@ -81,7 +177,7 @@ function createHudTag(className, color) {
 
 function createFloor() {
     const floor = new THREE.Mesh(
-        new THREE.CylinderGeometry(11, 12.6, 0.6, 48, 1, false),
+        new THREE.CylinderGeometry(13.4, 15.2, 0.6, 56, 1, false),
         new THREE.MeshStandardMaterial({
             color: 0x08161d,
             roughness: 0.84,
@@ -92,27 +188,27 @@ function createFloor() {
     worldGroup.add(floor);
 
     const outerRing = new THREE.Mesh(
-        new THREE.TorusGeometry(9.2, 0.08, 12, 84),
-        new THREE.MeshBasicMaterial({ color: 0x7df0ff, transparent: true, opacity: 0.36 })
+        new THREE.TorusGeometry(11.9, 0.08, 12, 92),
+        new THREE.MeshBasicMaterial({ color: 0x7df0ff, transparent: true, opacity: 0.32 })
     );
     outerRing.rotation.x = Math.PI / 2;
     worldGroup.add(outerRing);
 
     const innerRing = new THREE.Mesh(
-        new THREE.TorusGeometry(4.8, 0.06, 12, 64),
-        new THREE.MeshBasicMaterial({ color: 0xffbf69, transparent: true, opacity: 0.42 })
+        new THREE.TorusGeometry(6.4, 0.06, 12, 72),
+        new THREE.MeshBasicMaterial({ color: 0xffbf69, transparent: true, opacity: 0.36 })
     );
     innerRing.rotation.x = Math.PI / 2;
     innerRing.position.y = 0.04;
     worldGroup.add(innerRing);
 
     const spokes = new THREE.Group();
-    for (let index = 0; index < 8; index += 1) {
+    for (let index = 0; index < 10; index += 1) {
         const spoke = new THREE.Mesh(
-            new THREE.BoxGeometry(0.08, 0.02, 8.4),
-            new THREE.MeshBasicMaterial({ color: 0x1a4756, transparent: true, opacity: 0.45 })
+            new THREE.BoxGeometry(0.08, 0.02, 11.8),
+            new THREE.MeshBasicMaterial({ color: 0x1a4756, transparent: true, opacity: 0.4 })
         );
-        spoke.rotation.y = (Math.PI / 4) * index;
+        spoke.rotation.y = (Math.PI / 5) * index;
         spoke.position.y = 0.06;
         spokes.add(spoke);
     }
@@ -123,32 +219,32 @@ function createLightRig() {
     const hemi = new THREE.HemisphereLight(0xbfefff, 0x081318, 1.1);
     scene.add(hemi);
 
-    const key = new THREE.DirectionalLight(0xffffff, 1.4);
-    key.position.set(6, 10, 4);
+    const key = new THREE.DirectionalLight(0xffffff, 1.35);
+    key.position.set(8, 14, 6);
     scene.add(key);
 
-    const cyanGlow = new THREE.PointLight(0x7df0ff, 18, 24, 2);
-    cyanGlow.position.set(-8, 6, 5);
+    const cyanGlow = new THREE.PointLight(0x7df0ff, 22, 30, 2);
+    cyanGlow.position.set(-11, 7, 8);
     scene.add(cyanGlow);
 
-    const warmGlow = new THREE.PointLight(0xffbf69, 16, 20, 2);
-    warmGlow.position.set(7, 5, -4);
+    const warmGlow = new THREE.PointLight(0xffbf69, 18, 24, 2);
+    warmGlow.position.set(9, 6, -6);
     scene.add(warmGlow);
 }
 
 function createBackdropColumns() {
-    const columnGeometry = new THREE.CylinderGeometry(0.12, 0.12, 5.5, 12);
+    const columnGeometry = new THREE.CylinderGeometry(0.12, 0.12, 6.5, 12);
     const columnMaterial = new THREE.MeshBasicMaterial({
         color: 0x163746,
         transparent: true,
-        opacity: 0.48
+        opacity: 0.44
     });
 
-    for (let index = 0; index < 14; index += 1) {
-        const angle = (Math.PI * 2 * index) / 14;
-        const radius = 13 + (index % 2 === 0 ? 0 : 1.4);
+    for (let index = 0; index < 18; index += 1) {
+        const angle = (Math.PI * 2 * index) / 18;
+        const radius = 17 + (index % 2 === 0 ? 0 : 1.6);
         const column = new THREE.Mesh(columnGeometry, columnMaterial);
-        column.position.set(Math.cos(angle) * radius, 2.4, Math.sin(angle) * radius);
+        column.position.set(Math.cos(angle) * radius, 2.8, Math.sin(angle) * radius);
         worldGroup.add(column);
     }
 }
@@ -261,6 +357,8 @@ function applySnapshot(snapshot) {
     worldState.worldId = snapshot.worldId;
     worldState.topic = snapshot.topic;
     worldState.status = snapshot.status;
+    worldState.phase = snapshot.phase || 'waiting_topic';
+    worldState.isRunning = Boolean(snapshot.isRunning);
     worldState.llmMode = snapshot.llmMode;
     worldState.log = Array.isArray(snapshot.log) ? snapshot.log : [];
     worldState.activeSpeakerId = snapshot.activeSpeakerId;
@@ -302,6 +400,21 @@ function applySnapshot(snapshot) {
     }
 }
 
+function getCanvasNdc(clientX, clientY) {
+    const rect = sceneCanvas.getBoundingClientRect();
+    return {
+        x: ((clientX - rect.left) / rect.width) * 2 - 1,
+        y: -((clientY - rect.top) / rect.height) * 2 + 1
+    };
+}
+
+function getGroundPoint(clientX, clientY) {
+    const ndc = getCanvasNdc(clientX, clientY);
+    raycaster.setFromCamera(ndc, camera);
+    const point = new THREE.Vector3();
+    return raycaster.ray.intersectPlane(groundPlane, point) ? point : null;
+}
+
 function projectToScreen(position) {
     const projected = position.clone().project(camera);
     const rect = sceneCanvas.getBoundingClientRect();
@@ -325,18 +438,32 @@ function updateHud() {
     }
 }
 
+function updateCamera() {
+    camera.position.copy(cameraState.target).add(cameraOffset);
+    camera.lookAt(cameraState.target);
+    camera.updateMatrixWorld();
+}
+
 function resizeRenderer() {
     const rect = sceneCanvas.getBoundingClientRect();
     const width = Math.max(1, Math.floor(rect.width));
     const height = Math.max(1, Math.floor(rect.height));
 
-    if (sceneCanvas.width === width && sceneCanvas.height === height) {
-        return;
+    if (sceneCanvas.width !== width || sceneCanvas.height !== height) {
+        renderer.setSize(width, height, false);
     }
 
-    renderer.setSize(width, height, false);
-    camera.aspect = width / height;
+    const aspect = width / height;
+    const frustumHalfHeight = cameraState.frustumHeight * 0.5;
+    const frustumHalfWidth = frustumHalfHeight * aspect;
+
+    camera.left = -frustumHalfWidth;
+    camera.right = frustumHalfWidth;
+    camera.top = frustumHalfHeight;
+    camera.bottom = -frustumHalfHeight;
+    camera.zoom = cameraState.zoom;
     camera.updateProjectionMatrix();
+    updateCamera();
 }
 
 function updateAgents(elapsedSeconds, deltaSeconds) {
@@ -371,14 +498,18 @@ function updateAgents(elapsedSeconds, deltaSeconds) {
     }
 }
 
-function updatePointer(event) {
-    const rect = sceneCanvas.getBoundingClientRect();
-    pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+function updateHoverPointer(clientX, clientY) {
+    const ndc = getCanvasNdc(clientX, clientY);
+    hoverPointer.set(ndc.x, ndc.y);
 }
 
 function pickHoveredAgent() {
-    raycaster.setFromCamera(pointer, camera);
+    if (interactionState.pointerPanning || interactionState.touchMode !== 'none') {
+        hoveredRoot.current = null;
+        return;
+    }
+
+    raycaster.setFromCamera(hoverPointer, camera);
     const intersections = raycaster.intersectObjects(agents.map((agent) => agent.root), true);
     const hit = intersections[0];
 
@@ -397,6 +528,153 @@ function pickHoveredAgent() {
         : null;
 }
 
+function panCamera(startPoint, currentPoint, startTarget) {
+    if (!startPoint || !currentPoint || !startTarget) {
+        return;
+    }
+
+    const delta = startPoint.clone().sub(currentPoint);
+    cameraState.target.copy(startTarget.clone().add(delta));
+}
+
+function onPointerDown(event) {
+    if (event.pointerType === 'touch' || event.button !== 0) {
+        return;
+    }
+
+    const groundPoint = getGroundPoint(event.clientX, event.clientY);
+    if (!groundPoint) {
+        return;
+    }
+
+    interactionState.activePointerId = event.pointerId;
+    interactionState.pointerPanning = true;
+    interactionState.panStartPoint = groundPoint;
+    interactionState.panStartTarget = cameraState.target.clone();
+    hoveredRoot.current = null;
+    sceneCanvas.setPointerCapture?.(event.pointerId);
+}
+
+function onPointerMove(event) {
+    if (event.pointerType === 'touch') {
+        return;
+    }
+
+    updateHoverPointer(event.clientX, event.clientY);
+
+    if (!interactionState.pointerPanning || interactionState.activePointerId !== event.pointerId) {
+        return;
+    }
+
+    event.preventDefault();
+    const groundPoint = getGroundPoint(event.clientX, event.clientY);
+    panCamera(interactionState.panStartPoint, groundPoint, interactionState.panStartTarget);
+}
+
+function stopPointerPan(pointerId) {
+    if (interactionState.activePointerId !== pointerId) {
+        return;
+    }
+
+    sceneCanvas.releasePointerCapture?.(pointerId);
+    interactionState.activePointerId = null;
+    interactionState.pointerPanning = false;
+    interactionState.panStartPoint = null;
+    interactionState.panStartTarget = null;
+}
+
+function onWheel(event) {
+    event.preventDefault();
+    const nextZoom = cameraState.zoom * Math.exp(-event.deltaY * 0.0012);
+    cameraState.zoom = clamp(nextZoom, cameraState.minZoom, cameraState.maxZoom);
+    resizeRenderer();
+}
+
+function getTouchDistance(touches) {
+    const [first, second] = touches;
+    return Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
+}
+
+function getTouchMidpoint(touches) {
+    const [first, second] = touches;
+    return {
+        x: (first.clientX + second.clientX) * 0.5,
+        y: (first.clientY + second.clientY) * 0.5
+    };
+}
+
+function primeSingleTouch(touch) {
+    interactionState.touchMode = 'pan';
+    interactionState.touchPanStartPoint = getGroundPoint(touch.clientX, touch.clientY);
+    interactionState.touchPanStartTarget = cameraState.target.clone();
+}
+
+function onTouchStart(event) {
+    if (event.touches.length === 1) {
+        primeSingleTouch(event.touches[0]);
+        updateHoverPointer(event.touches[0].clientX, event.touches[0].clientY);
+        return;
+    }
+
+    if (event.touches.length !== 2) {
+        return;
+    }
+
+    event.preventDefault();
+    const midpoint = getTouchMidpoint(event.touches);
+    interactionState.touchMode = 'pinch';
+    interactionState.pinchStartDistance = getTouchDistance(event.touches);
+    interactionState.pinchStartZoom = cameraState.zoom;
+    interactionState.pinchStartPoint = getGroundPoint(midpoint.x, midpoint.y);
+    interactionState.pinchStartTarget = cameraState.target.clone();
+    updateHoverPointer(midpoint.x, midpoint.y);
+}
+
+function onTouchMove(event) {
+    if (event.touches.length === 1 && interactionState.touchMode === 'pan') {
+        event.preventDefault();
+        const touch = event.touches[0];
+        updateHoverPointer(touch.clientX, touch.clientY);
+        const groundPoint = getGroundPoint(touch.clientX, touch.clientY);
+        panCamera(interactionState.touchPanStartPoint, groundPoint, interactionState.touchPanStartTarget);
+        return;
+    }
+
+    if (event.touches.length !== 2) {
+        return;
+    }
+
+    event.preventDefault();
+    const midpoint = getTouchMidpoint(event.touches);
+    updateHoverPointer(midpoint.x, midpoint.y);
+
+    const distance = getTouchDistance(event.touches);
+    const nextZoom = interactionState.pinchStartZoom * (distance / interactionState.pinchStartDistance);
+    cameraState.zoom = clamp(nextZoom, cameraState.minZoom, cameraState.maxZoom);
+
+    const groundPoint = getGroundPoint(midpoint.x, midpoint.y);
+    panCamera(interactionState.pinchStartPoint, groundPoint, interactionState.pinchStartTarget);
+    resizeRenderer();
+}
+
+function onTouchEnd(event) {
+    if (event.touches.length === 1) {
+        primeSingleTouch(event.touches[0]);
+        return;
+    }
+
+    if (event.touches.length === 0) {
+        interactionState.touchMode = 'none';
+        interactionState.touchPanStartPoint = null;
+        interactionState.touchPanStartTarget = null;
+        interactionState.pinchStartPoint = null;
+        interactionState.pinchStartTarget = null;
+        return;
+    }
+
+    interactionState.touchMode = 'none';
+}
+
 function animate() {
     resizeRenderer();
     const deltaSeconds = clock.getDelta();
@@ -404,12 +682,7 @@ function animate() {
 
     pickHoveredAgent();
     updateAgents(elapsedSeconds, deltaSeconds);
-
-    const orbitRadius = 18;
-    camera.position.x = Math.sin(elapsedSeconds * 0.12) * orbitRadius;
-    camera.position.z = Math.cos(elapsedSeconds * 0.12) * orbitRadius;
-    camera.position.y = 9 + Math.sin(elapsedSeconds * 0.16) * 0.6;
-    camera.lookAt(0, 2, 0);
+    updateCamera();
 
     renderer.render(scene, camera);
     updateHud();
@@ -441,7 +714,7 @@ async function restartWorld(topic) {
         return;
     }
 
-    setWorldStatus('restarting server world');
+    setWorldStatus(topic ? 'starting discussion' : 'returning agents to idle');
 
     const response = await fetch(`/api/mas/worlds/${worldState.worldId}/topic`, {
         method: 'POST',
@@ -483,19 +756,38 @@ function connectStream(worldId) {
 topicForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
 
+    const nextTopic = topicInput?.value?.trim() || '';
+
     try {
-        await restartWorld(topicInput?.value || '');
+        await restartWorld(nextTopic);
+        if (nextTopic) {
+            setMenuOpen(false);
+        }
     } catch (error) {
         console.error('[MAS] failed to submit topic:', error);
         setWorldStatus('failed to update topic');
     }
 });
 
-sceneCanvas?.addEventListener('pointermove', updatePointer);
+for (const button of menuButtons) {
+    button.addEventListener('click', toggleMenu);
+}
+
+sceneCanvas?.addEventListener('pointerdown', onPointerDown);
+sceneCanvas?.addEventListener('pointermove', onPointerMove);
+sceneCanvas?.addEventListener('pointerup', (event) => stopPointerPan(event.pointerId));
+sceneCanvas?.addEventListener('pointercancel', (event) => stopPointerPan(event.pointerId));
 sceneCanvas?.addEventListener('pointerleave', () => {
-    hoveredRoot.current = null;
-    pointer.set(10, 10);
+    if (!interactionState.pointerPanning) {
+        hoveredRoot.current = null;
+        hoverPointer.set(10, 10);
+    }
 });
+sceneCanvas?.addEventListener('wheel', onWheel, { passive: false });
+sceneCanvas?.addEventListener('touchstart', onTouchStart, { passive: false });
+sceneCanvas?.addEventListener('touchmove', onTouchMove, { passive: false });
+sceneCanvas?.addEventListener('touchend', onTouchEnd, { passive: false });
+sceneCanvas?.addEventListener('touchcancel', onTouchEnd, { passive: false });
 
 window.addEventListener('resize', resizeRenderer);
 window.addEventListener('beforeunload', () => {
@@ -509,9 +801,10 @@ resizeRenderer();
 renderLog([]);
 setWorldStatus(worldState.status);
 setWorldMode(worldState.llmMode);
+setMenuOpen(false);
 renderer.setAnimationLoop(animate);
 
-createWorld(topicInput?.value || '').catch((error) => {
+createWorld('').catch((error) => {
     console.error('[MAS] failed to initialize world:', error);
     setWorldStatus('failed to initialize world');
 });
