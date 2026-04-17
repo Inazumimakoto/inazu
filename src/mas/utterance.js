@@ -1,4 +1,11 @@
 const DEFAULT_BACKEND = process.env.MAS_UTTERANCE_BACKEND || 'mock';
+const DEFAULT_LLAMACPP_URL = (process.env.LLAMACPP_URL || 'http://127.0.0.1:8080').replace(/\/$/, '');
+const DEFAULT_LLAMACPP_MODEL = process.env.LLAMACPP_MODEL || 'local-model';
+const DEFAULT_LLAMACPP_API_MODE = process.env.LLAMACPP_API_MODE || 'auto';
+const DEFAULT_TIMEOUT_MS = Number(process.env.LLAMACPP_TIMEOUT_MS || 15000);
+const DEFAULT_MAX_TOKENS = Number(process.env.LLAMACPP_MAX_TOKENS || 96);
+const DEFAULT_TEMPERATURE = Number(process.env.LLAMACPP_TEMPERATURE || 0.75);
+const DEFAULT_TOP_P = Number(process.env.LLAMACPP_TOP_P || 0.92);
 
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -9,24 +16,59 @@ function normalizeTopic(topic) {
     return value || 'ローカルMASの最初の遊び方';
 }
 
-function buildLlamaCppPrompt({ topic, speaker, listener, transcript }) {
-    const dialogue = transcript.length
+function buildTranscriptBlock(transcript) {
+    return transcript.length
         ? transcript.map((line) => `- ${line}`).join('\n')
         : '- まだ会話ログはない';
+}
 
+function buildLlamaCppSystemPrompt({ speaker, listener }) {
     return [
         `あなたは MAS シミュレーション内のエージェント ${speaker.name} です。`,
         `役割: ${speaker.role}`,
-        `相手: ${listener.name} (${listener.role})`,
-        `話題: ${normalizeTopic(topic)}`,
-        '要件:',
+        `会話相手: ${listener.name} (${listener.role})`,
+        '返答ルール:',
+        '- 日本語で話す',
         '- 一言は 1〜2 文に収める',
         '- 口調は役割に沿わせる',
         '- 題材から逸れすぎない',
-        '- 返答は地の文だけで、名前ラベルや箇条書きは出さない',
-        '直近ログ:',
-        dialogue
+        '- 名前ラベル、箇条書き、ト書き、囲み記号は付けない'
     ].join('\n');
+}
+
+function buildLlamaCppUserPrompt({ topic, listener, transcript }) {
+    return [
+        `議題: ${normalizeTopic(topic)}`,
+        `${listener.name} に向けて、次の一言だけ返してください。`,
+        '直近ログ:',
+        buildTranscriptBlock(transcript)
+    ].join('\n');
+}
+
+function buildLlamaCppPrompt({ topic, speaker, listener, transcript }) {
+    const systemPrompt = buildLlamaCppSystemPrompt({ speaker, listener });
+    const userPrompt = buildLlamaCppUserPrompt({ topic, listener, transcript });
+
+    return [
+        '### System',
+        systemPrompt,
+        '',
+        '### User',
+        userPrompt
+    ].join('\n');
+}
+
+function buildLlamaCppMessages(context) {
+    return [
+        {
+            role: 'system',
+            content: buildLlamaCppSystemPrompt(context)
+        },
+        {
+            role: 'user',
+            content: buildLlamaCppUserPrompt(context)
+        }
+    ];
 }
 
 function buildMockUtterance({ topic, speaker, turnIndex }) {
@@ -51,34 +93,117 @@ function buildMockUtterance({ topic, speaker, turnIndex }) {
     return lines[Math.min(turnIndex, lines.length - 1)];
 }
 
-async function generateViaLlamaCpp(context) {
-    const baseUrl = (process.env.LLAMACPP_URL || 'http://127.0.0.1:8080').replace(/\/$/, '');
-    const prompt = buildLlamaCppPrompt(context);
+function sanitizeUtterance(text) {
+    const normalized = String(text || '')
+        .trim()
+        .replace(/^["'`「『]+/, '')
+        .replace(/["'`」』]+$/, '')
+        .replace(/^(Pulse|Shard|Mica)\s*[:：-]\s*/i, '')
+        .replace(/\s+/g, ' ');
 
-    const response = await fetch(`${baseUrl}/completion`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            prompt,
-            n_predict: 96,
-            temperature: 0.8,
-            top_p: 0.92,
-            stop: ['\n', '</s>']
-        })
+    return normalized || '';
+}
+
+async function postJson(url, payload) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            signal: controller.signal
+        });
+
+        return response;
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
+async function generateViaChatCompletions(context) {
+    const response = await postJson(`${DEFAULT_LLAMACPP_URL}/v1/chat/completions`, {
+        model: DEFAULT_LLAMACPP_MODEL,
+        messages: buildLlamaCppMessages(context),
+        max_tokens: DEFAULT_MAX_TOKENS,
+        temperature: DEFAULT_TEMPERATURE,
+        top_p: DEFAULT_TOP_P,
+        stream: false
     });
 
     if (!response.ok) {
-        throw new Error(`llama.cpp error: ${response.status}`);
+        const error = new Error(`llama.cpp chat endpoint error: ${response.status}`);
+        error.status = response.status;
+        throw error;
     }
 
     const payload = await response.json();
-    const content = (payload.content || payload.response || '').trim();
+    const content = sanitizeUtterance(
+        payload?.choices?.[0]?.message?.content
+        || payload?.choices?.[0]?.text
+        || ''
+    );
 
     if (!content) {
-        throw new Error('llama.cpp returned an empty response');
+        throw new Error('llama.cpp chat endpoint returned an empty response');
     }
 
-    return content;
+    return {
+        text: content,
+        backendLabel: 'server orchestrator / llama.cpp chat'
+    };
+}
+
+async function generateViaCompletion(context) {
+    const prompt = buildLlamaCppPrompt(context);
+
+    const response = await postJson(`${DEFAULT_LLAMACPP_URL}/completion`, {
+        prompt,
+        n_predict: DEFAULT_MAX_TOKENS,
+        temperature: DEFAULT_TEMPERATURE,
+        top_p: DEFAULT_TOP_P,
+        stop: ['\n', '</s>'],
+        cache_prompt: true
+    });
+
+    if (!response.ok) {
+        const error = new Error(`llama.cpp completion endpoint error: ${response.status}`);
+        error.status = response.status;
+        throw error;
+    }
+
+    const payload = await response.json();
+    const content = sanitizeUtterance(payload?.content || payload?.response || payload?.choices?.[0]?.text || '');
+
+    if (!content) {
+        throw new Error('llama.cpp completion endpoint returned an empty response');
+    }
+
+    return {
+        text: content,
+        backendLabel: 'server orchestrator / llama.cpp completion'
+    };
+}
+
+async function generateViaLlamaCpp(context) {
+    if (DEFAULT_LLAMACPP_API_MODE === 'chat') {
+        return generateViaChatCompletions(context);
+    }
+
+    if (DEFAULT_LLAMACPP_API_MODE === 'completion') {
+        return generateViaCompletion(context);
+    }
+
+    try {
+        return await generateViaChatCompletions(context);
+    } catch (error) {
+        if (error.status && error.status !== 404 && error.status !== 501) {
+            throw error;
+        }
+    }
+
+    return generateViaCompletion(context);
 }
 
 async function generateMasUtterance(context) {
@@ -98,7 +223,12 @@ async function generateMasUtterance(context) {
     }
 
     await sleep(420 + ((context.turnIndex % 3) * 180));
-    return buildMockUtterance(nextContext);
+    return {
+        text: buildMockUtterance(nextContext),
+        backendLabel: DEFAULT_BACKEND === 'llama.cpp'
+            ? 'server orchestrator / mock fallback'
+            : 'server orchestrator / mock utterances'
+    };
 }
 
 function getMasBackendLabel() {

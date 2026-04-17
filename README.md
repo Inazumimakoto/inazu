@@ -1,9 +1,10 @@
-# inazu.me / chat.inazu.me
+# inazu.me / chat.inazu.me / mas.inazu.me
 
-`inazu.me` のポートフォリオサイトと、`chat.inazu.me` のローカル LLM チャットアプリを同じ Node.js サーバーで配信しているリポジトリです。
+`inazu.me` のポートフォリオサイト、`chat.inazu.me` のローカル LLM チャットアプリ、`mas.inazu.me` の MAS 実験ページを同じ Node.js サーバーで配信しているリポジトリです。
 
 - `inazu.me`: ポートフォリオサイト
 - `chat.inazu.me`: Cloudflare Turnstile を通して使うチャットボットアプリ
+- `mas.inazu.me`: three.js で可視化するローカル MAS 実験ページ
 
 ## Overview
 
@@ -11,7 +12,9 @@
 
 - `https://inazu.me/` は [`public/index.html`](public/index.html) を返します
 - `https://chat.inazu.me/` は最初に [`public/verify.html`](public/verify.html) を返します
+- `http://localhost:3000/mas/` は [`public/mas/index.html`](public/mas/index.html) を返します
 - 認証通過後に [`public/chat.html`](public/chat.html) から `/api/chat` を叩いて Ollama と会話します
+- MAS 側は `/api/mas/worlds` と SSE でサーバー主導の world state を配信します
 
 チャット側は Cloudflare Turnstile、セッション管理、簡易 Bot ブロック、レート制限を挟んだ上で、ローカルの Ollama にストリーミングでプロキシします。
 
@@ -19,10 +22,12 @@
 
 - Node.js + Express
 - Ollama
+- llama.cpp
 - Cloudflare Turnstile
 - express-session
 - express-rate-limit
 - marked
+- three.js
 
 ## Local Setup
 
@@ -51,12 +56,13 @@ SESSION_SECRET=your_random_session_secret
 - `TURNSTILE_SECRET` がないと `/api/verify` は `503` を返します
 - `SESSION_SECRET` は未設定でも起動しますが、再起動ごとに変わるので固定推奨です
 - Turnstile の site key は [`public/verify.html`](public/verify.html) と [`public/chat.html`](public/chat.html) に直書きされています
+- MAS 用の `llama.cpp` 設定は [`docs/mas-llamacpp.md`](docs/mas-llamacpp.md) を参照
 
 ## Notes For Local Development
 
 この実装は本番寄りです。`express-session` の cookie が `secure: true` なので、チャットの認証フローをローカルで完全に試す場合は HTTPS 環境か、ローカル用の cookie 設定調整が必要です。
 
-ポートフォリオ側の見た目調整だけなら、そのまま `localhost:3000` で確認できます。
+ポートフォリオや MAS の見た目調整だけなら、そのまま `localhost:3000` で確認できます。
 
 ## Model
 
@@ -66,15 +72,25 @@ SESSION_SECRET=your_random_session_secret
 ollama create nazumi -f Modelfile
 ```
 
+MAS 側の `llama.cpp` 接続手順は [`docs/mas-llamacpp.md`](docs/mas-llamacpp.md) を参照してください。
+
 ## Project Structure
 
 ```text
 .
 ├── server.js
+├── src
+│   └── mas
+│       ├── orchestrator.js
+│       └── utterance.js
 ├── Modelfile
 ├── package.json
+├── docs
+│   ├── mas-TODO.md
+│   └── mas-llamacpp.md
 └── public
     ├── index.html
+    ├── mas/
     ├── portfolio.css
     ├── portfolio.js
     ├── verify.html
@@ -87,10 +103,13 @@ ollama create nazumi -f Modelfile
 主な役割:
 
 - [`server.js`](server.js): ホスト振り分け、認証、レート制限、Ollama プロキシ
+- [`src/mas/orchestrator.js`](src/mas/orchestrator.js): MAS の world state とターン進行
+- [`src/mas/utterance.js`](src/mas/utterance.js): mock / `llama.cpp` 発話生成
 - [`public/index.html`](public/index.html): `inazu.me` のポートフォリオ
 - [`public/verify.html`](public/verify.html): Turnstile 認証画面
 - [`public/chat.html`](public/chat.html): `chat.inazu.me` の UI
 - [`public/script.js`](public/script.js): チャット送信、SSE 受信、再認証処理
+- [`public/mas/`](public/mas): MAS の three.js UI
 
 ## Runtime Files
 

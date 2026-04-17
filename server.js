@@ -9,7 +9,7 @@ const os = require('os');
 const { masWorlds } = require('./src/mas/orchestrator');
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT || 3000);
 const OLLAMA_URL = 'http://localhost:11434';
 const LOG_FILE = path.join(__dirname, 'usage.log');
 const PUBLIC_DIR = path.join(__dirname, 'public');

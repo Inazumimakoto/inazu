@@ -141,6 +141,7 @@ class MasWorld {
         this.activeTurn = null;
         this.phaseEndsAt = 0;
         this.log = [];
+        this.backendLabel = getMasBackendLabel();
         this.agents = AGENT_BLUEPRINTS.map(createAgentState);
     }
 
@@ -217,6 +218,7 @@ class MasWorld {
         this.activeTurn = null;
         this.phaseEndsAt = 0;
         this.log = [];
+        this.backendLabel = getMasBackendLabel();
         this.agents = AGENT_BLUEPRINTS.map(createAgentState);
         this.hideBubbles();
         this.resetTargets();
@@ -276,7 +278,7 @@ class MasWorld {
             status: this.status,
             phase: this.phase,
             isRunning: this.isRunning,
-            llmMode: getMasBackendLabel(),
+            llmMode: this.backendLabel,
             activeSpeakerId: this.activeTurn?.speakerId || null,
             activeListenerId: this.activeTurn?.listenerId || null,
             agents: this.agents.map((agent) => ({
@@ -343,13 +345,14 @@ class MasWorld {
             listener,
             turnIndex: this.turnIndex,
             transcript
-        }).then((line) => {
+        }).then((result) => {
             if (this.activeTurn !== turn) {
                 return;
             }
 
-            turn.line = line;
+            turn.line = result.text;
             turn.ready = true;
+            this.backendLabel = result.backendLabel;
 
             if (this.phase === 'awaiting_line') {
                 this.startSpeaking();
@@ -364,6 +367,7 @@ class MasWorld {
 
             turn.line = `${this.topic} については、まず最小構成で様子を見るのがよさそうだ。`;
             turn.ready = true;
+            this.backendLabel = 'server orchestrator / emergency fallback';
             if (this.phase === 'awaiting_line') {
                 this.startSpeaking();
             } else {
