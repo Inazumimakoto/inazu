@@ -173,6 +173,14 @@ button {
     border-radius: 18px;
 }
 
+.status-mode {
+    color: var(--muted);
+    font-family: 'Azeret Mono', monospace;
+    font-size: 0.66rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
 .agent-tag,
 .speech-bubble {
     position: absolute;
