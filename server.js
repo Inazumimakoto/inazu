@@ -116,6 +116,10 @@ app.get(['/chat', '/chat.html'], (req, res) => {
     return sendPublicFile(res, 'chat.html');
 });
 
+app.get(['/mas', '/mas/', '/mas/index.html'], (req, res) => {
+    return sendPublicFile(res, 'mas/index.html');
+});
+
 app.use(express.static(PUBLIC_DIR, { index: false }));
 app.use('/scripts', express.static(path.join(__dirname, 'node_modules/marked')));
 
