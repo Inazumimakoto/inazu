@@ -158,6 +158,12 @@ button {
     align-items: flex-start;
 }
 
+.hud-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
 .status-card {
     display: flex;
     flex-direction: column;
@@ -165,6 +171,86 @@ button {
     min-width: 220px;
     padding: 14px 16px;
     border-radius: 18px;
+}
+
+.agent-tag,
+.speech-bubble {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translate(-50%, -50%);
+    transition: opacity 220ms ease, transform 220ms ease;
+    opacity: 0;
+}
+
+.agent-tag.is-visible,
+.speech-bubble.is-visible {
+    opacity: 1;
+}
+
+.agent-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border-radius: 999px;
+    background: rgba(2, 9, 13, 0.74);
+    border: 1px solid rgba(236, 247, 248, 0.12);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+    color: var(--text);
+    font-family: 'Azeret Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.agent-tag::before {
+    content: "";
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--tag-color, var(--accent));
+    box-shadow: 0 0 18px var(--tag-color, var(--accent));
+}
+
+.speech-bubble {
+    max-width: min(260px, calc(100vw - 40px));
+    padding: 14px 16px;
+    border-radius: 18px 18px 18px 6px;
+    background:
+        linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03)),
+        rgba(4, 14, 20, 0.88);
+    border: 1px solid rgba(236, 247, 248, 0.16);
+    box-shadow:
+        0 18px 48px rgba(0, 0, 0, 0.32),
+        0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+    color: var(--text);
+    line-height: 1.5;
+}
+
+.speech-bubble.is-visible {
+    transform: translate(-50%, calc(-100% - 12px));
+}
+
+.speech-bubble::after {
+    content: "";
+    position: absolute;
+    left: 18px;
+    bottom: -10px;
+    border-width: 10px 10px 0 0;
+    border-style: solid;
+    border-color: rgba(4, 14, 20, 0.92) transparent transparent transparent;
+}
+
+.speech-bubble strong {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--accent);
+    font-family: 'Azeret Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .sidebar {

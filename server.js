@@ -121,6 +121,7 @@ app.get(['/mas', '/mas/', '/mas/index.html'], (req, res) => {
 });
 
 app.use(express.static(PUBLIC_DIR, { index: false }));
+app.use('/scripts/three', express.static(path.join(__dirname, 'node_modules/three/build')));
 app.use('/scripts', express.static(path.join(__dirname, 'node_modules/marked')));
 
 // Logging function

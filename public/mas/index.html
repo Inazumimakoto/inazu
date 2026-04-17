@@ -29,7 +29,7 @@
                 <div class="panel-header">
                     <div>
                         <p class="section-label">Stage</p>
-                        <h2>3D world comes here</h2>
+                        <h2>Agents in motion</h2>
                     </div>
                     <p class="panel-copy">まずは 3 体のエージェントを置いて、題材を元に近づいて話す最小デモを作る。</p>
                 </div>
@@ -37,6 +37,7 @@
                 <div class="scene-shell">
                     <canvas class="scene-canvas" data-scene-canvas aria-label="MAS simulation stage"></canvas>
                     <div class="scene-overlay">
+                        <div class="hud-layer" data-hud-layer></div>
                         <div class="status-card">
                             <span class="status-label">World status</span>
                             <strong data-world-status>booting prototype</strong>
@@ -56,7 +57,7 @@
 
                     <form class="topic-form" data-topic-form>
                         <label class="input-label" for="topic-input">議題</label>
-                        <textarea id="topic-input" name="topic" rows="5" placeholder="例: ローカルMASはどこまで遊べるか"></textarea>
+                        <textarea id="topic-input" name="topic" rows="5" placeholder="例: ローカルMASはどこまで遊べるか">ローカルMASはどこまで遊べるか</textarea>
                         <button type="submit">start prototype</button>
                     </form>
                 </section>
