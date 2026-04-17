@@ -83,6 +83,10 @@ button {
     line-height: 1.05;
 }
 
+.topbar-title h1 {
+    margin-top: 0;
+}
+
 .ghost-link {
     display: inline-flex;
     align-items: center;
