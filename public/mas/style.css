@@ -48,8 +48,7 @@ button {
 }
 
 .topbar,
-.panel,
-.status-card {
+.panel {
     border: 1px solid var(--panel-line);
     background: var(--panel);
     backdrop-filter: blur(18px);
@@ -68,8 +67,7 @@ button {
 }
 
 .eyebrow,
-.section-label,
-.status-label {
+.section-label {
     margin: 0;
     color: var(--accent);
     font-family: 'Azeret Mono', monospace;
@@ -103,9 +101,20 @@ button {
     gap: 18px;
 }
 
+.main-column,
+.sidebar {
+    display: grid;
+    gap: 18px;
+    align-content: start;
+}
+
 .panel {
     border-radius: 28px;
     padding: 18px;
+}
+
+.topic-panel {
+    padding-bottom: 20px;
 }
 
 .stage-panel {
@@ -152,33 +161,12 @@ button {
     pointer-events: none;
     position: absolute;
     inset: 0;
-    padding: 18px;
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-start;
 }
 
 .hud-layer {
     position: absolute;
     inset: 0;
     pointer-events: none;
-}
-
-.status-card {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 220px;
-    padding: 14px 16px;
-    border-radius: 18px;
-}
-
-.status-mode {
-    color: var(--muted);
-    font-family: 'Azeret Mono', monospace;
-    font-size: 0.66rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
 }
 
 .agent-tag,
@@ -261,12 +249,6 @@ button {
     text-transform: uppercase;
 }
 
-.sidebar {
-    display: grid;
-    gap: 18px;
-    align-content: start;
-}
-
 .topic-form {
     display: grid;
     gap: 12px;
@@ -283,7 +265,7 @@ button {
 .topic-form textarea {
     width: 100%;
     resize: vertical;
-    min-height: 124px;
+    min-height: 108px;
     padding: 14px 16px;
     border: 1px solid rgba(236, 247, 248, 0.12);
     border-radius: 18px;

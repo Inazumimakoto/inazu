@@ -4,8 +4,6 @@ const sceneCanvas = document.querySelector('[data-scene-canvas]');
 const hudLayer = document.querySelector('[data-hud-layer]');
 const topicForm = document.querySelector('[data-topic-form]');
 const topicInput = document.querySelector('#topic-input');
-const worldStatus = document.querySelector('[data-world-status]');
-const worldMode = document.querySelector('[data-world-mode]');
 const logList = document.querySelector('[data-log-list]');
 
 const clock = new THREE.Clock();
@@ -50,16 +48,10 @@ const agentScaleActive = 1.04;
 
 function setWorldStatus(text) {
     worldState.status = text;
-    if (worldStatus) {
-        worldStatus.textContent = text;
-    }
 }
 
 function setWorldMode(text) {
     worldState.llmMode = text;
-    if (worldMode) {
-        worldMode.textContent = text;
-    }
 }
 
 function renderLog(logEntries) {
