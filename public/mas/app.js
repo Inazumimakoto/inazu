@@ -140,6 +140,23 @@ function resizeTopicInput() {
     topicInput.style.height = `${Math.min(topicInput.scrollHeight, 160)}px`;
 }
 
+function handleTopicKeydown(event) {
+    if (event.key !== 'Enter') {
+        return;
+    }
+
+    if (event.isComposing || event.keyCode === 229) {
+        return;
+    }
+
+    if (event.ctrlKey) {
+        return;
+    }
+
+    event.preventDefault();
+    topicForm?.requestSubmit();
+}
+
 function createHudTag(className, color) {
     const node = document.createElement('div');
     node.className = className;
@@ -744,6 +761,7 @@ topicForm?.addEventListener('submit', async (event) => {
 });
 
 topicInput?.addEventListener('input', resizeTopicInput);
+topicInput?.addEventListener('keydown', handleTopicKeydown);
 
 for (const button of menuButtons) {
     button.addEventListener('click', toggleMenu);
