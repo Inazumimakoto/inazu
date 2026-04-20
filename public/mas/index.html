@@ -22,64 +22,22 @@
             <div class="scene-overlay">
                 <header class="site-header">
                     <a class="site-mark" href="/mas" aria-current="page">mas.inazu.me</a>
-
-                    <div class="header-actions">
-                        <button class="menu-toggle" type="button" data-menu-toggle aria-controls="control-panel"
-                            aria-expanded="false">menu</button>
-                        <a class="site-link" href="/">back to inazu.me</a>
-                    </div>
+                    <button class="menu-toggle" type="button" data-menu-toggle aria-controls="control-panel"
+                        aria-expanded="false">menu</button>
                 </header>
 
-                <section class="scene-brief">
-                    <p class="section-label">Stage</p>
-                    <h1>Agents in motion</h1>
-                    <p class="scene-topic" data-scene-topic>No topic loaded.</p>
-                    <p class="scene-copy" data-scene-hint>メニューから議題を入力すると、止まっていたエージェントが動き出します。</p>
-                    <p class="scene-controls">drag to pan / wheel or pinch to zoom</p>
-                </section>
+                <form class="topic-composer" data-topic-form>
+                    <label class="sr-only" for="topic-input">議題</label>
+                    <div class="composer-bubble">
+                        <textarea id="topic-input" name="topic" rows="1"
+                            placeholder="議題を入力すると、エージェントが動き出します。"></textarea>
+                        <button class="composer-submit" type="submit" aria-label="Apply topic">
+                            <span aria-hidden="true">↗</span>
+                        </button>
+                    </div>
+                </form>
 
                 <aside id="control-panel" class="control-panel" data-control-panel aria-hidden="true">
-                    <section class="panel topic-panel">
-                        <div class="panel-header compact">
-                            <div>
-                                <p class="section-label">Topic</p>
-                                <h2>Discussion seed</h2>
-                            </div>
-                            <p class="panel-status" data-menu-status>Waiting for topic input.</p>
-                        </div>
-
-                        <form class="topic-form" data-topic-form>
-                            <label class="input-label" for="topic-input">議題</label>
-                            <textarea id="topic-input" name="topic" rows="4" placeholder="例: ローカルMASはどこまで遊べるか"></textarea>
-                            <p class="topic-note">空欄で送ると、エージェントは停止状態に戻ります。</p>
-                            <button type="submit">apply topic</button>
-                        </form>
-                    </section>
-
-                    <section class="panel agents-panel">
-                        <div class="panel-header compact">
-                            <div>
-                                <p class="section-label">Agents</p>
-                                <h2>Initial cast</h2>
-                            </div>
-                        </div>
-
-                        <ul class="agent-list">
-                            <li>
-                                <strong>Pulse</strong>
-                                <span>肯定派。面白さ優先で前へ進める。</span>
-                            </li>
-                            <li>
-                                <strong>Shard</strong>
-                                <span>懐疑派。破綻点と重さを突く。</span>
-                            </li>
-                            <li>
-                                <strong>Mica</strong>
-                                <span>要約役。論点を整理して収束させる。</span>
-                            </li>
-                        </ul>
-                    </section>
-
                     <section class="panel history-panel">
                         <div class="panel-header compact">
                             <div>

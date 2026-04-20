@@ -7,9 +7,6 @@ const topicInput = document.querySelector('#topic-input');
 const logList = document.querySelector('[data-log-list]');
 const menuButtons = Array.from(document.querySelectorAll('[data-menu-toggle]'));
 const controlPanel = document.querySelector('[data-control-panel]');
-const sceneTopic = document.querySelector('[data-scene-topic]');
-const sceneHint = document.querySelector('[data-scene-hint]');
-const menuStatus = document.querySelector('[data-menu-status]');
 
 const clock = new THREE.Clock();
 const raycaster = new THREE.Raycaster();
@@ -84,43 +81,10 @@ function clamp(value, min, max) {
 
 function setWorldStatus(text) {
     worldState.status = text;
-    if (menuStatus) {
-        menuStatus.textContent = text;
-    }
-    updateSceneMeta();
 }
 
 function setWorldMode(text) {
     worldState.llmMode = text;
-}
-
-function updateSceneMeta() {
-    if (sceneTopic) {
-        sceneTopic.textContent = worldState.topic
-            ? `Topic: ${worldState.topic}`
-            : 'No topic loaded.';
-    }
-
-    if (!sceneHint) {
-        return;
-    }
-
-    if (!worldState.topic) {
-        sceneHint.textContent = 'メニューから議題を入力すると、止まっていたエージェントが動き出します。';
-        return;
-    }
-
-    if (worldState.isRunning) {
-        sceneHint.textContent = worldState.status;
-        return;
-    }
-
-    if (worldState.phase === 'complete') {
-        sceneHint.textContent = '会話は一周しました。メニューから別の議題を入れると再開します。';
-        return;
-    }
-
-    sceneHint.textContent = worldState.status;
 }
 
 function getEmptyLogMessage() {
@@ -165,6 +129,15 @@ function setMenuOpen(isOpen) {
 
 function toggleMenu() {
     setMenuOpen(!clientState.menuOpen);
+}
+
+function resizeTopicInput() {
+    if (!topicInput) {
+        return;
+    }
+
+    topicInput.style.height = '0px';
+    topicInput.style.height = `${Math.min(topicInput.scrollHeight, 160)}px`;
 }
 
 function createHudTag(className, color) {
@@ -370,6 +343,7 @@ function applySnapshot(snapshot) {
 
     if (topicInput && document.activeElement !== topicInput) {
         topicInput.value = snapshot.topic;
+        resizeTopicInput();
     }
 
     for (const agentSnapshot of snapshot.agents || []) {
@@ -769,6 +743,8 @@ topicForm?.addEventListener('submit', async (event) => {
     }
 });
 
+topicInput?.addEventListener('input', resizeTopicInput);
+
 for (const button of menuButtons) {
     button.addEventListener('click', toggleMenu);
 }
@@ -802,6 +778,7 @@ renderLog([]);
 setWorldStatus(worldState.status);
 setWorldMode(worldState.llmMode);
 setMenuOpen(false);
+resizeTopicInput();
 renderer.setAnimationLoop(animate);
 
 createWorld('').catch((error) => {
