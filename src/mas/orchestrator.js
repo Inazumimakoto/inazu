@@ -37,7 +37,8 @@ const TURN_BLUEPRINTS = Object.freeze([
 const TICK_MS = 120;
 const MOVE_SPEED_PER_TICK = 0.52;
 const POSITION_EPSILON = 0.12;
-const SPEAK_DURATION_MS = 3200;
+const MIN_SPEAK_DURATION_MS = 3600;
+const MAX_SPEAK_DURATION_MS = 9800;
 const RETURN_TIMEOUT_MS = 1600;
 const WORLD_IDLE_TTL_MS = 10 * 60 * 1000;
 const WORLD_UNSUBSCRIBED_TTL_MS = 45 * 1000;
@@ -86,6 +87,10 @@ function normalizeVector(point) {
 
 function randomBetween(min, max) {
     return min + Math.random() * (max - min);
+}
+
+function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
 }
 
 function samePair(a, b) {
@@ -137,6 +142,15 @@ function getMeetingTargets(speaker, listener) {
             z: shiftedMidpoint.z + direction.z * (spacing / 2)
         }
     };
+}
+
+function calculateSpeakDuration(text) {
+    const normalized = String(text || '').trim();
+    const charCount = normalized.length;
+    const punctuationCount = (normalized.match(/[。！？!?]/g) || []).length;
+    const duration = 1800 + (charCount * 90) + (punctuationCount * 420);
+
+    return clamp(duration, MIN_SPEAK_DURATION_MS, MAX_SPEAK_DURATION_MS);
 }
 
 function createAgentState(blueprint) {
@@ -443,7 +457,7 @@ class MasWorld {
         speaker.bubbleVisible = true;
         speaker.bubbleText = this.activeTurn.line;
         this.phase = 'speaking';
-        this.phaseEndsAt = Date.now() + SPEAK_DURATION_MS;
+        this.phaseEndsAt = Date.now() + calculateSpeakDuration(this.activeTurn.line);
         this.status = `${speaker.name} speaking on ${this.topic}`;
         this.pushLog(`${speaker.name}: ${this.activeTurn.line}`);
     }

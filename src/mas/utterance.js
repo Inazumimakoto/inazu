@@ -16,10 +16,52 @@ function normalizeTopic(topic) {
     return value || 'ローカルMASの最初の遊び方';
 }
 
+function isDialogueLine(line) {
+    return /^(?:Pulse|Shard|Mica|パルス|シャード|ミカ)\s*:/u.test(String(line || '').trim());
+}
+
 function buildTranscriptBlock(transcript) {
-    return transcript.length
-        ? transcript.map((line) => `- ${line}`).join('\n')
-        : '- まだ会話ログはない';
+    const recentTranscript = transcript.filter(isDialogueLine).slice(-6);
+    return recentTranscript.length
+        ? recentTranscript.map((line) => `- ${line}`).join('\n')
+        : '- まだ発話ログはない';
+}
+
+function getRoleStyleGuide(speaker) {
+    const guideById = {
+        pulse: [
+            '- 前向きで実験を進める立場から話す',
+            '- 具体的な次の一歩や試し方を一つ入れる',
+            '- 明るいが雑にはしない'
+        ],
+        shard: [
+            '- 懐疑的な立場から話す',
+            '- リスク、制約、破綻点のどれかを必ず一つ指摘する',
+            '- 反対するだけでなく、何を抑えればよいかも短く添える'
+        ],
+        mica: [
+            '- 要点整理役として話す',
+            '- 今までの会話を一度まとめるか、論点を言い換える',
+            '- 最後に焦点を一つに絞る'
+        ]
+    };
+
+    return guideById[speaker.id] || [
+        '- 役割に沿った立場をはっきり出す',
+        '- 同じ言い回しを繰り返さない'
+    ];
+}
+
+function getRecentSpeakerLine({ speaker, transcript }) {
+    const speakerPrefix = `${speaker.name}:`;
+    for (let index = transcript.length - 1; index >= 0; index -= 1) {
+        const line = transcript[index];
+        if (typeof line === 'string' && isDialogueLine(line) && line.startsWith(speakerPrefix)) {
+            return line.slice(speakerPrefix.length).trim();
+        }
+    }
+
+    return '';
 }
 
 function buildLlamaCppSystemPrompt({ speaker, listener }) {
@@ -27,23 +69,32 @@ function buildLlamaCppSystemPrompt({ speaker, listener }) {
         `あなたは MAS シミュレーション内のエージェント ${speaker.name} です。`,
         `役割: ${speaker.role}`,
         `会話相手: ${listener.name} (${listener.role})`,
+        '役割の出し方:',
+        ...getRoleStyleGuide(speaker),
         '返答ルール:',
         '- 日本語で話す',
         '- 一言は 1〜2 文に収める',
         '- 出力は発話本文だけを 1 行で返す',
         '- 口調は役割に沿わせる',
         '- 題材から逸れすぎない',
+        '- 直前の自分の発話と同じ切り口や同じ語尾を繰り返さない',
         '- 名前ラベル、箇条書き、ト書き、囲み記号は付けない',
         '- 「返答:」「発言:」のような見出しを付けない',
         '- <think> タグ、Markdown、引用符、括弧の地の文は入れない'
     ].join('\n');
 }
 
-function buildLlamaCppUserPrompt({ topic, listener, transcript }) {
+function buildLlamaCppUserPrompt({ topic, speaker, listener, transcript }) {
+    const recentSpeakerLine = getRecentSpeakerLine({ speaker, transcript });
+
     return [
         `議題: ${normalizeTopic(topic)}`,
         `${listener.name} に向けて、次の一言だけ返してください。`,
         '出力形式: 本文のみ。1行。説明や補足は不要。',
+        recentSpeakerLine
+            ? `自分がさっき言ったこと: ${recentSpeakerLine}`
+            : '自分の直前発話: まだない',
+        '自分の直前発話と同じ内容を焼き直さず、別の角度で一言返すこと。',
         '直近ログ:',
         buildTranscriptBlock(transcript)
     ].join('\n');
