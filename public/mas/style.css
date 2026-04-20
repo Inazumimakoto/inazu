@@ -186,6 +186,31 @@ button {
     text-transform: uppercase;
 }
 
+.topic-status {
+    margin: 10px 0 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(236, 247, 248, 0.12);
+    background: rgba(4, 15, 21, 0.62);
+    color: rgba(236, 247, 248, 0.78);
+    font-family: 'Azeret Mono', monospace;
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.topic-status::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 14px rgba(125, 240, 255, 0.48);
+}
+
 .control-panel {
     position: absolute;
     top: calc(max(18px, env(safe-area-inset-top, 0px)) + 38px);
@@ -405,6 +430,12 @@ button {
     .composer-hint {
         margin: 8px 10px 0;
         font-size: 0.58rem;
+        letter-spacing: 0.06em;
+    }
+
+    .topic-status {
+        margin-top: 8px;
+        font-size: 0.6rem;
         letter-spacing: 0.06em;
     }
 

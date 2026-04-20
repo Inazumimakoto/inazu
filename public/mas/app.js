@@ -7,6 +7,7 @@ const topicInput = document.querySelector('#topic-input');
 const logList = document.querySelector('[data-log-list]');
 const menuButtons = Array.from(document.querySelectorAll('[data-menu-toggle]'));
 const controlPanel = document.querySelector('[data-control-panel]');
+const topicStatus = document.querySelector('[data-topic-status]');
 
 const clock = new THREE.Clock();
 const raycaster = new THREE.Raycaster();
@@ -86,6 +87,32 @@ function setWorldStatus(text) {
 
 function setWorldMode(text) {
     worldState.llmMode = text;
+}
+
+function renderTopicStatus() {
+    if (!topicStatus) {
+        return;
+    }
+
+    if (!worldState.topic) {
+        topicStatus.hidden = true;
+        topicStatus.textContent = '';
+        return;
+    }
+
+    topicStatus.hidden = false;
+
+    if (worldState.isRunning) {
+        topicStatus.textContent = `議論中: ${worldState.topic}`;
+        return;
+    }
+
+    if (worldState.phase === 'complete') {
+        topicStatus.textContent = `議論完了: ${worldState.topic}`;
+        return;
+    }
+
+    topicStatus.textContent = `議題: ${worldState.topic}`;
 }
 
 function getEmptyLogMessage() {
@@ -357,12 +384,8 @@ function applySnapshot(snapshot) {
 
     setWorldStatus(snapshot.status);
     setWorldMode(snapshot.llmMode);
+    renderTopicStatus();
     renderLog(snapshot.log);
-
-    if (topicInput && document.activeElement !== topicInput) {
-        topicInput.value = snapshot.topic;
-        resizeTopicInput();
-    }
 
     for (const agentSnapshot of snapshot.agents || []) {
         const agent = ensureAgent(agentSnapshot);
@@ -752,6 +775,10 @@ topicForm?.addEventListener('submit', async (event) => {
 
     try {
         await restartWorld(nextTopic);
+        if (topicInput) {
+            topicInput.value = '';
+            resizeTopicInput();
+        }
         if (nextTopic) {
             setMenuOpen(false);
         }
@@ -802,6 +829,7 @@ resizeRenderer();
 renderLog([]);
 setWorldStatus(worldState.status);
 setWorldMode(worldState.llmMode);
+renderTopicStatus();
 setMenuOpen(false);
 resizeTopicInput();
 renderer.setAnimationLoop(animate);
