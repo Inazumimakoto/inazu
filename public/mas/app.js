@@ -406,10 +406,16 @@ function applySnapshot(snapshot) {
         agent.label.textContent = agentSnapshot.name;
 
         if (agentSnapshot.bubbleVisible) {
-            agent.bubble.innerHTML = `<strong>${agentSnapshot.name}</strong><span>${agentSnapshot.bubbleText}</span>`;
+            const label = document.createElement('strong');
+            label.textContent = agentSnapshot.name;
+
+            const line = document.createElement('span');
+            line.textContent = agentSnapshot.bubbleText;
+
+            agent.bubble.replaceChildren(label, line);
             agent.bubble.classList.add('is-visible');
         } else {
-            agent.bubble.innerHTML = '';
+            agent.bubble.replaceChildren();
             agent.bubble.classList.remove('is-visible');
         }
     }

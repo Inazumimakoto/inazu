@@ -30,9 +30,12 @@ function buildLlamaCppSystemPrompt({ speaker, listener }) {
         '返答ルール:',
         '- 日本語で話す',
         '- 一言は 1〜2 文に収める',
+        '- 出力は発話本文だけを 1 行で返す',
         '- 口調は役割に沿わせる',
         '- 題材から逸れすぎない',
-        '- 名前ラベル、箇条書き、ト書き、囲み記号は付けない'
+        '- 名前ラベル、箇条書き、ト書き、囲み記号は付けない',
+        '- 「返答:」「発言:」のような見出しを付けない',
+        '- <think> タグ、Markdown、引用符、括弧の地の文は入れない'
     ].join('\n');
 }
 
@@ -40,6 +43,7 @@ function buildLlamaCppUserPrompt({ topic, listener, transcript }) {
     return [
         `議題: ${normalizeTopic(topic)}`,
         `${listener.name} に向けて、次の一言だけ返してください。`,
+        '出力形式: 本文のみ。1行。説明や補足は不要。',
         '直近ログ:',
         buildTranscriptBlock(transcript)
     ].join('\n');
@@ -93,13 +97,53 @@ function buildMockUtterance({ topic, speaker, turnIndex }) {
     return lines[Math.min(turnIndex, lines.length - 1)];
 }
 
+function stripOuterWrappers(text) {
+    let value = text;
+
+    for (let index = 0; index < 4; index += 1) {
+        const next = value
+            .replace(/^["'`「『【［（(<\s]+/, '')
+            .replace(/["'`」』】］）>)\s]+$/, '')
+            .trim();
+
+        if (next === value) {
+            break;
+        }
+
+        value = next;
+    }
+
+    return value;
+}
+
+function sanitizeUtteranceLine(text) {
+    return text
+        .replace(/^>\s*/, '')
+        .replace(/^(?:[-*•・]|\d+[.)])\s*/u, '')
+        .replace(/^[【\[]?\s*(?:Pulse|Shard|Mica|パルス|シャード|ミカ)\s*[】\]]?\s*[:：-]\s*/iu, '')
+        .replace(/^(?:speaker|agent|assistant|話者|発話|返答|回答|セリフ)\s*[:：-]\s*/iu, '')
+        .replace(/^(?:\([^)]{0,24}\)|（[^）]{0,24}）|【[^】]{0,24}】|\[[^\]]{0,24}\])\s*/u, '')
+        .trim();
+}
+
 function sanitizeUtterance(text) {
-    const normalized = String(text || '')
-        .trim()
-        .replace(/^["'`「『]+/, '')
-        .replace(/["'`」』]+$/, '')
-        .replace(/^(Pulse|Shard|Mica)\s*[:：-]\s*/i, '')
-        .replace(/\s+/g, ' ');
+    const lines = String(text || '')
+        .replace(/\r/g, '\n')
+        .replace(/<think>[\s\S]*?<\/think>/gi, ' ')
+        .replace(/<\/?think>/gi, ' ')
+        .replace(/```(?:[\w-]+)?/g, ' ')
+        .replace(/<\/?[^>\n]+>/g, ' ')
+        .split('\n')
+        .map((line) => sanitizeUtteranceLine(line))
+        .filter(Boolean);
+
+    const normalized = stripOuterWrappers(
+        lines.join(' ')
+            .replace(/\s+/g, ' ')
+            .replace(/^[*_~`]+/, '')
+            .replace(/[*_~`]+$/, '')
+            .trim()
+    );
 
     return normalized || '';
 }
