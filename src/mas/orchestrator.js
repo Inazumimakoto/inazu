@@ -26,12 +26,42 @@ const AGENT_BLUEPRINTS = Object.freeze([
 ]);
 
 const TURN_BLUEPRINTS = Object.freeze([
-    { speakerId: 'pulse', listenerId: 'shard' },
-    { speakerId: 'shard', listenerId: 'pulse' },
-    { speakerId: 'mica', listenerId: 'pulse' },
-    { speakerId: 'pulse', listenerId: 'mica' },
-    { speakerId: 'shard', listenerId: 'mica' },
-    { speakerId: 'mica', listenerId: 'shard' }
+    {
+        speakerId: 'pulse',
+        listenerId: 'shard',
+        debateStage: 'opening',
+        goal: '賛成か反対かの立場を先に言い、理由を一つだけ添える。'
+    },
+    {
+        speakerId: 'shard',
+        listenerId: 'pulse',
+        debateStage: 'rebuttal',
+        goal: '直前の主張の弱い点を一つ指摘し、反対または条件付き反対を返す。'
+    },
+    {
+        speakerId: 'mica',
+        listenerId: 'pulse',
+        debateStage: 'summary',
+        goal: 'ここまでの対立点を整理し、次に考えるべき論点を一つに絞る。'
+    },
+    {
+        speakerId: 'pulse',
+        listenerId: 'mica',
+        debateStage: 'follow_up',
+        goal: '絞られた論点に答え、具体例か判断基準を一つだけ足す。'
+    },
+    {
+        speakerId: 'shard',
+        listenerId: 'mica',
+        debateStage: 'counter',
+        goal: 'その具体例や基準の穴、例外、条件を一つだけ指摘する。'
+    },
+    {
+        speakerId: 'mica',
+        listenerId: 'shard',
+        debateStage: 'closing',
+        goal: '賛成側と慎重側の条件を短くまとめ、暫定結論を示す。'
+    }
 ]);
 
 const TICK_MS = 120;
@@ -415,7 +445,9 @@ class MasWorld {
             speaker,
             listener,
             turnIndex: this.turnIndex,
-            transcript
+            transcript,
+            turnGoal: turn.goal,
+            debateStage: turn.debateStage
         }).then((result) => {
             if (this.activeTurn !== turn) {
                 return;
@@ -463,7 +495,6 @@ class MasWorld {
     }
 
     completeDiscussion() {
-        this.hideBubbles();
         this.resetTargets();
         this.stopInterval();
         this.isRunning = false;
@@ -516,8 +547,6 @@ class MasWorld {
         }
 
         if (this.phase === 'speaking' && Date.now() >= this.phaseEndsAt) {
-            this.hideBubbles();
-
             const nextTurn = this.getNextTurnBlueprint();
             if (samePair(this.activeTurn, nextTurn)) {
                 this.turnIndex += 1;

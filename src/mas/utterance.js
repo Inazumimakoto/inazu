@@ -3,9 +3,13 @@ const DEFAULT_LLAMACPP_URL = (process.env.LLAMACPP_URL || 'http://127.0.0.1:8080
 const DEFAULT_LLAMACPP_MODEL = process.env.LLAMACPP_MODEL || 'local-model';
 const DEFAULT_LLAMACPP_API_MODE = process.env.LLAMACPP_API_MODE || 'auto';
 const DEFAULT_TIMEOUT_MS = Number(process.env.LLAMACPP_TIMEOUT_MS || 15000);
-const DEFAULT_MAX_TOKENS = Number(process.env.LLAMACPP_MAX_TOKENS || 96);
-const DEFAULT_TEMPERATURE = Number(process.env.LLAMACPP_TEMPERATURE || 0.75);
-const DEFAULT_TOP_P = Number(process.env.LLAMACPP_TOP_P || 0.92);
+const DEFAULT_MAX_TOKENS = Number(process.env.LLAMACPP_MAX_TOKENS || 72);
+const DEFAULT_TEMPERATURE = Number(process.env.LLAMACPP_TEMPERATURE || 0.5);
+const DEFAULT_TOP_P = Number(process.env.LLAMACPP_TOP_P || 0.85);
+const DEFAULT_TOP_K = Number(process.env.LLAMACPP_TOP_K || 20);
+const DEFAULT_MIN_P = Number(process.env.LLAMACPP_MIN_P || 0);
+const DEFAULT_REPEAT_PENALTY = Number(process.env.LLAMACPP_REPEAT_PENALTY || 1.14);
+const DEFAULT_REPEAT_LAST_N = Number(process.env.LLAMACPP_REPEAT_LAST_N || 128);
 
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -20,35 +24,21 @@ function isDialogueLine(line) {
     return /^(?:Pulse|Shard|Mica|パルス|シャード|ミカ)\s*:/u.test(String(line || '').trim());
 }
 
-function buildTranscriptBlock(transcript) {
-    const recentTranscript = transcript.filter(isDialogueLine).slice(-6);
-    return recentTranscript.length
-        ? recentTranscript.map((line) => `- ${line}`).join('\n')
-        : '- まだ発話ログはない';
-}
-
 function getRoleStyleGuide(speaker) {
     const guideById = {
         pulse: [
-            '- 前向きで実験を進める立場から話す',
-            '- 具体的な次の一歩や試し方を一つ入れる',
-            '- 明るいが雑にはしない'
+            '前向きに賛成し、具体例か基準を一つだけ出す。'
         ],
         shard: [
-            '- 懐疑的な立場から話す',
-            '- リスク、制約、破綻点のどれかを必ず一つ指摘する',
-            '- 反対するだけでなく、何を抑えればよいかも短く添える'
+            '慎重に疑い、条件・例外・弱点を一つだけ出す。'
         ],
         mica: [
-            '- 要点整理役として話す',
-            '- 今までの会話を一度まとめるか、論点を言い換える',
-            '- 最後に焦点を一つに絞る'
+            '要点整理役として、対立点を短くまとめる。'
         ]
     };
 
     return guideById[speaker.id] || [
-        '- 役割に沿った立場をはっきり出す',
-        '- 同じ言い回しを繰り返さない'
+        '役割に沿った立場をはっきり出す。'
     ];
 }
 
@@ -64,64 +54,58 @@ function getRecentSpeakerLine({ speaker, transcript }) {
     return '';
 }
 
-function buildLlamaCppSystemPrompt({ speaker, listener }) {
+function getStageGuide(stage) {
+    const stageGuides = {
+        opening: '最初の立場表明',
+        rebuttal: '相手への反論',
+        summary: '論点の整理',
+        follow_up: '論点への具体化',
+        counter: '条件付きの再反論',
+        closing: '暫定結論'
+    };
+
+    return stageGuides[stage] || '役割どおりに返答';
+}
+
+function buildLlamaCppSystemPrompt({ speaker, listener, debateStage }) {
     return [
-        `あなたは MAS シミュレーション内のエージェント ${speaker.name} です。`,
-        `役割: ${speaker.role}`,
-        `会話相手: ${listener.name} (${listener.role})`,
-        '役割の出し方:',
+        `あなたは ${speaker.name}。役割は ${speaker.role}。相手は ${listener.name}。`,
+        `段階: ${getStageGuide(debateStage)}`,
         ...getRoleStyleGuide(speaker),
-        '返答ルール:',
-        '- 日本語で話す',
-        '- 一言は 1〜2 文に収める',
-        '- 出力は発話本文だけを 1 行で返す',
-        '- 口調は役割に沿わせる',
-        '- 題材から逸れすぎない',
-        '- 直前の自分の発話と同じ切り口や同じ語尾を繰り返さない',
-        '- 名前ラベル、箇条書き、ト書き、囲み記号は付けない',
-        '- 「返答:」「発言:」のような見出しを付けない',
-        '- <think> タグ、Markdown、引用符、括弧の地の文は入れない'
+        '日本語で 1〜2 文だけ返す。議題の復唱、オウム返し、名前ラベル、説明は禁止。'
     ].join('\n');
 }
 
-function buildLlamaCppUserPrompt({ topic, speaker, listener, transcript }) {
+function buildLlamaCppUserPrompt({ topic, speaker, listener, transcript, turnGoal, debateStage }) {
     const recentSpeakerLine = getRecentSpeakerLine({ speaker, transcript });
+    const recentListenerLine = getRecentSpeakerLine({ speaker: listener, transcript });
 
     return [
         `議題: ${normalizeTopic(topic)}`,
-        `${listener.name} に向けて、次の一言だけ返してください。`,
-        '出力形式: 本文のみ。1行。説明や補足は不要。',
-        recentSpeakerLine
-            ? `自分がさっき言ったこと: ${recentSpeakerLine}`
-            : '自分の直前発話: まだない',
-        '自分の直前発話と同じ内容を焼き直さず、別の角度で一言返すこと。',
-        '直近ログ:',
-        buildTranscriptBlock(transcript)
+        `段階: ${getStageGuide(debateStage)}`,
+        `役目: ${turnGoal || getStageGuide(debateStage)}`,
+        recentListenerLine ? `${listener.name} の直前: ${recentListenerLine}` : '',
+        recentSpeakerLine ? `自分の直前: ${recentSpeakerLine}` : '',
+        '返答:'
+    ].filter(Boolean).join('\n');
+}
+
+function buildSingleTurnInstruction(context) {
+    return [
+        buildLlamaCppSystemPrompt(context),
+        buildLlamaCppUserPrompt(context)
     ].join('\n');
 }
 
-function buildLlamaCppPrompt({ topic, speaker, listener, transcript }) {
-    const systemPrompt = buildLlamaCppSystemPrompt({ speaker, listener });
-    const userPrompt = buildLlamaCppUserPrompt({ topic, listener, transcript });
-
-    return [
-        '### System',
-        systemPrompt,
-        '',
-        '### User',
-        userPrompt
-    ].join('\n');
+function buildLlamaCppPrompt(context) {
+    return buildSingleTurnInstruction(context);
 }
 
 function buildLlamaCppMessages(context) {
     return [
         {
-            role: 'system',
-            content: buildLlamaCppSystemPrompt(context)
-        },
-        {
             role: 'user',
-            content: buildLlamaCppUserPrompt(context)
+            content: buildSingleTurnInstruction(context)
         }
     ];
 }
@@ -146,6 +130,27 @@ function buildMockUtterance({ topic, speaker, turnIndex }) {
 
     const lines = linesBySpeaker[speaker.id] || [`${cleanTopic} について話したい。`];
     return lines[Math.min(turnIndex, lines.length - 1)];
+}
+
+function dedupeConsecutiveSentences(text) {
+    const sentences = String(text || '')
+        .split(/(?<=[。！？!?])/u)
+        .map((sentence) => sentence.trim())
+        .filter(Boolean);
+
+    if (sentences.length <= 1) {
+        return String(text || '').trim();
+    }
+
+    const deduped = [];
+    for (const sentence of sentences) {
+        if (deduped[deduped.length - 1] === sentence) {
+            continue;
+        }
+        deduped.push(sentence);
+    }
+
+    return deduped.join(' ').trim();
 }
 
 function stripOuterWrappers(text) {
@@ -196,7 +201,7 @@ function sanitizeUtterance(text) {
             .trim()
     );
 
-    return normalized || '';
+    return dedupeConsecutiveSentences(normalized || '');
 }
 
 async function postJson(url, payload) {
@@ -224,6 +229,14 @@ async function generateViaChatCompletions(context) {
         max_tokens: DEFAULT_MAX_TOKENS,
         temperature: DEFAULT_TEMPERATURE,
         top_p: DEFAULT_TOP_P,
+        top_k: DEFAULT_TOP_K,
+        min_p: DEFAULT_MIN_P,
+        repeat_penalty: DEFAULT_REPEAT_PENALTY,
+        repeat_last_n: DEFAULT_REPEAT_LAST_N,
+        reasoning_format: 'none',
+        chat_template_kwargs: {
+            enable_thinking: false
+        },
         stream: false
     });
 
@@ -258,6 +271,10 @@ async function generateViaCompletion(context) {
         n_predict: DEFAULT_MAX_TOKENS,
         temperature: DEFAULT_TEMPERATURE,
         top_p: DEFAULT_TOP_P,
+        top_k: DEFAULT_TOP_K,
+        min_p: DEFAULT_MIN_P,
+        repeat_penalty: DEFAULT_REPEAT_PENALTY,
+        repeat_last_n: DEFAULT_REPEAT_LAST_N,
         stop: ['\n', '</s>'],
         cache_prompt: true
     });
