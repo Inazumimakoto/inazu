@@ -21,7 +21,7 @@ function normalizeTopic(topic) {
 }
 
 function isDialogueLine(line) {
-    return /^(?:Pulse|Shard|Mica|パルス|シャード|ミカ)\s*:/u.test(String(line || '').trim());
+    return /^(?:Pulse|Shard|Anchor|Mica|パルス|シャード|アンカー|ミカ)\s*:/u.test(String(line || '').trim());
 }
 
 function getRoleStyleGuide(speaker) {
@@ -31,6 +31,9 @@ function getRoleStyleGuide(speaker) {
         ],
         shard: [
             '慎重に疑い、条件・例外・弱点を一つだけ出す。'
+        ],
+        anchor: [
+            '具体化役として、具体例・基準・条件を一つだけ出す。'
         ],
         mica: [
             '要点整理役として、対立点を短くまとめる。'
@@ -58,9 +61,11 @@ function getStageGuide(stage) {
     const stageGuides = {
         opening: '最初の立場表明',
         rebuttal: '相手への反論',
+        example: '具体例の提示',
         summary: '論点の整理',
         follow_up: '論点への具体化',
         counter: '条件付きの再反論',
+        criteria: '判断基準の言い直し',
         closing: '暫定結論'
     };
 
@@ -122,6 +127,10 @@ function buildMockUtterance({ topic, speaker, turnIndex }) {
             `でも ${cleanTopic} は演出だけ先行すると薄い。誰がいつ話すかの制御を先に決めないと破綻する。`,
             'その代わり同時発話は避けたい。いまは turn-based にして待ち時間を見た方が安全だ。'
         ],
+        anchor: [
+            `たとえば ${cleanTopic} は「条件が変わると答えも変わる題材」だ。まず境界線を一つ決めた方がいい。`,
+            `判断基準を一つ置こう。日常で食事とは別枠で扱うなら、その時点でおやつ寄りと見なせる。`
+        ],
         mica: [
             `論点は二つ。${cleanTopic} の見せ方と、会話順のルールを最小に絞ること。`,
             `結論。${cleanTopic} は今の設計で始められる。次はダミー発話を llama.cpp 呼び出しに差し替える。`
@@ -176,7 +185,7 @@ function sanitizeUtteranceLine(text) {
     return text
         .replace(/^>\s*/, '')
         .replace(/^(?:[-*•・]|\d+[.)])\s*/u, '')
-        .replace(/^[【\[]?\s*(?:Pulse|Shard|Mica|パルス|シャード|ミカ)\s*[】\]]?\s*[:：-]\s*/iu, '')
+        .replace(/^[【\[]?\s*(?:Pulse|Shard|Anchor|Mica|パルス|シャード|アンカー|ミカ)\s*[】\]]?\s*[:：-]\s*/iu, '')
         .replace(/^(?:speaker|agent|assistant|話者|発話|返答|回答|セリフ)\s*[:：-]\s*/iu, '')
         .replace(/^(?:\([^)]{0,24}\)|（[^）]{0,24}）|【[^】]{0,24}】|\[[^\]]{0,24}\])\s*/u, '')
         .trim();

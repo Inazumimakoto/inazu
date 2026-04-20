@@ -7,21 +7,28 @@ const AGENT_BLUEPRINTS = Object.freeze([
         name: 'Pulse',
         role: '肯定派',
         color: '#7df0ff',
-        basePosition: { x: -5.8, y: 0, z: 3.6 }
+        basePosition: { x: -6.4, y: 0, z: 0.4 }
     },
     {
         id: 'shard',
         name: 'Shard',
         role: '懐疑派',
         color: '#ff8a6b',
-        basePosition: { x: 5.5, y: 0, z: 2.6 }
+        basePosition: { x: 6.4, y: 0, z: 0.4 }
+    },
+    {
+        id: 'anchor',
+        name: 'Anchor',
+        role: '具体化役',
+        color: '#8cf08c',
+        basePosition: { x: 0.2, y: 0, z: 6.2 }
     },
     {
         id: 'mica',
         name: 'Mica',
         role: '要約役',
         color: '#ffd36a',
-        basePosition: { x: -0.2, y: 0, z: -5.7 }
+        basePosition: { x: 0.2, y: 0, z: -6.2 }
     }
 ]);
 
@@ -39,26 +46,38 @@ const TURN_BLUEPRINTS = Object.freeze([
         goal: '直前の主張の弱い点を一つ指摘し、反対または条件付き反対を返す。'
     },
     {
-        speakerId: 'mica',
+        speakerId: 'anchor',
         listenerId: 'pulse',
+        debateStage: 'example',
+        goal: '議題を具体例に落とし、どんな条件なら当てはまるかを一つ示す。'
+    },
+    {
+        speakerId: 'mica',
+        listenerId: 'anchor',
         debateStage: 'summary',
         goal: 'ここまでの対立点を整理し、次に考えるべき論点を一つに絞る。'
     },
     {
         speakerId: 'pulse',
-        listenerId: 'mica',
+        listenerId: 'anchor',
         debateStage: 'follow_up',
         goal: '絞られた論点に答え、具体例か判断基準を一つだけ足す。'
     },
     {
         speakerId: 'shard',
-        listenerId: 'mica',
+        listenerId: 'anchor',
         debateStage: 'counter',
         goal: 'その具体例や基準の穴、例外、条件を一つだけ指摘する。'
     },
     {
-        speakerId: 'mica',
+        speakerId: 'anchor',
         listenerId: 'shard',
+        debateStage: 'criteria',
+        goal: '例外を踏まえて、判断基準を一つだけ言い直す。'
+    },
+    {
+        speakerId: 'mica',
+        listenerId: 'pulse',
         debateStage: 'closing',
         goal: '賛成側と慎重側の条件を短くまとめ、暫定結論を示す。'
     }
