@@ -45,7 +45,8 @@ const worldState = {
 const clientState = {
     stream: null,
     initializing: false,
-    menuOpen: false
+    menuOpen: false,
+    topicIsComposing: false
 };
 
 const cameraState = {
@@ -145,11 +146,11 @@ function handleTopicKeydown(event) {
         return;
     }
 
-    if (event.isComposing || event.keyCode === 229) {
+    if (event.isComposing || clientState.topicIsComposing) {
         return;
     }
 
-    if (event.ctrlKey) {
+    if (event.ctrlKey || event.shiftKey || event.metaKey) {
         return;
     }
 
@@ -762,6 +763,12 @@ topicForm?.addEventListener('submit', async (event) => {
 
 topicInput?.addEventListener('input', resizeTopicInput);
 topicInput?.addEventListener('keydown', handleTopicKeydown);
+topicInput?.addEventListener('compositionstart', () => {
+    clientState.topicIsComposing = true;
+});
+topicInput?.addEventListener('compositionend', () => {
+    clientState.topicIsComposing = false;
+});
 
 for (const button of menuButtons) {
     button.addEventListener('click', toggleMenu);

@@ -177,6 +177,15 @@ button {
     font-weight: 700;
 }
 
+.composer-hint {
+    margin: 10px 14px 0;
+    color: rgba(236, 247, 248, 0.48);
+    font-family: 'Azeret Mono', monospace;
+    font-size: 0.64rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
 .control-panel {
     position: absolute;
     top: calc(max(18px, env(safe-area-inset-top, 0px)) + 38px);
@@ -391,6 +400,12 @@ button {
     .control-panel {
         top: calc(max(12px, env(safe-area-inset-top, 0px)) + 40px);
         max-height: min(58dvh, 480px);
+    }
+
+    .composer-hint {
+        margin: 8px 10px 0;
+        font-size: 0.58rem;
+        letter-spacing: 0.06em;
     }
 
     .panel {
