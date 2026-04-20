@@ -84,6 +84,22 @@ function normalizeVector(point) {
     };
 }
 
+function randomBetween(min, max) {
+    return min + Math.random() * (max - min);
+}
+
+function samePair(a, b) {
+    if (!a || !b) {
+        return false;
+    }
+
+    return (
+        a.speakerId === b.speakerId && a.listenerId === b.listenerId
+    ) || (
+        a.speakerId === b.listenerId && a.listenerId === b.speakerId
+    );
+}
+
 function getMeetingTargets(speaker, listener) {
     const midpoint = {
         x: (speaker.basePosition.x + listener.basePosition.x) * 0.5,
@@ -95,18 +111,30 @@ function getMeetingTargets(speaker, listener) {
         y: 0,
         z: listener.basePosition.z - speaker.basePosition.z
     });
-    const spacing = 1.4;
+    const normal = {
+        x: -direction.z,
+        y: 0,
+        z: direction.x
+    };
+    const spacing = randomBetween(1.2, 1.95);
+    const lateralShift = randomBetween(-1.15, 1.15);
+    const depthShift = randomBetween(-0.38, 0.38);
+    const shiftedMidpoint = {
+        x: midpoint.x + normal.x * lateralShift + direction.x * depthShift,
+        y: 0,
+        z: midpoint.z + normal.z * lateralShift + direction.z * depthShift
+    };
 
     return {
         speakerTarget: {
-            x: midpoint.x - direction.x * (spacing / 2),
+            x: shiftedMidpoint.x - direction.x * (spacing / 2),
             y: 0,
-            z: midpoint.z - direction.z * (spacing / 2)
+            z: shiftedMidpoint.z - direction.z * (spacing / 2)
         },
         listenerTarget: {
-            x: midpoint.x + direction.x * (spacing / 2),
+            x: shiftedMidpoint.x + direction.x * (spacing / 2),
             y: 0,
-            z: midpoint.z + direction.z * (spacing / 2)
+            z: shiftedMidpoint.z + direction.z * (spacing / 2)
         }
     };
 }
@@ -431,6 +459,10 @@ class MasWorld {
         this.pushLog(`Prototype complete for topic: ${this.topic}`);
     }
 
+    getNextTurnBlueprint() {
+        return TURN_BLUEPRINTS[this.turnIndex + 1] || null;
+    }
+
     tick() {
         this.updateAgentPositions();
 
@@ -471,6 +503,18 @@ class MasWorld {
 
         if (this.phase === 'speaking' && Date.now() >= this.phaseEndsAt) {
             this.hideBubbles();
+
+            const nextTurn = this.getNextTurnBlueprint();
+            if (samePair(this.activeTurn, nextTurn)) {
+                this.turnIndex += 1;
+                this.activeTurn = null;
+                this.phase = 'queued';
+                this.status = `${speaker.name} and ${listener.name} continue in place`;
+                this.pushLog(`${speaker.name} と ${listener.name} はその場で会話を続ける`);
+                this.broadcast(true);
+                return;
+            }
+
             this.resetTargets();
             this.phase = 'returning';
             this.phaseEndsAt = Date.now() + RETURN_TIMEOUT_MS;
