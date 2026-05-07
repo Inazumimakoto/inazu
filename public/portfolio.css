@@ -203,8 +203,8 @@ body.background-view .page-noise {
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.18),
         0 10px 28px rgba(0, 0, 0, 0.12);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
     font-size: 1rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -222,8 +222,8 @@ body.background-view .page-noise {
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.18),
         0 10px 28px rgba(0, 0, 0, 0.12);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     color: var(--text);
     font-size: 0.84rem;
     letter-spacing: 0.08em;
@@ -349,8 +349,8 @@ main {
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.18),
         0 10px 28px rgba(0, 0, 0, 0.12);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
 }
@@ -426,8 +426,8 @@ main {
 
 .text-glass-shape {
     background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
 }
 
 .text-glass-highlight {
@@ -544,8 +544,8 @@ main {
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.22),
         0 10px 30px rgba(0, 0, 0, 0.12);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
     transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
 }
 
@@ -654,8 +654,8 @@ main {
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.18),
         0 14px 40px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     transform-style: preserve-3d;
     transition: transform 240ms ease, border-color 240ms ease, background 240ms ease, box-shadow 240ms ease;
 }

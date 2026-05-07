@@ -641,27 +641,30 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
             return mix(photo, overlay.rgb, overlay.a);
         }
 
-        vec4 renderGlassSurface(vec2 fragPx, vec2 uv, vec3 baseColor, vec4 rect, float radius, float dist) {
-            float insideMask = 1.0 - step(0.0, dist);
+        vec4 renderGlassSurface(vec2 fragPx, vec2 uv, vec3 baseColor, vec4 rect, float radius, float dist, float priority) {
+            float edgeBoost = mix(0.66, 1.0, priority);
+            float chromaBoost = mix(0.54, 0.9, priority);
+            float outerFeather = mix(2.0, 3.6, priority);
+            float surfaceCoverage = 1.0 - smoothstep(0.0, outerFeather, dist);
 
-            if (insideMask <= 0.001) {
+            if (surfaceCoverage <= 0.001) {
                 return vec4(baseColor, 0.0);
             }
 
-            float innerFeather = smoothstep(0.0, 7.0, -dist);
-            float glassMask = insideMask * innerFeather;
             vec2 rectUv = clamp((fragPx - rect.xy) / max(rect.zw, vec2(1.0)), 0.0, 1.0);
             vec2 centerUv = rectUv * 2.0 - 1.0;
             vec2 edgeDir = normalize(centerUv + vec2(0.0001));
-            float edge = 1.0 - smoothstep(0.0, 26.0, -dist);
-            float rim = pow(edge, 0.92) * smoothstep(0.0, 4.0, -dist);
-            float body = (0.22 + (1.0 - smoothstep(18.0, 88.0, -dist)) * 0.2) * innerFeather;
-            float horizontalBias = smoothstep(-0.08, 0.28, abs(centerUv.y) - abs(centerUv.x) * 0.72);
-            float tubeBand = smoothstep(0.34, 0.96, abs(centerUv.y));
-            float tubeMask = clamp(horizontalBias * tubeBand, 0.0, 1.0);
+            float edgeBand = 1.0 - smoothstep(0.0, 25.0, abs(dist));
+            float innerBody = smoothstep(3.0, 60.0, -dist);
+            float glassMask = max(innerBody * 0.84, pow(edgeBand, 0.72) * (0.82 + priority * 0.12)) * surfaceCoverage;
+            float rim = pow(edgeBand, 0.64) * surfaceCoverage * edgeBoost;
+            float body = (0.14 + (1.0 - smoothstep(22.0, 92.0, -dist)) * 0.14) * glassMask;
+            float sideDominance = step(abs(centerUv.y), abs(centerUv.x));
+            vec2 axisNormal = normalize(vec2(sign(centerUv.x) * sideDominance, sign(centerUv.y) * (1.0 - sideDominance)) + edgeDir * 0.22 + vec2(0.0001));
+            float tubeBand = smoothstep(0.42, 0.98, max(abs(centerUv.x), abs(centerUv.y)));
+            float tubeMask = clamp(tubeBand * (0.36 + edgeBand * 0.64), 0.0, 1.0);
             float tubeRim = rim * tubeMask;
-            float chromaRim = pow(1.0 - smoothstep(0.0, 9.0, -dist), 1.6) * tubeMask * insideMask;
-            vec2 tubeNormal = vec2(0.0, sign(centerUv.y));
+            float chromaRim = pow(edgeBand, 1.08) * (0.24 + tubeMask * 0.62) * surfaceCoverage * chromaBoost;
 
             vec2 noiseUv = rectUv * 15.8 + vec2(92.0, 31.0);
             float nA = fbm(noiseUv);
@@ -681,15 +684,15 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
             turbulence = mix(turbulence, fineNoise, 0.24);
 
             vec2 pxOffset =
-                vec2(turbulence.x * 0.52, turbulence.y * 1.06) * (2.4 + body * 3.1 + tubeRim * 20.0) +
-                tubeNormal * tubeRim * 12.0 +
-                edgeDir * tubeRim * 4.0;
+                vec2(turbulence.x * 0.56, turbulence.y * 1.06) * (1.4 + body * 2.3 + tubeRim * 15.0) +
+                axisNormal * tubeRim * 10.0 +
+                edgeDir * tubeRim * 3.0;
 
             vec2 uvOffset = pxOffset / max(u_resolution, vec2(1.0));
             vec3 refractedA = sampleScene(uv + uvOffset);
             vec3 refractedB = sampleScene(uv - uvOffset * 0.22);
             vec3 glass = mix(refractedA, refractedB, 0.22);
-            vec2 chromaOffset = (uvOffset * (0.16 + chromaRim * 1.2)) + (tubeNormal * chromaRim * 4.2 / max(u_resolution, vec2(1.0)));
+            vec2 chromaOffset = (uvOffset * (0.22 + chromaRim * 1.45)) + (axisNormal * chromaRim * 4.4 / max(u_resolution, vec2(1.0)));
             vec3 chromaSplit = vec3(
                 sampleScene(uv + uvOffset + chromaOffset).r,
                 glass.g,
@@ -697,9 +700,9 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
             );
 
             glass = mix(baseColor, glass, 0.9 * glassMask);
-            glass = mix(glass, chromaSplit, chromaRim * 0.62);
-            glass += vec3(0.18) * tubeRim * 0.16;
-            glass += vec3(0.06) * body * 0.06;
+            glass = mix(glass, chromaSplit, clamp(chromaRim * 0.72, 0.0, 0.78));
+            glass += vec3(0.18, 0.2, 0.24) * tubeRim * 0.16;
+            glass += vec3(0.06) * body * 0.05;
 
             return vec4(clamp(glass, 0.0, 1.0), glassMask);
         }
@@ -719,6 +722,8 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
             float nearestDistB = 1.0e9;
             float nearestRadiusA = 0.0;
             float nearestRadiusB = 0.0;
+            float nearestPriorityA = 0.0;
+            float nearestPriorityB = 0.0;
             vec4 nearestRectA = vec4(0.0);
             vec4 nearestRectB = vec4(0.0);
 
@@ -735,21 +740,24 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
                     nearestScoreB = nearestScoreA;
                     nearestDistB = nearestDistA;
                     nearestRadiusB = nearestRadiusA;
+                    nearestPriorityB = nearestPriorityA;
                     nearestRectB = nearestRectA;
 
                     nearestScoreA = score;
                     nearestDistA = dist;
                     nearestRadiusA = u_glass_radii[i];
+                    nearestPriorityA = u_glass_priority[i];
                     nearestRectA = rect;
                 } else if (score < nearestScoreB) {
                     nearestScoreB = score;
                     nearestDistB = dist;
                     nearestRadiusB = u_glass_radii[i];
+                    nearestPriorityB = u_glass_priority[i];
                     nearestRectB = rect;
                 }
             }
 
-            vec4 surfaceA = renderGlassSurface(fragPx, v_uv, base, nearestRectA, nearestRadiusA, nearestDistA);
+            vec4 surfaceA = renderGlassSurface(fragPx, v_uv, base, nearestRectA, nearestRadiusA, nearestDistA, nearestPriorityA);
             if (surfaceA.a <= 0.001) {
                 gl_FragColor = vec4(base, 1.0);
                 return;
@@ -759,7 +767,7 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
             float accumMask = surfaceA.a;
 
             if (nearestScoreB < 1.0e8) {
-                vec4 surfaceB = renderGlassSurface(fragPx, v_uv, base, nearestRectB, nearestRadiusB, nearestDistB);
+                vec4 surfaceB = renderGlassSurface(fragPx, v_uv, base, nearestRectB, nearestRadiusB, nearestDistB, nearestPriorityB);
                 float secondaryMask = surfaceB.a * (1.0 - surfaceA.a * 0.35);
                 accumColor += surfaceB.rgb * secondaryMask;
                 accumMask += secondaryMask;
