@@ -1,19 +1,36 @@
 const revealTargets = document.querySelectorAll('.reveal');
 const tiltTargets = document.querySelectorAll('[data-tilt]');
 const hero = document.querySelector('[data-hero]');
+const backgroundControls = document.querySelector('[data-background-controls]');
 const backgroundToggle = document.querySelector('[data-background-toggle]');
+const backgroundSlotMenu = document.querySelector('[data-background-slot-menu]');
+const backgroundSlotTrigger = document.querySelector('[data-background-slot-trigger]');
+const backgroundSlotValue = document.querySelector('[data-background-slot-value]');
+const backgroundSlotOptions = document.querySelector('[data-background-slot-options]');
+const backgroundSlotButtons = Array.from(document.querySelectorAll('[data-background-slot-mode]'));
 const pageCanvas = document.querySelector('[data-page-canvas]');
 const celebrationCanvas = document.querySelector('[data-celebration-canvas]');
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const glassCopyTargets = Array.from(document.querySelectorAll('.text-glass-copy'));
 const FALLBACK_BACKGROUND_PHOTO = 'assets/hero-dinner.jpg';
-const BACKGROUND_PHOTOS = {
-    morning: [],
-    lunch: [],
-    night: [
-        'assets/hero-dinner.jpg'
-    ]
+const BACKGROUND_SLOTS = ['morning', 'lunch', 'night'];
+const BACKGROUND_SLOT_MODES = ['current', ...BACKGROUND_SLOTS];
+const BACKGROUND_SLOT_LABELS = {
+    current: '自動',
+    morning: '朝',
+    lunch: '昼',
+    night: '夜'
 };
+const BACKGROUND_QUEUE_STORAGE_KEY = 'inazu:background-queues:v1';
+const BACKGROUND_SLOT_MODE_STORAGE_KEY = 'inazu:background-slot-mode:v1';
+const BACKGROUND_VIEW_STORAGE_KEY = 'inazu:background-view:v1';
+const LEGACY_LAST_BACKGROUND_STORAGE_KEY = 'inazu:last-background-photo';
+let backgroundRenderer = null;
+let celebrationRenderer = null;
+let backgroundSlotMode = readStoredBackgroundSlotMode();
+let backgroundViewEnabled = readStoredBackgroundView();
+let backgroundSlotMenuOpen = false;
+let loadedBackgroundPhotos = null;
 
 function getMealSlot(date = new Date()) {
     const hour = date.getHours();
@@ -29,29 +46,270 @@ function getMealSlot(date = new Date()) {
     return 'night';
 }
 
-function getMealRotationIndex(items, slot, date = new Date()) {
-    if (items.length <= 1) return 0;
+function normalizeBackgroundPhotos(data) {
+    const photos = {};
 
-    const startOfYear = new Date(date.getFullYear(), 0, 0);
-    const dayOfYear = Math.floor((date - startOfYear) / 86400000);
-    const slotStep = slot === 'night'
-        ? Math.floor(date.getHours() / 2)
-        : Math.floor(date.getHours() / 3);
+    for (const slot of BACKGROUND_SLOTS) {
+        const values = Array.isArray(data?.[slot]) ? data[slot] : [];
+        photos[slot] = values.filter((value) => {
+            return typeof value === 'string' && value.startsWith(`assets/backgrounds/${slot}/`);
+        });
+    }
 
-    return (dayOfYear + slotStep) % items.length;
+    return photos;
 }
 
-function resolveBackgroundPhoto(date = new Date()) {
-    const slot = getMealSlot(date);
-    const activeSlot = BACKGROUND_PHOTOS[slot]?.length ? slot : 'night';
-    const candidates = BACKGROUND_PHOTOS[activeSlot];
-    const photo = candidates[getMealRotationIndex(candidates, activeSlot, date)] || FALLBACK_BACKGROUND_PHOTO;
-    return { slot, activeSlot, photo };
+function isBackgroundPhotoForSlot(photo, slot) {
+    return typeof photo === 'string' && photo.startsWith(`assets/backgrounds/${slot}/`);
 }
 
-const selectedBackground = resolveBackgroundPhoto();
-document.documentElement.style.setProperty('--page-photo-url', `url("${selectedBackground.photo}")`);
-document.body.dataset.mealSlot = selectedBackground.activeSlot;
+function isBackgroundSlotMode(mode) {
+    return BACKGROUND_SLOT_MODES.includes(mode);
+}
+
+function getBackgroundSlotLabel(mode) {
+    return BACKGROUND_SLOT_LABELS[mode] || BACKGROUND_SLOT_LABELS.current;
+}
+
+function readStoredBackgroundSlotMode() {
+    try {
+        const value = window.localStorage.getItem(BACKGROUND_SLOT_MODE_STORAGE_KEY);
+
+        return isBackgroundSlotMode(value) ? value : 'current';
+    } catch (error) {
+        return 'current';
+    }
+}
+
+function writeStoredBackgroundSlotMode(mode) {
+    try {
+        window.localStorage.setItem(BACKGROUND_SLOT_MODE_STORAGE_KEY, mode);
+
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+function setBackgroundSlotMode(mode) {
+    if (!isBackgroundSlotMode(mode)) return;
+
+    backgroundSlotMode = mode;
+    writeStoredBackgroundSlotMode(mode);
+}
+
+function getActiveBackgroundSlot(date = new Date()) {
+    if (backgroundSlotMode === 'current') {
+        return getMealSlot(date);
+    }
+
+    return backgroundSlotMode;
+}
+
+function readStoredBackgroundView() {
+    try {
+        return window.localStorage.getItem(BACKGROUND_VIEW_STORAGE_KEY) === 'true';
+    } catch (error) {
+        return false;
+    }
+}
+
+function writeStoredBackgroundView(enabled) {
+    try {
+        window.localStorage.setItem(BACKGROUND_VIEW_STORAGE_KEY, enabled ? 'true' : 'false');
+
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+function setBackgroundView(enabled) {
+    backgroundViewEnabled = enabled;
+    writeStoredBackgroundView(enabled);
+    document.body.classList.toggle('background-view', enabled);
+    celebrationRenderer?.setSpawnEnabled(!enabled);
+}
+
+function arraysEqual(first, second) {
+    if (!Array.isArray(first) || !Array.isArray(second) || first.length !== second.length) {
+        return false;
+    }
+
+    return first.every((value, index) => value === second[index]);
+}
+
+function shufflePhotos(photos, avoidFirstPhoto = '') {
+    const shuffled = [...photos];
+
+    for (let index = shuffled.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+    }
+
+    if (avoidFirstPhoto && shuffled.length > 1 && shuffled[0] === avoidFirstPhoto) {
+        const swapIndex = shuffled.findIndex((photo) => photo !== avoidFirstPhoto);
+
+        if (swapIndex > 0) {
+            [shuffled[0], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[0]];
+        }
+    }
+
+    return shuffled;
+}
+
+function readBackgroundQueueState() {
+    try {
+        const value = window.localStorage.getItem(BACKGROUND_QUEUE_STORAGE_KEY);
+        const state = value ? JSON.parse(value) : null;
+
+        if (!state || typeof state !== 'object' || !state.slots || typeof state.slots !== 'object') {
+            return { slots: {} };
+        }
+
+        return state;
+    } catch (error) {
+        return { slots: {} };
+    }
+}
+
+function writeBackgroundQueueState(state) {
+    try {
+        window.localStorage.setItem(BACKGROUND_QUEUE_STORAGE_KEY, JSON.stringify(state));
+
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+function readLegacyLastBackground(slot) {
+    try {
+        const value = window.localStorage.getItem(LEGACY_LAST_BACKGROUND_STORAGE_KEY);
+        const parsed = value ? JSON.parse(value) : null;
+
+        if (!parsed || parsed.slot !== slot || !isBackgroundPhotoForSlot(parsed.photo, slot)) {
+            return '';
+        }
+
+        return parsed.photo;
+    } catch (error) {
+        return '';
+    }
+}
+
+function readInitialBackgroundPhoto(slot) {
+    const state = readBackgroundQueueState();
+    const slotState = state.slots[slot] || {};
+    const storedPhoto = typeof slotState.lastPhoto === 'string' ? slotState.lastPhoto : '';
+    const storedCandidates = Array.isArray(slotState.candidates) ? slotState.candidates : [];
+
+    if (isBackgroundPhotoForSlot(storedPhoto, slot) && (!storedCandidates.length || storedCandidates.includes(storedPhoto))) {
+        return storedPhoto;
+    }
+
+    return readLegacyLastBackground(slot);
+}
+
+function pickRandomPhoto(candidates) {
+    if (!candidates.length) return FALLBACK_BACKGROUND_PHOTO;
+
+    return candidates[Math.floor(Math.random() * candidates.length)] || FALLBACK_BACKGROUND_PHOTO;
+}
+
+function pickQueuedPhoto(candidates, slot) {
+    if (!candidates.length) return FALLBACK_BACKGROUND_PHOTO;
+    if (candidates.length === 1) return candidates[0];
+
+    const state = readBackgroundQueueState();
+    const slotState = state.slots[slot] || {};
+    const previousPhoto = typeof slotState.lastPhoto === 'string' ? slotState.lastPhoto : '';
+    const shouldRebuildQueue = !arraysEqual(slotState.candidates, candidates);
+    let queue = shouldRebuildQueue
+        ? shufflePhotos(candidates, previousPhoto)
+        : Array.isArray(slotState.remaining)
+            ? slotState.remaining.filter((photo) => candidates.includes(photo))
+            : [];
+
+    if (!queue.length) {
+        queue = shufflePhotos(candidates, previousPhoto);
+    }
+
+    const photo = queue.shift() || pickRandomPhoto(candidates);
+    const nextState = {
+        ...state,
+        slots: {
+            ...state.slots,
+            [slot]: {
+                candidates: [...candidates],
+                remaining: queue,
+                lastPhoto: photo
+            }
+        }
+    };
+
+    if (!writeBackgroundQueueState(nextState)) {
+        return pickRandomPhoto(candidates);
+    }
+
+    return photo;
+}
+
+function createInitialBackground(date = new Date(), slot = getActiveBackgroundSlot(date)) {
+    const photo = readInitialBackgroundPhoto(slot);
+
+    if (photo) {
+        return { slot, activeSlot: slot, photo };
+    }
+
+    return { slot, activeSlot: 'fallback', photo: FALLBACK_BACKGROUND_PHOTO };
+}
+
+function resolveBackgroundPhoto(backgroundPhotos, date = new Date(), slot = getActiveBackgroundSlot(date)) {
+    const candidates = backgroundPhotos[slot] || [];
+    const selected = {
+        slot,
+        activeSlot: candidates.length ? slot : 'fallback',
+        photo: pickQueuedPhoto(candidates, slot)
+    };
+    return selected;
+}
+
+function applyBackgroundPhoto(background) {
+    document.documentElement.style.setProperty('--page-photo-url', `url("${background.photo}")`);
+    document.body.dataset.mealSlot = background.activeSlot;
+}
+
+async function loadBackgroundPhotos() {
+    const response = await fetch('/api/backgrounds', { cache: 'no-store' });
+
+    if (!response.ok) {
+        throw new Error(`Background API returned ${response.status}`);
+    }
+
+    return normalizeBackgroundPhotos(await response.json());
+}
+
+function applyResolvedBackground(backgroundPhotos = loadedBackgroundPhotos) {
+    if (!backgroundPhotos) return;
+
+    selectedBackground = resolveBackgroundPhoto(backgroundPhotos);
+    applyBackgroundPhoto(selectedBackground);
+    backgroundRenderer?.setPhoto?.(selectedBackground.photo);
+}
+
+setBackgroundView(backgroundViewEnabled);
+let selectedBackground = createInitialBackground();
+applyBackgroundPhoto(selectedBackground);
+
+loadBackgroundPhotos()
+    .then((backgroundPhotos) => {
+        loadedBackgroundPhotos = backgroundPhotos;
+        applyResolvedBackground(backgroundPhotos);
+    })
+    .catch((error) => {
+        console.warn('Background photo API failed; keeping the initial photo.', error);
+    });
 
 const observer = new IntersectionObserver((entries) => {
     for (const entry of entries) {
@@ -67,26 +325,71 @@ for (const target of revealTargets) {
     observer.observe(target);
 }
 
-let backgroundRenderer = null;
-let celebrationRenderer = null;
+function setBackgroundSlotMenuOpen(open) {
+    backgroundSlotMenuOpen = Boolean(open);
+    backgroundSlotMenu?.classList.toggle('is-open', backgroundSlotMenuOpen);
+    backgroundSlotTrigger?.setAttribute('aria-expanded', backgroundSlotMenuOpen ? 'true' : 'false');
+
+    if (backgroundSlotOptions) {
+        backgroundSlotOptions.hidden = !backgroundSlotMenuOpen;
+    }
+}
 
 function syncBackgroundControls() {
-    if (!backgroundToggle) return;
+    if (backgroundToggle) {
+        backgroundToggle.setAttribute('aria-pressed', backgroundViewEnabled ? 'true' : 'false');
+        backgroundToggle.textContent = backgroundViewEnabled ? 'back to site' : 'view photo';
+    }
 
-    const isBackgroundView = document.body.classList.contains('background-view');
-    backgroundToggle.setAttribute('aria-pressed', isBackgroundView ? 'true' : 'false');
-    backgroundToggle.textContent = isBackgroundView ? 'back to site' : 'view photo';
+    if (backgroundSlotValue) {
+        backgroundSlotValue.textContent = getBackgroundSlotLabel(backgroundSlotMode);
+    }
+
+    if (backgroundSlotTrigger) {
+        backgroundSlotTrigger.setAttribute('aria-label', `背景画像の時間帯: ${getBackgroundSlotLabel(backgroundSlotMode)}`);
+    }
+
+    for (const button of backgroundSlotButtons) {
+        const isSelected = button.dataset.backgroundSlotMode === backgroundSlotMode;
+        button.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+    }
 }
 
 if (backgroundToggle) {
     backgroundToggle.addEventListener('click', () => {
-        const nextState = !document.body.classList.contains('background-view');
-        document.body.classList.toggle('background-view', nextState);
+        setBackgroundView(!backgroundViewEnabled);
         syncBackgroundControls();
-        celebrationRenderer?.setSpawnEnabled(!nextState);
         backgroundRenderer?.renderNow();
     });
 }
+
+if (backgroundSlotTrigger) {
+    backgroundSlotTrigger.addEventListener('click', () => {
+        setBackgroundSlotMenuOpen(!backgroundSlotMenuOpen);
+    });
+}
+
+for (const button of backgroundSlotButtons) {
+    button.addEventListener('click', () => {
+        setBackgroundSlotMode(button.dataset.backgroundSlotMode);
+        setBackgroundSlotMenuOpen(false);
+        syncBackgroundControls();
+        applyResolvedBackground();
+    });
+}
+
+document.addEventListener('click', (event) => {
+    if (!backgroundSlotMenuOpen || backgroundControls?.contains(event.target)) return;
+
+    setBackgroundSlotMenuOpen(false);
+});
+
+document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || !backgroundSlotMenuOpen) return;
+
+    setBackgroundSlotMenuOpen(false);
+    backgroundSlotTrigger?.focus();
+});
 
 syncBackgroundControls();
 
@@ -528,7 +831,7 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
     }
 
     const MAX_GLASS_SURFACES = 48;
-    const glassSelector = '.site-mark, .site-nav, .hero, .panel, .card, .contact-card, .button, .background-toggle, .text-glass-label, .text-glass-title, .text-glass-surface';
+    const glassSelector = '.site-mark, .site-nav, .hero, .panel, .card, .contact-card, .button, .background-slot-trigger, .background-slot-options, .background-slot-option, .background-toggle, .text-glass-label, .text-glass-title, .text-glass-surface';
     const rectData = new Float32Array(MAX_GLASS_SURFACES * 4);
     const radiusData = new Float32Array(MAX_GLASS_SURFACES);
     const priorityData = new Float32Array(MAX_GLASS_SURFACES);
@@ -537,6 +840,8 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
     let scrollAmount = window.scrollY / Math.max(window.innerHeight, 1);
     let rafId = 0;
     let isReady = false;
+    let isLooping = false;
+    let photoLoadId = 0;
     let lastFrameTime = 0;
 
     const vertexSource = `
@@ -1007,36 +1312,55 @@ function initPageGlassWebGL(canvas, reducedMotion, celebrationSource, photoSourc
 
     resizeCanvas();
 
-    const image = new Image();
-    image.decoding = 'async';
-    image.onload = () => {
-        imageSize.width = image.naturalWidth || 1;
-        imageSize.height = image.naturalHeight || 1;
+    function loadPhoto(source) {
+        const nextPhoto = source || FALLBACK_BACKGROUND_PHOTO;
+        const loadId = photoLoadId + 1;
+        const image = new Image();
+        photoLoadId = loadId;
+        image.decoding = 'async';
+        image.onload = () => {
+            if (loadId !== photoLoadId) return;
 
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, photoTexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            imageSize.width = image.naturalWidth || 1;
+            imageSize.height = image.naturalHeight || 1;
 
-        isReady = true;
-        document.body.classList.add('is-webgl-ready');
-        renderNow();
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, photoTexture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
-        if (!reducedMotion) {
-            rafId = window.requestAnimationFrame(loop);
-        }
-    };
-    image.onerror = () => {
-        console.warn('Page WebGL image load failed; keeping the static photo background.');
-        canvas.remove();
-    };
-    image.src = photoSource || FALLBACK_BACKGROUND_PHOTO;
+            isReady = true;
+            document.body.classList.add('is-webgl-ready');
+            renderNow();
+
+            if (!reducedMotion && !isLooping) {
+                isLooping = true;
+                rafId = window.requestAnimationFrame(loop);
+            }
+        };
+        image.onerror = () => {
+            if (loadId !== photoLoadId) return;
+
+            if (nextPhoto !== FALLBACK_BACKGROUND_PHOTO) {
+                loadPhoto(FALLBACK_BACKGROUND_PHOTO);
+                return;
+            }
+
+            console.warn('Page WebGL image load failed; keeping the static photo background.');
+            canvas.remove();
+        };
+        image.src = nextPhoto;
+    }
+
+    loadPhoto(photoSource);
 
     return {
         renderNow,
+        setPhoto: loadPhoto,
         destroy() {
             if (rafId) {
                 window.cancelAnimationFrame(rafId);
             }
+            isLooping = false;
         }
     };
 }

@@ -18,6 +18,9 @@ const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toSt
 
 const CHAT_HOSTS = new Set(['chat.inazu.me']);
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
+const BACKGROUND_SLOTS = ['morning', 'lunch', 'night'];
+const BACKGROUND_IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp']);
+const BACKGROUND_DIR = path.join(PUBLIC_DIR, 'assets', 'backgrounds');
 
 // Trust proxy (for Cloudflare)
 app.set('trust proxy', 1);
@@ -93,6 +96,29 @@ function sendPublicFile(res, file) {
     return res.sendFile(path.join(PUBLIC_DIR, file));
 }
 
+async function listBackgroundPhotos(slot) {
+    const slotDir = path.join(BACKGROUND_DIR, slot);
+
+    try {
+        const entries = await fs.promises.readdir(slotDir, { withFileTypes: true });
+
+        return entries
+            .filter((entry) => {
+                if (!entry.isFile() || entry.name.startsWith('.')) return false;
+
+                return BACKGROUND_IMAGE_EXTENSIONS.has(path.extname(entry.name).toLowerCase());
+            })
+            .map((entry) => `assets/backgrounds/${slot}/${encodeURIComponent(entry.name)}`)
+            .sort((a, b) => a.localeCompare(b));
+    } catch (error) {
+        if (error.code === 'ENOENT') {
+            return [];
+        }
+
+        throw error;
+    }
+}
+
 app.get(['/', '/index.html'], (req, res) => {
     if (isChatHost(req)) {
         return sendPublicFile(res, 'verify.html');
@@ -119,6 +145,22 @@ app.get(['/chat', '/chat.html'], (req, res) => {
 
 app.get(['/mas', '/mas/', '/mas/index.html'], (req, res) => {
     return sendPublicFile(res, 'mas/index.html');
+});
+
+app.get('/api/backgrounds', async (req, res) => {
+    try {
+        const photos = {};
+
+        for (const slot of BACKGROUND_SLOTS) {
+            photos[slot] = await listBackgroundPhotos(slot);
+        }
+
+        res.setHeader('Cache-Control', 'no-store');
+        return res.json(photos);
+    } catch (error) {
+        console.error('[BACKGROUND LIST ERROR]', error);
+        return res.status(500).json({ error: 'Failed to list background photos' });
+    }
 });
 
 app.post('/api/mas/worlds', (req, res) => {

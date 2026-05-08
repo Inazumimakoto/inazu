@@ -64,6 +64,26 @@ SESSION_SECRET=your_random_session_secret
 
 ポートフォリオや MAS の見た目調整だけなら、そのまま `localhost:3000` で確認できます。
 
+## Portfolio Background Photos
+
+`inazu.me` の背景写真は時間帯ごとに自動列挙されます。写真を追加するときは、次のいずれかに画像を置いてください。
+
+```text
+public/assets/backgrounds/morning/
+public/assets/backgrounds/lunch/
+public/assets/backgrounds/night/
+```
+
+対応拡張子は `.jpg`, `.jpeg`, `.png`, `.webp` です。位置情報などの EXIF が入った写真は、公開前にメタデータを削除してください。
+
+写真を追加した後は、公開前に背景画像を一括でサニタイズしてください。
+
+```bash
+npm run sanitize-backgrounds
+```
+
+このコマンドは `.DS_Store` を削除し、画像の向きを焼き込んでからメタデータを削除し、最大 2400px に縮小します。ImageMagick が必要です。
+
 ## Model
 
 [`Modelfile`](Modelfile) から `nazumi` モデルを作成して使います。サーバー側では `/api/chat` で固定で `nazumi` を呼び出しています。

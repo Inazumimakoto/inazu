@@ -126,18 +126,22 @@ body.is-webgl-ready .page-photo {
     bottom: 20px;
     z-index: 4;
     display: flex;
-    flex-wrap: wrap;
+    align-items: flex-end;
     justify-content: flex-end;
     gap: 10px;
+    max-width: min(620px, calc(100vw - 40px));
 }
 
+.background-slot-menu {
+    position: relative;
+}
+
+.background-slot-trigger,
 .background-toggle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 148px;
-    padding: 12px 16px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.28);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.14);
     box-shadow:
@@ -146,11 +150,98 @@ body.is-webgl-ready .page-photo {
     color: var(--text);
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.72rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
     transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, color 180ms ease;
 }
 
+.background-slot-trigger {
+    min-width: 256px;
+    gap: 10px;
+    justify-content: space-between;
+    padding: 12px 16px;
+    letter-spacing: 0;
+}
+
+.background-slot-label {
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.background-slot-value {
+    color: var(--text);
+    white-space: nowrap;
+}
+
+.background-slot-options {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 10px);
+    display: grid;
+    width: 100%;
+    min-width: 196px;
+    gap: 4px;
+    padding: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 18px;
+    background: rgba(22, 22, 22, 0.58);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        0 18px 42px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(18px);
+}
+
+.background-slot-options[hidden] {
+    display: none;
+}
+
+.background-slot-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 36px;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.72);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0;
+    line-height: 1;
+    transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.background-slot-option::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: transparent;
+}
+
+.background-slot-option:hover,
+.background-slot-option:focus-visible {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text);
+}
+
+.background-slot-option[aria-checked="true"] {
+    background: rgba(255, 255, 255, 0.18);
+    color: var(--text);
+}
+
+.background-slot-option[aria-checked="true"]::after {
+    background: var(--text);
+}
+
+.background-toggle {
+    min-width: 148px;
+    padding: 12px 16px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.background-slot-trigger:hover,
+.background-slot-trigger:focus-visible,
 .background-toggle:hover,
 .background-toggle:focus-visible {
     transform: translateY(-2px);
@@ -1014,10 +1105,43 @@ button:focus-visible {
         right: 12px;
         bottom: 12px;
         left: 12px;
+        align-items: stretch;
+        max-width: none;
+        gap: 8px;
+    }
+
+    .background-slot-menu {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .background-slot-trigger {
+        width: 100%;
+        min-width: 0;
+        padding: 10px 12px;
+        font-size: 0.62rem;
+    }
+
+    .background-slot-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .background-slot-options {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .background-slot-option {
+        min-height: 34px;
+        font-size: 0.66rem;
     }
 
     .background-toggle {
-        min-width: 132px;
+        flex: 0 0 auto;
+        min-width: 118px;
         padding: 10px 14px;
         font-size: 0.66rem;
     }

@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "sanitize-backgrounds": "scripts/sanitize-backgrounds.sh"
   },
   "dependencies": {
     "dotenv": "^17.2.3",

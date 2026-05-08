@@ -20,7 +20,19 @@
     <div class="page-photo" aria-hidden="true"></div>
     <div class="page-grid"></div>
     <div class="page-noise"></div>
-    <div class="background-controls">
+    <div class="background-controls" data-background-controls>
+        <div class="background-slot-menu" data-background-slot-menu>
+            <button class="background-slot-trigger" type="button" data-background-slot-trigger aria-haspopup="true" aria-expanded="false">
+                <span class="background-slot-label">背景画像の時間帯:</span>
+                <span class="background-slot-value" data-background-slot-value>自動</span>
+            </button>
+            <div class="background-slot-options" data-background-slot-options role="menu" hidden>
+                <button class="background-slot-option" type="button" role="menuitemradio" data-background-slot-mode="current" aria-checked="true">自動</button>
+                <button class="background-slot-option" type="button" role="menuitemradio" data-background-slot-mode="morning" aria-checked="false">朝</button>
+                <button class="background-slot-option" type="button" role="menuitemradio" data-background-slot-mode="lunch" aria-checked="false">昼</button>
+                <button class="background-slot-option" type="button" role="menuitemradio" data-background-slot-mode="night" aria-checked="false">夜</button>
+            </div>
+        </div>
         <button class="background-toggle" type="button" data-background-toggle aria-pressed="false">view photo</button>
     </div>
 
@@ -65,12 +77,10 @@
                     <a class="card feature-card feature-card-lead card-link" href="https://github.com/Inazumimakoto/inazu" target="_blank" rel="noreferrer" data-tilt>
                         <p class="card-kicker">This Site</p>
                         <h3>inazu.me</h3>
-                        <p>このポートフォリオ自体も制作物です。リキッドグラスの実装にかなり手こずりつつ、背景には飯テロ写真を置いて、右下のボタンから背景だけ見られるようにして、さらにやかましい祝祭レイヤーまで降らせています。</p>
+                        <p>このポートフォリオ自体も制作物です。背景には朝・昼・夜で切り替えられる写真を置いて、リロードするたびに違う1枚を見られるようにしています。右下から時間帯を選んだり、背景だけを眺めたりできます。</p>
                         <ul class="list">
                             <li><span>focus</span><span>liquid glass</span></li>
-                            <li><span>background</span><span>food photo</span></li>
-                            <li><span>toggle</span><span>view photo</span></li>
-                            <li><span>extra</span><span>loud celebration</span></li>
+                            <li><span>background</span><span>photo rotation</span></li>
                         </ul>
                         <span class="inline-link">Open repo</span>
                     </a>
@@ -294,7 +304,7 @@
         </main>
     </div>
 
-    <script src="portfolio.js"></script>
+    <script src="portfolio.js?v=background-slot-menu-20260508"></script>
 </body>
 
 </html>
