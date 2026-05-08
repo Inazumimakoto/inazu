@@ -338,7 +338,7 @@ function setBackgroundSlotMenuOpen(open) {
 function syncBackgroundControls() {
     if (backgroundToggle) {
         backgroundToggle.setAttribute('aria-pressed', backgroundViewEnabled ? 'true' : 'false');
-        backgroundToggle.textContent = backgroundViewEnabled ? 'back to site' : 'view photo';
+        backgroundToggle.textContent = backgroundViewEnabled ? 'サイトに戻る' : '写真だけ見る';
     }
 
     if (backgroundSlotValue) {
