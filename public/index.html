@@ -31,6 +31,7 @@
                 <a href="#work">work</a>
                 <a href="#client">client</a>
                 <a href="#profile">profile</a>
+                <a href="#notes">notes</a>
                 <a href="#links">links</a>
             </nav>
         </header>
@@ -164,21 +165,40 @@
                 </div>
             </section>
 
-            <section class="panel reveal">
+            <section class="panel reveal" id="notes">
                 <div class="panel-header">
                     <div>
                         <p class="section-kicker"><span class="text-glass text-glass-label">Notes</span></p>
-                        <h2 class="panel-title"><span class="text-glass text-glass-title">まだ書いていないけど、書く場所は作る。</span></h2>
+                        <h2 class="panel-title"><span class="text-glass text-glass-title">実験と記録はZennへ。</span></h2>
                     </div>
-                    <p class="panel-copy"><span class="text-glass text-glass-copy">ブログはまだ空です。研究や制作メモ、ローカルLLMを家で運用したときの話は今後ここに増やしていく予定です。</span></p>
+                    <p class="panel-copy"><span class="text-glass text-glass-copy">macOSやLinuxの検証、セキュリティ・キャンプの記録、制作メモをZennにまとめています。技術寄りの話も、生活ログっぽい話もここに束ねます。</span></p>
                 </div>
 
-                <article class="card notes-card">
-                    <p class="card-kicker">Status</p>
-                    <h3>Writing soon.</h3>
-                    <p>公開できる形になったものから、短くても残していきます。</p>
-                    <span class="status">coming soon</span>
-                </article>
+                <div class="note-grid">
+                    <a class="card notes-card note-card card-link" href="https://zenn.dev/inazumimakoto/articles/mac-tcp-report" target="_blank" rel="noreferrer" data-tilt>
+                        <p class="card-kicker">Zenn / Tech</p>
+                        <h3>約49.7日で起きたTCP時計の停止</h3>
+                        <p>macOS長期稼働でTCP接続が詰まる現象を、TIME_WAITや一時ポートのログから追った実体験と分析の記録です。</p>
+                        <ul class="list">
+                            <li><span>topics</span><span>macOS / TCP</span></li>
+                            <li><span>published</span><span>2026-05-08</span></li>
+                        </ul>
+                        <span class="inline-link">Read on Zenn</span>
+                    </a>
+
+                    <a class="card notes-card note-card card-link" href="https://zenn.dev/inazumimakoto/articles/2e6c009ffc3443" target="_blank" rel="noreferrer" data-tilt>
+                        <p class="card-kicker">Zenn / Idea</p>
+                        <h3>セキュリティ・キャンプ2026 コネクトで食べたもの</h3>
+                        <p>セキュリティ・キャンプ2026 コネクト中に食べたものを写真付きで残した記録です。技術の話は出てきません。</p>
+                        <ul class="list">
+                            <li><span>topics</span><span>securitycamp / food</span></li>
+                            <li><span>published</span><span>2026-05-08</span></li>
+                        </ul>
+                        <span class="inline-link">Read on Zenn</span>
+                    </a>
+                </div>
+
+                <p class="notes-more"><a class="inline-link" href="https://zenn.dev/inazumimakoto" target="_blank" rel="noreferrer">View all posts on Zenn</a></p>
             </section>
 
             <section class="panel reveal" id="links">

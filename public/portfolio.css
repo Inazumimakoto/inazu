@@ -625,13 +625,15 @@ main {
 }
 
 .feature-grid,
+.note-grid,
 .profile-grid,
 .contact-grid {
     display: grid;
     gap: 20px;
 }
 
-.feature-grid {
+.feature-grid,
+.note-grid {
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
@@ -847,6 +849,33 @@ button:focus-visible {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+}
+
+.note-card {
+    min-height: 300px;
+}
+
+.note-card h3 {
+    margin: 10px 0 14px;
+    font-size: clamp(1.35rem, 2.4vw, 2rem);
+    line-height: 1.14;
+    letter-spacing: -0.03em;
+}
+
+.note-card p {
+    margin: 0;
+    font-weight: 500;
+    line-height: 1.75;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.note-card .inline-link {
+    margin-top: auto;
+    padding-top: 22px;
+}
+
+.notes-more {
+    margin: 18px 0 0;
 }
 
 .notes-card .status {
