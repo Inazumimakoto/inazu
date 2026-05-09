@@ -1,7 +1,4 @@
-# Block all crawlers
 User-agent: *
-Disallow: /
+Allow: /
 
-# No indexing
-User-agent: *
-Noindex: /
+Sitemap: https://inazu.me/sitemap.xml

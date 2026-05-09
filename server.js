@@ -16,6 +16,7 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET;
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
+const PUBLIC_PORTFOLIO_HOSTS = new Set(['inazu.me', 'www.inazu.me']);
 const CHAT_HOSTS = new Set(['chat.inazu.me']);
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
 const BACKGROUND_SLOTS = ['morning', 'lunch', 'night'];
@@ -55,8 +56,7 @@ const chatLimiter = rateLimit({
     message: { error: 'Too many messages, please slow down' }
 });
 
-// Bot blocking middleware
-const BOT_PATTERNS = [
+const PROTECTED_BOT_PATTERNS = [
     /bot/i, /crawl/i, /spider/i, /scrape/i, /wget/i, /curl/i,
     /python/i, /java\//i, /ruby/i, /perl/i, /php/i,
     /googlebot/i, /bingbot/i, /yandex/i, /baidu/i, /duckduck/i,
@@ -65,23 +65,22 @@ const BOT_PATTERNS = [
     /bytespider/i, /gptbot/i, /claudebot/i, /anthropic/i
 ];
 
-app.use((req, res, next) => {
-    const userAgent = req.headers['user-agent'] || '';
-
-    // Block if User-Agent matches bot patterns or is empty
-    if (!userAgent || BOT_PATTERNS.some(pattern => pattern.test(userAgent))) {
-        console.log(`[BOT BLOCKED] ${req.ip} - ${userAgent.substring(0, 50)}`);
-        return res.status(403).send('Access denied');
-    }
-
-    next();
-});
+const PUBLIC_BLOCKED_BOT_PATTERNS = [
+    /ahrefsbot/i, /semrush/i, /dotbot/i, /bytespider/i,
+    /gptbot/i, /claudebot/i, /anthropic/i, /scrape/i
+];
 
 function getHostname(req) {
     const forwardedHost = req.headers['x-forwarded-host'];
     const rawHost = (Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost) || req.headers.host || req.hostname || '';
 
     return rawHost.split(',')[0].trim().split(':')[0].toLowerCase();
+}
+
+function isPublicPortfolioHost(req) {
+    const hostname = getHostname(req);
+
+    return PUBLIC_PORTFOLIO_HOSTS.has(hostname) || isLocalHost(req);
 }
 
 function isChatHost(req) {
@@ -95,6 +94,35 @@ function isLocalHost(req) {
 function sendPublicFile(res, file) {
     return res.sendFile(path.join(PUBLIC_DIR, file));
 }
+
+app.get('/robots.txt', (req, res) => {
+    res.type('text/plain');
+
+    if (isChatHost(req)) {
+        return res.send('User-agent: *\nDisallow: /\n');
+    }
+
+    return res.send('User-agent: *\nAllow: /\nSitemap: https://inazu.me/sitemap.xml\n');
+});
+
+// Keep chat and API protected while allowing legitimate crawlers to read the public portfolio.
+app.use((req, res, next) => {
+    const userAgent = req.headers['user-agent'] || '';
+    const isProtectedSurface = isChatHost(req) || req.path.startsWith('/api/');
+    const isPublicSurface = isPublicPortfolioHost(req);
+    const shouldBlock =
+        !userAgent ||
+        (isProtectedSurface && PROTECTED_BOT_PATTERNS.some(pattern => pattern.test(userAgent))) ||
+        (!isProtectedSurface && isPublicSurface && PUBLIC_BLOCKED_BOT_PATTERNS.some(pattern => pattern.test(userAgent))) ||
+        (!isProtectedSurface && !isPublicSurface && PROTECTED_BOT_PATTERNS.some(pattern => pattern.test(userAgent)));
+
+    if (shouldBlock) {
+        console.log(`[BOT BLOCKED] ${getHostname(req)} ${req.ip} - ${userAgent.substring(0, 50)}`);
+        return res.status(403).send('Access denied');
+    }
+
+    next();
+});
 
 async function listBackgroundPhotos(slot) {
     const slotDir = path.join(BACKGROUND_DIR, slot);

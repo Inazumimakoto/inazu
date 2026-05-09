@@ -143,3 +143,29 @@ npm run dev
 ```
 
 どちらも [`server.js`](server.js) を起動します。
+
+## Production Server
+
+本番の `inazu.me` / `chat.inazu.me` は pm2 の `inazu-chat` プロセスで動かしています。
+
+```bash
+pm2 list
+pm2 restart inazu-chat
+```
+
+`inazu-chat` はこのリポジトリの [`server.js`](server.js) を起動し、デフォルトの `PORT=3000` で待ち受けます。Cloudflare Tunnel はこのローカル3000番へ転送します。
+
+反映後の確認:
+
+```bash
+curl -I -A 'Googlebot' https://inazu.me/
+curl -A 'Googlebot' https://inazu.me/robots.txt
+curl -I https://inazu.me/sitemap.xml
+```
+
+期待値:
+
+- `https://inazu.me/` は `200`
+- `https://inazu.me/robots.txt` は `Allow: /`
+- `https://inazu.me/sitemap.xml` は `200`
+- `https://chat.inazu.me/` は Bot に対して引き続き `403`
