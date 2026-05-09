@@ -118,40 +118,292 @@ function builtInFallback(request, status, origin) {
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>inazu.me fallback</title>
   <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101214;
+      --panel: #171a1f;
+      --panel-2: #1f232a;
+      --text: #f7f1e8;
+      --muted: #c8c0b5;
+      --subtle: #8d8790;
+      --line: #343943;
+      --accent: #8bd3ff;
+      --warn: #ffd48a;
+    }
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
       min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: #0f1115;
-      color: #f6f1e8;
+      background: var(--bg);
+      color: var(--text);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.65;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .shell {
+      width: min(1040px, calc(100vw - 40px));
+      margin: 0 auto;
+      padding: 40px 0 56px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding-bottom: 56px;
+    }
+    .mark {
+      font-size: 20px;
+      font-weight: 800;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--warn);
+      font: 700 13px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--warn);
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+      gap: 40px;
+      align-items: end;
+      padding-bottom: 56px;
+      border-bottom: 1px solid var(--line);
     }
     main {
-      width: min(680px, calc(100vw - 40px));
+      display: block;
     }
     h1 {
-      margin: 0 0 16px;
-      font-size: clamp(32px, 8vw, 72px);
+      margin: 0;
+      font-size: clamp(54px, 12vw, 132px);
+      line-height: 0.9;
       letter-spacing: 0;
     }
-    p {
-      margin: 0 0 12px;
-      color: #c9c3b8;
-      font-size: 16px;
+    .lead {
+      max-width: 680px;
+      margin: 28px 0 0;
+      color: var(--muted);
+      font-size: clamp(17px, 2.4vw, 22px);
       line-height: 1.8;
     }
+    .note {
+      padding: 22px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+    }
+    .note strong {
+      display: block;
+      margin-bottom: 10px;
+      color: var(--text);
+      font-size: 16px;
+    }
+    .note p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      padding-top: 28px;
+    }
+    section {
+      padding: 28px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+    }
+    .wide {
+      grid-column: 1 / -1;
+    }
+    h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+    }
+    p {
+      margin: 0;
+      color: var(--muted);
+    }
+    .list {
+      display: grid;
+      gap: 10px;
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    .list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .list span:first-child {
+      color: var(--subtle);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+    }
+    .step {
+      padding: 8px 10px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+    }
+    .arrow {
+      align-self: center;
+      color: var(--accent);
+    }
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .link {
+      padding: 10px 12px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 14px;
+    }
+    footer {
+      padding-top: 28px;
+      color: var(--subtle);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
     code {
-      color: #8bd3ff;
+      color: var(--accent);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    @media (max-width: 760px) {
+      .shell {
+        width: min(100% - 28px, 1040px);
+        padding-top: 28px;
+      }
+      header {
+        align-items: flex-start;
+        flex-direction: column;
+        padding-bottom: 42px;
+      }
+      .hero {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        padding-bottom: 40px;
+      }
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      section {
+        padding: 22px;
+      }
+      .wide {
+        grid-column: auto;
+      }
+      .list li {
+        flex-direction: column;
+        gap: 4px;
+      }
     }
   </style>
 </head>
 <body>
-  <main>
-    <h1>inazu.me</h1>
-    <p>現在、home Mac と Raspberry Pi fallback の両方に接続できないため、Cloudflare Worker から最小ページを表示しています。</p>
-    <p><code>worker fallback mode</code></p>
-  </main>
+  <div class="shell">
+    <header>
+      <a class="mark" href="/">inazu.me</a>
+      <div class="status"><span class="dot"></span>worker fallback mode</div>
+    </header>
+
+    <main>
+      <div class="hero">
+        <div>
+          <h1>inazu.me</h1>
+          <p class="lead">
+            home Mac と Raspberry Pi fallback の両方に接続できないため、
+            Cloudflare Worker から最小プロフィールを表示しています。
+          </p>
+        </div>
+
+        <aside class="note">
+          <strong>現在の状態</strong>
+          <p>
+            Worker が Mac origin と Pi origin の両方から正常な応答を受け取れませんでした。
+            このページは Cloudflare edge だけで返しています。
+          </p>
+        </aside>
+      </div>
+
+      <div class="grid">
+        <section>
+          <h2>Profile</h2>
+          <p>
+            4月からM1です。ネットワーク系の研究をしています。AIとセキュリティが好きで、
+            ローカルLLMや変なWebアプリをよく作っています。
+          </p>
+          <ul class="list">
+            <li><span>focus</span><strong>network / security / local LLM</strong></li>
+            <li><span>site</span><strong>Cloudflare Worker fallback</strong></li>
+            <li><span>mode</span><strong>last resort</strong></li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>What happened?</h2>
+          <p>
+            普段の <code>inazu.me</code> は自宅の Mac で動きます。
+            Mac が落ちた時は Pi が肩代わりしますが、今はその Pi にも届いていません。
+          </p>
+          <div class="flow" aria-label="fallback flow">
+            <span class="step">User</span>
+            <span class="arrow">-&gt;</span>
+            <span class="step">Worker</span>
+            <span class="arrow">-/-></span>
+            <span class="step">Mac / Pi</span>
+          </div>
+        </section>
+
+        <section class="wide">
+          <h2>Links</h2>
+          <p>
+            本番ページが復帰するまでは、外部リンクだけ置いておきます。
+            <code>chat.inazu.me</code> は home Mac 側のローカルLLMに依存しているため、今は使えない可能性があります。
+          </p>
+          <div class="links">
+            <a class="link" href="https://github.com/Inazumimakoto" target="_blank" rel="noreferrer">GitHub</a>
+            <a class="link" href="https://x.com/makoto0109a" target="_blank" rel="noreferrer">X</a>
+            <a class="link" href="https://instagram.com/inazutagram" target="_blank" rel="noreferrer">Instagram</a>
+            <a class="link" href="https://zenn.dev/inazumimakoto" target="_blank" rel="noreferrer">Zenn</a>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      served by Cloudflare Worker / no origin available
+    </footer>
+  </div>
 </body>
 </html>
 `, { status, headers });
