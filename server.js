@@ -16,7 +16,7 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET;
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
-const PUBLIC_PORTFOLIO_HOSTS = new Set(['inazu.me', 'www.inazu.me']);
+const PUBLIC_PORTFOLIO_HOSTS = new Set(['inazu.me', 'www.inazu.me', 'mac-site-origin.inazu.me']);
 const CHAT_HOSTS = new Set(['chat.inazu.me']);
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
 const BACKGROUND_SLOTS = ['morning', 'lunch', 'night'];

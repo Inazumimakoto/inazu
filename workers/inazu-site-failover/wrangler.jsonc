@@ -1,0 +1,17 @@
+{
+  "name": "inazu-site-failover",
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-05-09",
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "inazu.me/*",
+      "zone_name": "inazu.me"
+    }
+  ],
+  "vars": {
+    "MAC_ORIGIN": "https://mac-site-origin.inazu.me",
+    "PI_ORIGIN": "https://pi-site-origin.inazu.me",
+    "ORIGIN_TIMEOUT_MS": 1500
+  }
+}
