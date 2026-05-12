@@ -112,7 +112,7 @@ class AnalyticsStore {
                 COUNT(*) AS requests,
                 COALESCE(SUM(is_pageview), 0) AS pageviews,
                 COUNT(DISTINCT CASE
-                    WHEN is_pageview = 1 THEN day_jst || ':' || ip_hash || ':' || ua_family
+                    WHEN is_pageview = 1 THEN ip || ':' || ua_family
                 END) AS uniqueVisitors,
                 COALESCE(SUM(is_bot), 0) AS botRequests,
                 COALESCE(SUM(CASE WHEN is_bot = 1 AND status = 403 THEN 1 ELSE 0 END), 0) AS blockedBots
@@ -128,7 +128,7 @@ class AnalyticsStore {
                 COUNT(*) AS requests,
                 COALESCE(SUM(is_pageview), 0) AS pageviews,
                 COUNT(DISTINCT CASE
-                    WHEN is_pageview = 1 THEN ip_hash || ':' || ua_family
+                    WHEN is_pageview = 1 THEN ip || ':' || ua_family
                 END) AS uniqueVisitors,
                 COALESCE(SUM(is_bot), 0) AS botRequests
             FROM access_events
@@ -143,7 +143,7 @@ class AnalyticsStore {
             SELECT
                 path_no_query AS path,
                 COUNT(*) AS pageviews,
-                COUNT(DISTINCT day_jst || ':' || ip_hash || ':' || ua_family) AS uniqueVisitors
+                COUNT(DISTINCT ip || ':' || ua_family) AS uniqueVisitors
             FROM access_events
             WHERE ${rangeClause.where}
                 AND is_pageview = 1

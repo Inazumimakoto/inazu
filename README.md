@@ -155,7 +155,8 @@ npm run analytics:report
 
 - `https://inazu.me/` のヒーロー下に、総visitor数と総view数、`/analytics` への導線を表示します
 - `https://inazu.me/admin/analytics/raw` はBasic認証付きの管理者用rawログ画面です。生IP、完全User-Agent、query string付きpathを表示します
-- pageview は `GET/HEAD` のHTMLページアクセスだけを数えます
+- pageview は `GET/HEAD` のHTMLページアクセスだけを数えます。リロードなどのHTML `304 Not Modified` もpageviewとして数えます
+- visitor は `IP + User-Agent分類` の重複なし件数です。同じIP/同じブラウザ分類なら日付が変わっても同一visitorとして扱います
 - `/analytics*`、`/api/analytics*`、静的asset、JSON APIはpageviewから除外します
 - 公開APIの `GET /api/analytics/summary?range=7d|30d|all` は生IP、完全User-Agent、完全referer、query stringを返しません
 - Mac停止中に Worker / Pi fallback が返したアクセスは、完全ローカル運用を優先するため記録されません

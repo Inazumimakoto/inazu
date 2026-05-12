@@ -112,6 +112,8 @@ function isPageviewRequest(req, res, pathNoQuery) {
     const ext = path.extname(pathNoQuery).toLowerCase();
     if (STATIC_EXTENSIONS.has(ext)) return false;
 
+    if (res.statusCode === 304) return true;
+
     const contentType = String(res.getHeader('content-type') || '').toLowerCase();
     return contentType.includes('text/html');
 }
