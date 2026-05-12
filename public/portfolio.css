@@ -18,6 +18,15 @@
         inset 0 0 0 0 rgba(0, 0, 0, 0),
         inset 0 0 0 0 rgba(0, 0, 0, 0),
         inset 0 0 0 0 rgba(0, 0, 0, 0);
+    --text-shadow-soft:
+        0 1px 2px rgba(0, 0, 0, 0.62),
+        0 0 12px rgba(0, 0, 0, 0.3);
+    --text-shadow-control:
+        0 1px 2px rgba(0, 0, 0, 0.76),
+        0 0 10px rgba(0, 0, 0, 0.38);
+    --text-shadow-title:
+        0 2px 4px rgba(0, 0, 0, 0.44),
+        0 0 18px rgba(0, 0, 0, 0.28);
 }
 
 * {
@@ -37,6 +46,7 @@ body {
         var(--bg);
     color: var(--text);
     font-family: 'Space Grotesk', sans-serif;
+    text-shadow: var(--text-shadow-soft);
     overflow-x: hidden;
 }
 
@@ -150,6 +160,7 @@ body.is-webgl-ready .page-photo {
     color: var(--text);
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.72rem;
+    text-shadow: var(--text-shadow-control);
     transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, color 180ms ease;
 }
 
@@ -206,6 +217,7 @@ body.is-webgl-ready .page-photo {
     font-size: 0.72rem;
     letter-spacing: 0;
     line-height: 1;
+    text-shadow: var(--text-shadow-control);
     transition: background 180ms ease, color 180ms ease, transform 180ms ease;
 }
 
@@ -298,6 +310,7 @@ body.background-view .page-noise {
     -webkit-backdrop-filter: blur(3px);
     font-size: 1rem;
     letter-spacing: 0.08em;
+    text-shadow: var(--text-shadow-control);
     text-transform: uppercase;
 }
 
@@ -318,6 +331,7 @@ body.background-view .page-noise {
     color: var(--text);
     font-size: 0.84rem;
     letter-spacing: 0.08em;
+    text-shadow: var(--text-shadow-control);
     text-transform: uppercase;
 }
 
@@ -557,6 +571,7 @@ main {
     font-size: clamp(4.4rem, 17vw, 12rem);
     line-height: 0.9;
     letter-spacing: -0.06em;
+    text-shadow: var(--text-shadow-title);
     transform: translate3d(var(--hero-shift-x, 0px), var(--hero-shift-y, 0px), 0);
     transition: transform 320ms ease;
     will-change: transform;
@@ -593,6 +608,7 @@ main {
         0 10px 30px rgba(0, 0, 0, 0.12);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
+    text-shadow: var(--text-shadow-control);
     transition: transform 220ms ease, border-color 220ms ease, background 220ms ease;
 }
 
@@ -704,6 +720,7 @@ main {
         0 10px 30px rgba(0, 0, 0, 0.12);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
+    text-shadow: var(--text-shadow-control);
     transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
 }
 
@@ -721,6 +738,7 @@ main {
 .button-primary {
     background: var(--text);
     color: var(--bg);
+    text-shadow: none;
 }
 
 .hero-strip {
