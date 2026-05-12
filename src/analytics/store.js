@@ -241,6 +241,41 @@ class AnalyticsStore {
         `).all(limit);
     }
 
+    getRawEvents(range = '7d', limit = 200) {
+        const rangeClause = getRangeClause(normalizeRange(range));
+        const safeLimit = clampLimit(limit, 1, 500);
+
+        return this.db.prepare(`
+            SELECT
+                timestamp,
+                day_jst AS dayJst,
+                host,
+                method,
+                path,
+                status,
+                duration_ms AS durationMs,
+                ip,
+                user_agent AS userAgent,
+                ua_family AS uaFamily,
+                device,
+                browser,
+                os,
+                is_bot AS isBot,
+                bot_name AS botName,
+                bot_category AS botCategory,
+                referer,
+                referer_host AS refererHost,
+                country,
+                cf_ray AS cfRay,
+                x_inazu_worker AS xInazuWorker,
+                is_pageview AS isPageview
+            FROM access_events
+            WHERE ${rangeClause.where}
+            ORDER BY timestamp DESC
+            LIMIT ?
+        `).all(...rangeClause.params, safeLimit);
+    }
+
     close() {
         this.db.close();
     }
@@ -249,6 +284,12 @@ class AnalyticsStore {
 function normalizeRange(range) {
     if (range === '30d' || range === 'all') return range;
     return '7d';
+}
+
+function clampLimit(value, min, max) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return max;
+    return Math.min(max, Math.max(min, Math.floor(parsed)));
 }
 
 function getRangeClause(range) {

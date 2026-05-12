@@ -130,6 +130,36 @@ h1 {
     color: var(--surface);
 }
 
+.admin-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.limit-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--subtle);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.limit-control select {
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font: 800 13px/1 ui-sans-serif, system-ui, sans-serif;
+}
+
 .kpi-grid {
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -277,6 +307,10 @@ h2 {
     overflow-x: auto;
 }
 
+.raw-table-wrap {
+    max-height: 70vh;
+}
+
 table {
     width: 100%;
     min-width: 860px;
@@ -306,6 +340,24 @@ td {
 
 .mono {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.raw-table {
+    min-width: 1380px;
+}
+
+.raw-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--surface);
+}
+
+.raw-path,
+.raw-ua {
+    max-width: 420px;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .status-ok {

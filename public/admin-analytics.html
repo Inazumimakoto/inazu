@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>inazu.me raw analytics</title>
+    <meta name="robots" content="noindex,nofollow">
+    <link rel="stylesheet" href="/analytics.css">
+    <script src="/admin-analytics.js" defer></script>
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="/">inazu.me</a>
+        <nav class="header-nav" aria-label="Admin analytics navigation">
+            <a href="/analytics">Public analytics</a>
+            <a aria-current="page" href="/admin/analytics/raw">Admin raw</a>
+        </nav>
+    </header>
+
+    <main class="analytics-shell">
+        <section class="summary-band" aria-labelledby="raw-title">
+            <div>
+                <h1 id="raw-title">Raw access log</h1>
+                <p class="summary-copy">Basic認証で保護されたMac内の詳細ログです。</p>
+            </div>
+            <div class="admin-controls">
+                <div class="range-control" role="group" aria-label="表示期間">
+                    <button type="button" class="range-button is-active" data-range="7d">7 days</button>
+                    <button type="button" class="range-button" data-range="30d">30 days</button>
+                    <button type="button" class="range-button" data-range="all">All</button>
+                </div>
+                <label class="limit-control">
+                    <span>Limit</span>
+                    <select data-limit>
+                        <option value="100">100</option>
+                        <option value="200" selected>200</option>
+                        <option value="500">500</option>
+                    </select>
+                </label>
+            </div>
+        </section>
+
+        <section class="panel panel-wide" aria-labelledby="raw-events-title">
+            <div class="panel-heading">
+                <h2 id="raw-events-title">Recent raw events</h2>
+                <span class="panel-meta" data-generated-at>Loading</span>
+            </div>
+            <div class="table-wrap raw-table-wrap">
+                <table class="raw-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Host</th>
+                            <th>Method</th>
+                            <th>Path</th>
+                            <th>Status</th>
+                            <th>IP</th>
+                            <th>User-Agent</th>
+                            <th>BOT</th>
+                            <th>Country</th>
+                            <th>CF-Ray</th>
+                        </tr>
+                    </thead>
+                    <tbody data-raw-events></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

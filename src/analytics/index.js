@@ -27,6 +27,9 @@ function createAnalytics({ dbPath, saltPath, trackedHosts, getHostname }) {
         getSummary(range) {
             return store.getSummary(normalizeRange(range));
         },
+        getRawEvents(range, limit) {
+            return store.getRawEvents(normalizeRange(range), limit);
+        },
         getRecentRaw(limit) {
             return store.getRecentRaw(limit);
         },
@@ -95,6 +98,8 @@ function createMiddleware({ store, salt, trackedHostSet, getHostname }) {
 
 function shouldIgnore(requestPath) {
     return requestPath.startsWith('/analytics') ||
+        requestPath.startsWith('/admin/analytics/') ||
+        requestPath.startsWith('/api/admin/analytics/') ||
         requestPath.startsWith('/api/analytics/');
 }
 

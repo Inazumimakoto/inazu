@@ -154,10 +154,18 @@ npm run analytics:report
 `https://inazu.me/analytics` で匿名化した公開アクセス解析を表示します。
 
 - `https://inazu.me/` のヒーロー下に、総visitor数と総view数、`/analytics` への導線を表示します
+- `https://inazu.me/admin/analytics/raw` はBasic認証付きの管理者用rawログ画面です。生IP、完全User-Agent、query string付きpathを表示します
 - pageview は `GET/HEAD` のHTMLページアクセスだけを数えます
 - `/analytics*`、`/api/analytics*`、静的asset、JSON APIはpageviewから除外します
 - 公開APIの `GET /api/analytics/summary?range=7d|30d|all` は生IP、完全User-Agent、完全referer、query stringを返しません
 - Mac停止中に Worker / Pi fallback が返したアクセスは、完全ローカル運用を優先するため記録されません
+
+管理者用rawログ画面には、`.env` に次を設定してからサーバーを再起動してください。
+
+```env
+ANALYTICS_ADMIN_USER=inazu
+ANALYTICS_ADMIN_PASSWORD=your_private_password
+```
 
 ## Production Server
 

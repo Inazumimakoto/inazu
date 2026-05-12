@@ -18,6 +18,8 @@ const ANALYTICS_SALT_FILE = process.env.ANALYTICS_SALT_FILE || path.join(__dirna
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET;
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+const ANALYTICS_ADMIN_USER = process.env.ANALYTICS_ADMIN_USER || 'inazu';
+const ANALYTICS_ADMIN_PASSWORD = process.env.ANALYTICS_ADMIN_PASSWORD || '';
 
 const PUBLIC_PORTFOLIO_HOSTS = new Set(['inazu.me', 'www.inazu.me', 'mac-site-origin.inazu.me']);
 const CHAT_HOSTS = new Set(['chat.inazu.me']);
@@ -105,6 +107,56 @@ function isPublicAnalyticsPath(req) {
         req.path.startsWith('/api/analytics/');
 }
 
+function isAdminAnalyticsPath(req) {
+    return req.path.startsWith('/admin/analytics/') ||
+        req.path.startsWith('/api/admin/analytics/');
+}
+
+function parseBasicAuth(header) {
+    if (!header || !header.startsWith('Basic ')) return null;
+
+    try {
+        const decoded = Buffer.from(header.slice('Basic '.length), 'base64').toString('utf8');
+        const separator = decoded.indexOf(':');
+        if (separator === -1) return null;
+
+        return {
+            username: decoded.slice(0, separator),
+            password: decoded.slice(separator + 1)
+        };
+    } catch (error) {
+        return null;
+    }
+}
+
+function timingSafeStringEqual(actual, expected) {
+    const actualHash = crypto.createHash('sha256').update(String(actual)).digest();
+    const expectedHash = crypto.createHash('sha256').update(String(expected)).digest();
+    return crypto.timingSafeEqual(actualHash, expectedHash);
+}
+
+function requireAnalyticsAdmin(req, res, next) {
+    if (!isPublicPortfolioHost(req)) {
+        return res.status(404).send('Not found');
+    }
+
+    if (!ANALYTICS_ADMIN_PASSWORD) {
+        return res.status(503).send('Analytics admin password is not configured');
+    }
+
+    const credentials = parseBasicAuth(req.headers.authorization || '');
+    const valid = credentials &&
+        timingSafeStringEqual(credentials.username, ANALYTICS_ADMIN_USER) &&
+        timingSafeStringEqual(credentials.password, ANALYTICS_ADMIN_PASSWORD);
+
+    if (!valid) {
+        res.setHeader('WWW-Authenticate', 'Basic realm="inazu analytics", charset="UTF-8"');
+        return res.status(401).send('Authentication required');
+    }
+
+    return next();
+}
+
 let analytics = null;
 try {
     analytics = createAnalytics({
@@ -131,7 +183,7 @@ app.get('/robots.txt', (req, res) => {
 // Keep chat and API protected while allowing legitimate crawlers to read the public portfolio.
 app.use((req, res, next) => {
     const userAgent = req.headers['user-agent'] || '';
-    const isProtectedSurface = isChatHost(req) || (req.path.startsWith('/api/') && !isPublicAnalyticsPath(req));
+    const isProtectedSurface = isChatHost(req) || (req.path.startsWith('/api/') && !isPublicAnalyticsPath(req) && !isAdminAnalyticsPath(req));
     const isPublicSurface = isPublicPortfolioHost(req);
     const shouldBlock =
         !userAgent ||
@@ -170,6 +222,28 @@ app.get('/api/analytics/summary', (req, res) => {
     } catch (error) {
         console.error('[ANALYTICS SUMMARY ERROR]', error);
         return res.status(500).json({ error: 'Failed to read analytics summary' });
+    }
+});
+
+app.get('/admin/analytics/raw', requireAnalyticsAdmin, (req, res) => {
+    return sendPublicFile(res, 'admin-analytics.html');
+});
+
+app.get('/api/admin/analytics/raw', requireAnalyticsAdmin, (req, res) => {
+    if (!analytics) {
+        return res.status(503).json({ error: 'Analytics is not available' });
+    }
+
+    try {
+        res.setHeader('Cache-Control', 'no-store');
+        return res.json({
+            generatedAt: new Date().toISOString(),
+            range: req.query.range || '7d',
+            events: analytics.getRawEvents(req.query.range, req.query.limit)
+        });
+    } catch (error) {
+        console.error('[ANALYTICS RAW ERROR]', error);
+        return res.status(500).json({ error: 'Failed to read raw analytics' });
     }
 });
 
