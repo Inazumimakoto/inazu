@@ -8,6 +8,9 @@ const backgroundSlotTrigger = document.querySelector('[data-background-slot-trig
 const backgroundSlotValue = document.querySelector('[data-background-slot-value]');
 const backgroundSlotOptions = document.querySelector('[data-background-slot-options]');
 const backgroundSlotButtons = Array.from(document.querySelectorAll('[data-background-slot-mode]'));
+const analyticsPill = document.querySelector('[data-analytics-pill]');
+const analyticsVisitors = document.querySelector('[data-analytics-visitors]');
+const analyticsViews = document.querySelector('[data-analytics-views]');
 const pageCanvas = document.querySelector('[data-page-canvas]');
 const celebrationCanvas = document.querySelector('[data-celebration-canvas]');
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -31,6 +34,30 @@ let backgroundSlotMode = readStoredBackgroundSlotMode();
 let backgroundViewEnabled = readStoredBackgroundView();
 let backgroundSlotMenuOpen = false;
 let loadedBackgroundPhotos = null;
+
+loadPublicAnalyticsCount();
+
+async function loadPublicAnalyticsCount() {
+    if (!analyticsPill || !analyticsVisitors || !analyticsViews) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/analytics/summary?range=all', { cache: 'no-store' });
+        if (!response.ok) return;
+
+        const summary = await response.json();
+        analyticsVisitors.textContent = formatAnalyticsNumber(summary?.totals?.uniqueVisitors);
+        analyticsViews.textContent = formatAnalyticsNumber(summary?.totals?.pageviews);
+        analyticsPill.hidden = false;
+    } catch (error) {
+        // Keep the counter hidden when analytics is unavailable.
+    }
+}
+
+function formatAnalyticsNumber(value) {
+    return new Intl.NumberFormat('en-US').format(Number(value || 0));
+}
 
 function getMealSlot(date = new Date()) {
     const hour = date.getHours();

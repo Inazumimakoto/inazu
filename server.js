@@ -7,11 +7,14 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { masWorlds } = require('./src/mas/orchestrator');
+const { createAnalytics } = require('./src/analytics');
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
 const OLLAMA_URL = 'http://localhost:11434';
 const LOG_FILE = path.join(__dirname, 'usage.log');
+const ANALYTICS_DB_FILE = process.env.ANALYTICS_DB_FILE || path.join(__dirname, 'logs', 'analytics.sqlite');
+const ANALYTICS_SALT_FILE = process.env.ANALYTICS_SALT_FILE || path.join(__dirname, 'logs', 'analytics.salt');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET;
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
@@ -67,7 +70,9 @@ const PROTECTED_BOT_PATTERNS = [
 
 const PUBLIC_BLOCKED_BOT_PATTERNS = [
     /ahrefsbot/i, /semrush/i, /dotbot/i, /bytespider/i,
-    /gptbot/i, /claudebot/i, /anthropic/i, /scrape/i
+    /gptbot/i, /claudebot/i, /anthropic/i, /scrape/i,
+    /wget/i, /curl/i, /python/i, /java\//i, /ruby/i, /perl/i, /php/i,
+    /node-fetch/i, /undici/i, /axios/i, /go-http-client/i
 ];
 
 function getHostname(req) {
@@ -95,6 +100,24 @@ function sendPublicFile(res, file) {
     return res.sendFile(path.join(PUBLIC_DIR, file));
 }
 
+function isPublicAnalyticsPath(req) {
+    return req.path.startsWith('/analytics') ||
+        req.path.startsWith('/api/analytics/');
+}
+
+let analytics = null;
+try {
+    analytics = createAnalytics({
+        dbPath: ANALYTICS_DB_FILE,
+        saltPath: ANALYTICS_SALT_FILE,
+        trackedHosts: PUBLIC_PORTFOLIO_HOSTS,
+        getHostname
+    });
+    app.use(analytics.middleware);
+} catch (error) {
+    console.error('[ANALYTICS INIT ERROR]', error);
+}
+
 app.get('/robots.txt', (req, res) => {
     res.type('text/plain');
 
@@ -108,7 +131,7 @@ app.get('/robots.txt', (req, res) => {
 // Keep chat and API protected while allowing legitimate crawlers to read the public portfolio.
 app.use((req, res, next) => {
     const userAgent = req.headers['user-agent'] || '';
-    const isProtectedSurface = isChatHost(req) || req.path.startsWith('/api/');
+    const isProtectedSurface = isChatHost(req) || (req.path.startsWith('/api/') && !isPublicAnalyticsPath(req));
     const isPublicSurface = isPublicPortfolioHost(req);
     const shouldBlock =
         !userAgent ||
@@ -122,6 +145,32 @@ app.use((req, res, next) => {
     }
 
     next();
+});
+
+app.get(['/analytics', '/analytics/'], (req, res) => {
+    if (!isPublicPortfolioHost(req)) {
+        return res.redirect(302, 'https://inazu.me/analytics');
+    }
+
+    return sendPublicFile(res, 'analytics.html');
+});
+
+app.get('/api/analytics/summary', (req, res) => {
+    if (!isPublicPortfolioHost(req)) {
+        return res.status(404).json({ error: 'Not found' });
+    }
+
+    if (!analytics) {
+        return res.status(503).json({ error: 'Analytics is not available' });
+    }
+
+    try {
+        res.setHeader('Cache-Control', 'no-store');
+        return res.json(analytics.getSummary(req.query.range));
+    } catch (error) {
+        console.error('[ANALYTICS SUMMARY ERROR]', error);
+        return res.status(500).json({ error: 'Failed to read analytics summary' });
+    }
 });
 
 async function listBackgroundPhotos(slot) {

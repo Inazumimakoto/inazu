@@ -578,6 +578,73 @@ main {
     margin-top: 32px;
 }
 
+.analytics-pill {
+    display: inline-flex;
+    align-items: stretch;
+    flex-wrap: wrap;
+    gap: 0;
+    margin-top: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        0 10px 30px rgba(0, 0, 0, 0.12);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    transition: transform 220ms ease, border-color 220ms ease, background 220ms ease;
+}
+
+.analytics-pill[hidden] {
+    display: none;
+}
+
+.analytics-pill:hover,
+.analytics-pill:focus-visible {
+    transform: translateY(-3px);
+    border-color: rgba(255, 255, 255, 0.48);
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.analytics-pill-item,
+.analytics-pill-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 54px;
+}
+
+.analytics-pill-item {
+    gap: 10px;
+    padding: 12px 16px;
+    border-right: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.analytics-pill-label,
+.analytics-pill-link {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.analytics-pill-label {
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.analytics-pill strong {
+    color: var(--text);
+    font-size: 1.28rem;
+    line-height: 1;
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.analytics-pill-link {
+    padding: 12px 16px;
+    color: var(--text);
+}
+
 .hero-mode-switch {
     position: relative;
     isolation: isolate;
@@ -1161,6 +1228,26 @@ button:focus-visible {
     .button {
         width: 100%;
         justify-content: center;
+    }
+
+    .analytics-pill {
+        width: 100%;
+    }
+
+    .analytics-pill-item {
+        flex: 1 1 50%;
+        justify-content: space-between;
+    }
+
+    .analytics-pill-item:nth-child(2) {
+        border-right: 0;
+    }
+
+    .analytics-pill-link {
+        flex: 1 1 100%;
+        justify-content: center;
+        min-height: 42px;
+        border-top: 1px solid rgba(255, 255, 255, 0.18);
     }
 
     .hero-mode-switch {

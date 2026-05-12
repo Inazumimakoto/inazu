@@ -134,15 +134,30 @@ MAS 側の `llama.cpp` 接続手順は [`docs/mas-llamacpp.md`](docs/mas-llamacp
 ## Runtime Files
 
 - `usage.log`: チャット利用時のログをサーバーが追記します
+- `logs/analytics.sqlite`: `inazu.me` のローカルアクセス解析DBです。生IP、完全User-Agent、path/queryなどの詳細はMac内だけに保存します
+- `logs/analytics.salt`: 公開表示用のIPハッシュに使うローカルsaltです
 
 ## Scripts
 
 ```bash
 npm start
 npm run dev
+npm run analytics:report
 ```
 
-どちらも [`server.js`](server.js) を起動します。
+`npm start` と `npm run dev` はどちらも [`server.js`](server.js) を起動します。
+
+`npm run analytics:report` はMac上で `logs/analytics.sqlite` を読み、詳細ログを含むローカル向けレポートを表示します。
+
+## Access Analytics
+
+`https://inazu.me/analytics` で匿名化した公開アクセス解析を表示します。
+
+- `https://inazu.me/` のヒーロー下に、総visitor数と総view数、`/analytics` への導線を表示します
+- pageview は `GET/HEAD` のHTMLページアクセスだけを数えます
+- `/analytics*`、`/api/analytics*`、静的asset、JSON APIはpageviewから除外します
+- 公開APIの `GET /api/analytics/summary?range=7d|30d|all` は生IP、完全User-Agent、完全referer、query stringを返しません
+- Mac停止中に Worker / Pi fallback が返したアクセスは、完全ローカル運用を優先するため記録されません
 
 ## Production Server
 

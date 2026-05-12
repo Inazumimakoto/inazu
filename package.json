@@ -6,9 +6,11 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
+    "analytics:report": "node scripts/analytics-report.js",
     "sanitize-backgrounds": "scripts/sanitize-backgrounds.sh"
   },
   "dependencies": {
+    "better-sqlite3": "^12.9.0",
     "dotenv": "^17.2.3",
     "express": "^4.18.2",
     "express-rate-limit": "^8.2.1",

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>inazu.me analytics</title>
+    <meta name="description" content="Public anonymous access analytics for inazu.me">
+    <link rel="stylesheet" href="/analytics.css">
+    <script src="/analytics.js" defer></script>
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="/">inazu.me</a>
+        <nav class="header-nav" aria-label="Analytics navigation">
+            <a href="/">Home</a>
+            <a aria-current="page" href="/analytics">Analytics</a>
+        </nav>
+    </header>
+
+    <main class="analytics-shell">
+        <section class="summary-band" aria-labelledby="analytics-title">
+            <div>
+                <h1 id="analytics-title">Access analytics</h1>
+                <p class="summary-copy">Mac origin に届いた inazu.me のアクセスを匿名表示しています。</p>
+            </div>
+            <div class="range-control" role="group" aria-label="表示期間">
+                <button type="button" class="range-button is-active" data-range="7d">7 days</button>
+                <button type="button" class="range-button" data-range="30d">30 days</button>
+                <button type="button" class="range-button" data-range="all">All</button>
+            </div>
+        </section>
+
+        <section class="kpi-grid" aria-label="主要指標">
+            <article class="kpi">
+                <span class="kpi-label">All pageviews</span>
+                <strong class="kpi-value" data-kpi="allPageviews">-</strong>
+            </article>
+            <article class="kpi">
+                <span class="kpi-label">Today</span>
+                <strong class="kpi-value" data-kpi="todayPageviews">-</strong>
+            </article>
+            <article class="kpi">
+                <span class="kpi-label">Last 7 days</span>
+                <strong class="kpi-value" data-kpi="last7Pageviews">-</strong>
+            </article>
+            <article class="kpi">
+                <span class="kpi-label">Last 30 days</span>
+                <strong class="kpi-value" data-kpi="last30Pageviews">-</strong>
+            </article>
+            <article class="kpi">
+                <span class="kpi-label">Unique visitors</span>
+                <strong class="kpi-value" data-kpi="selectedUnique">-</strong>
+            </article>
+            <article class="kpi">
+                <span class="kpi-label">BOT requests</span>
+                <strong class="kpi-value" data-kpi="selectedBots">-</strong>
+            </article>
+        </section>
+
+        <section class="panel panel-wide" aria-labelledby="daily-title">
+            <div class="panel-heading">
+                <h2 id="daily-title">Daily activity</h2>
+                <span class="panel-meta" data-generated-at>Loading</span>
+            </div>
+            <div class="daily-chart" data-daily-chart></div>
+        </section>
+
+        <div class="panel-grid">
+            <section class="panel" aria-labelledby="paths-title">
+                <div class="panel-heading">
+                    <h2 id="paths-title">Popular paths</h2>
+                </div>
+                <ol class="rank-list" data-top-paths></ol>
+            </section>
+
+            <section class="panel" aria-labelledby="bots-title">
+                <div class="panel-heading">
+                    <h2 id="bots-title">BOT ranking</h2>
+                </div>
+                <ol class="rank-list" data-bots></ol>
+            </section>
+        </div>
+
+        <div class="panel-grid">
+            <section class="panel" aria-labelledby="status-title">
+                <div class="panel-heading">
+                    <h2 id="status-title">Status codes</h2>
+                </div>
+                <div class="status-list" data-status-breakdown></div>
+            </section>
+
+            <section class="panel" aria-labelledby="origin-title">
+                <div class="panel-heading">
+                    <h2 id="origin-title">Request route</h2>
+                </div>
+                <div class="status-list" data-origin-breakdown></div>
+            </section>
+        </div>
+
+        <section class="panel panel-wide" aria-labelledby="recent-title">
+            <div class="panel-heading">
+                <h2 id="recent-title">Recent anonymous access</h2>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Path</th>
+                            <th>Status</th>
+                            <th>Visitor</th>
+                            <th>Client</th>
+                            <th>Type</th>
+                            <th>Referrer</th>
+                        </tr>
+                    </thead>
+                    <tbody data-recent></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
