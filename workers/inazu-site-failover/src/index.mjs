@@ -4,9 +4,32 @@ const DEFAULT_ORIGIN_TIMEOUT_MS = 1500;
 
 const RETRYABLE_METHODS = new Set(['GET', 'HEAD']);
 
+// Admin traffic must never fail over: the Pi knows nothing about admin
+// routes (it would answer 404), and uploads can legitimately take far
+// longer than the public-page timeout while the Mac re-encodes photos.
+const ADMIN_PATH_PREFIXES = ['/admin/', '/api/admin/'];
+const ADMIN_TIMEOUT_MS = 60000;
+
+function isAdminPath(pathname) {
+    return ADMIN_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
 export default {
     async fetch(request, env) {
         const requestUrl = new URL(request.url);
+
+        if (isAdminPath(requestUrl.pathname)) {
+            const macResult = await fetchOrigin({
+                request,
+                originUrl: buildOriginUrl(env.MAC_ORIGIN || DEFAULT_MAC_ORIGIN, requestUrl),
+                timeoutMs: ADMIN_TIMEOUT_MS
+            });
+
+            return macResult.response
+                ? withOriginHeader(macResult.response, 'mac')
+                : builtInFallback(request, 503, 'mac-unreachable');
+        }
+
         const timeoutMs = getTimeoutMs(env);
         const canRetry = RETRYABLE_METHODS.has(request.method.toUpperCase());
 
