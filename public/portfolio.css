@@ -67,67 +67,20 @@ textarea {
 }
 
 .page-photo,
-.page-grid,
-.page-noise,
-.page-webgl,
 .page-celebration {
     pointer-events: none;
     position: fixed;
     inset: 0;
-}
-
-.page-photo,
-.page-webgl,
-.page-celebration {
     z-index: 0;
     width: 100%;
     height: 100%;
     display: block;
 }
 
-.page-webgl {
-    opacity: 0;
-    transition: opacity 220ms ease;
-}
-
 .page-photo {
     background: var(--page-photo-url, url("assets/hero-dinner.jpg")) center center / cover no-repeat;
     filter: brightness(1.16) saturate(0.88);
     transform: scale(1.03);
-    transition: opacity 220ms ease;
-}
-
-.page-celebration {
-    z-index: 0;
-    opacity: 0;
-}
-
-.page-grid,
-.page-noise {
-    z-index: 1;
-}
-
-.page-grid {
-    background-image:
-        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-    background-size: 72px 72px;
-    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent 92%);
-    opacity: 0;
-}
-
-.page-noise {
-    background-image: radial-gradient(rgba(255, 255, 255, 0.1) 0.5px, transparent 0.5px);
-    background-size: 12px 12px;
-    opacity: 0;
-}
-
-body.is-webgl-ready .page-webgl {
-    opacity: 1;
-}
-
-body.is-webgl-ready .page-photo {
-    opacity: 0;
 }
 
 .background-controls {
@@ -279,11 +232,6 @@ body.background-view .site-shell {
     opacity: 0;
     pointer-events: none;
     transform: scale(0.985);
-}
-
-body.background-view .page-grid,
-body.background-view .page-noise {
-    opacity: 0;
 }
 
 .site-header {
@@ -475,89 +423,6 @@ main {
 .text-glass-copy {
     padding: 0.2rem 0.62rem 0.28rem;
     border-radius: 18px;
-}
-
-.text-glass-copy.is-line-built {
-    position: relative;
-    display: inline-flex;
-    flex-direction: column;
-    align-items: flex-start;
-    max-width: 100%;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    overflow: visible;
-}
-
-.text-glass-measure {
-    display: inline;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-}
-
-.text-glass-shape,
-.text-glass-highlight {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    opacity: 1;
-    mask-image: var(--text-glass-mask);
-    mask-repeat: no-repeat;
-    mask-size: 100% 100%;
-    -webkit-mask-image: var(--text-glass-mask);
-    -webkit-mask-repeat: no-repeat;
-    -webkit-mask-size: 100% 100%;
-}
-
-.text-glass-surfaces {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-}
-
-.text-glass-surface {
-    position: absolute;
-    pointer-events: none;
-    opacity: 0.03;
-    background: transparent;
-}
-
-.text-glass-shape {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
-}
-
-.text-glass-highlight {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
-    opacity: 0.72;
-}
-
-.text-glass-content {
-    position: relative;
-    z-index: 1;
-    display: inline-flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.text-glass-line {
-    display: inline-flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    padding: 0;
-}
-
-.text-glass-line + .text-glass-line {
-    margin-top: 0;
 }
 
 .hero-title-wrap {
@@ -795,8 +660,7 @@ main {
 }
 
 .panel-copy .text-glass-copy,
-.hero-copy .text-glass-copy,
-.text-glass-line {
+.hero-copy .text-glass-copy {
     line-height: inherit;
 }
 
@@ -1142,6 +1006,46 @@ button:focus-visible {
 .reveal.is-visible {
     opacity: 1;
     transform: translateY(0);
+}
+
+/* Liquid glass surfaces. In Chromium, liquid-glass.js swaps the backdrop
+   blur for an SVG displacement filter (refraction); other browsers keep a
+   frosted blur + saturation fallback. */
+.liquid-glass-defs {
+    position: fixed;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.site-mark,
+.site-nav,
+.button,
+.analytics-pill,
+.card,
+.contact-card,
+.background-slot-trigger,
+.background-toggle,
+.background-slot-options {
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.3),
+        inset 0 -1px 1px rgba(255, 255, 255, 0.1),
+        inset 1px 0 1px rgba(255, 255, 255, 0.08),
+        inset -1px 0 1px rgba(255, 255, 255, 0.08),
+        0 14px 40px rgba(0, 0, 0, 0.16);
+}
+
+html.glass-fallback .site-mark,
+html.glass-fallback .site-nav,
+html.glass-fallback .button,
+html.glass-fallback .analytics-pill,
+html.glass-fallback .card,
+html.glass-fallback .contact-card,
+html.glass-fallback .background-slot-trigger,
+html.glass-fallback .background-toggle,
+html.glass-fallback .background-slot-options {
+    backdrop-filter: blur(10px) saturate(1.4);
+    -webkit-backdrop-filter: blur(10px) saturate(1.4);
 }
 
 @media (max-width: 980px) {
