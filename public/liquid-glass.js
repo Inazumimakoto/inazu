@@ -20,6 +20,13 @@
         '.background-slot-options'
     ].join(', ');
 
+    // Surfaces that contain other glass elements. An element with
+    // backdrop-filter becomes the backdrop root for its descendants, so
+    // filtering these hosts directly would leave inner glass refracting
+    // only the host's flat background. Their filter goes on a z-index: 0
+    // child layer instead, which paints behind the inner glass siblings.
+    const LAYERED_SELECTOR = '.hero, .panel';
+
     const GLASS_BLUR = 2;
     const GLASS_SATURATE = 1.3;
 
@@ -46,7 +53,22 @@
 
     const filtersByKey = new Map();
     const keyByElement = new WeakMap();
+    const layerByHost = new WeakMap();
     let filterSeq = 0;
+
+    function glassSurface(element) {
+        if (!element.matches(LAYERED_SELECTOR)) return element;
+
+        let layer = layerByHost.get(element);
+        if (!layer) {
+            layer = document.createElement('div');
+            layer.className = 'liquid-glass-layer';
+            layer.setAttribute('aria-hidden', 'true');
+            element.prepend(layer);
+            layerByHost.set(element, layer);
+        }
+        return layer;
+    }
 
     function roundedRectDistance(x, y, halfWidth, halfHeight, radius) {
         const qx = Math.abs(x) - (halfWidth - radius);
@@ -202,7 +224,7 @@
             releaseFilter(previousKey);
         }
         keyByElement.set(element, key);
-        element.style.backdropFilter = `url("#${entry.id}")`;
+        glassSurface(element).style.backdropFilter = `url("#${entry.id}")`;
     }
 
     const pendingElements = new Set();

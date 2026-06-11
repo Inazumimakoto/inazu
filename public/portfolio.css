@@ -345,6 +345,18 @@ main {
         0 18px 50px rgba(0, 0, 0, 0.2);
 }
 
+/* Carries the host's refraction filter behind the inner glass elements,
+   so cards and text frames keep refracting the page photo instead of the
+   host's flat background (liquid-glass.js). */
+.hero > .liquid-glass-layer,
+.panel > .liquid-glass-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
 .hero::after,
 .panel::after,
 .card::before,
