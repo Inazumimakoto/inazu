@@ -45,6 +45,16 @@ app.set('trust proxy', 1);
 
 app.use(express.json());
 
+// Surface body-parse failures as JSON so clients see a real error message
+// instead of Express's default HTML 400 page.
+app.use((err, req, res, next) => {
+    if (err?.type === 'entity.parse.failed' || err instanceof SyntaxError) {
+        return res.status(400).json({ error: 'Malformed request body' });
+    }
+
+    return next(err);
+});
+
 // Session middleware with hardened cookies
 app.use(session({
     secret: SESSION_SECRET,
@@ -453,7 +463,12 @@ app.post(
     requireValidBackgroundArea,
     async (req, res) => {
         const { area, filename } = req.params;
-        const destination = req.body?.to;
+        // Safari can drop request bodies when it retries a fetch after a
+        // Basic auth challenge, so the destination is passed via query
+        // string. The JSON body remains accepted as a fallback.
+        const destination = typeof req.query.to === 'string' && req.query.to !== ''
+            ? req.query.to
+            : req.body?.to;
 
         if (!BACKGROUND_ADMIN_AREAS.includes(destination) || destination === area) {
             return res.status(400).json({ error: 'Invalid destination area' });

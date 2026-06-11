@@ -157,13 +157,9 @@
 
     async function movePhoto(areaId, filename, destination) {
         try {
-            const response = await fetch(`/api/admin/backgrounds/${areaId}/${encodeURIComponent(filename)}/move`, {
+            const response = await fetch(`/api/admin/backgrounds/${areaId}/${encodeURIComponent(filename)}/move?to=${destination}`, {
                 method: 'POST',
-                headers: {
-                    'X-Requested-With': 'fetch',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ to: destination })
+                headers: { 'X-Requested-With': 'fetch' }
             });
             const result = await response.json().catch(() => ({}));
 
