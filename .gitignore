@@ -15,3 +15,6 @@ npm-debug.log*
 # Environment
 .env
 .env.local
+
+# Background photos (managed via /admin/backgrounds, live only on the server)
+public/assets/backgrounds/

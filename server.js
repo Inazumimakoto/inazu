@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const rateLimit = require('express-rate-limit');
+const multer = require('multer');
+const sharp = require('sharp');
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
@@ -18,8 +20,8 @@ const ANALYTICS_SALT_FILE = process.env.ANALYTICS_SALT_FILE || path.join(__dirna
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET;
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
-const ANALYTICS_ADMIN_USER = process.env.ANALYTICS_ADMIN_USER || 'inazu';
-const ANALYTICS_ADMIN_PASSWORD = process.env.ANALYTICS_ADMIN_PASSWORD || '';
+const ADMIN_USER = process.env.ADMIN_USER || process.env.ANALYTICS_ADMIN_USER || 'inazu';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.ANALYTICS_ADMIN_PASSWORD || '';
 
 const PUBLIC_PORTFOLIO_HOSTS = new Set(['inazu.me', 'www.inazu.me', 'mac-site-origin.inazu.me']);
 const CHAT_HOSTS = new Set(['chat.inazu.me']);
@@ -27,6 +29,12 @@ const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
 const BACKGROUND_SLOTS = ['morning', 'lunch', 'night'];
 const BACKGROUND_IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp']);
 const BACKGROUND_DIR = path.join(PUBLIC_DIR, 'assets', 'backgrounds');
+const BACKGROUND_MAX_DIMENSION = Number(process.env.BACKGROUND_MAX_SIZE || 2400);
+const BACKGROUND_JPEG_QUALITY = Number(process.env.BACKGROUND_QUALITY || 84);
+const BACKGROUND_UPLOAD_MAX_FILE_SIZE = 30 * 1024 * 1024;
+const BACKGROUND_UPLOAD_MAX_FILES = 10;
+// Filenames are generated server-side on upload; this guards delete requests.
+const SAFE_BACKGROUND_FILENAME = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
 // Trust proxy (for Cloudflare)
 app.set('trust proxy', 1);
@@ -59,6 +67,13 @@ const chatLimiter = rateLimit({
     windowMs: 60 * 1000,        // 1 minute
     max: 15,                     // 15 messages per minute
     message: { error: 'Too many messages, please slow down' }
+});
+
+const adminAuthLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,   // 15 minutes
+    max: 30,                     // 30 failed admin requests per window
+    skipSuccessfulRequests: true,
+    message: { error: 'Too many admin requests, please try again later' }
 });
 
 const PROTECTED_BOT_PATTERNS = [
@@ -107,9 +122,9 @@ function isPublicAnalyticsPath(req) {
         req.path.startsWith('/api/analytics/');
 }
 
-function isAdminAnalyticsPath(req) {
-    return req.path.startsWith('/admin/analytics/') ||
-        req.path.startsWith('/api/admin/analytics/');
+function isAdminPath(req) {
+    return req.path.startsWith('/admin/') ||
+        req.path.startsWith('/api/admin/');
 }
 
 function parseBasicAuth(header) {
@@ -135,23 +150,35 @@ function timingSafeStringEqual(actual, expected) {
     return crypto.timingSafeEqual(actualHash, expectedHash);
 }
 
-function requireAnalyticsAdmin(req, res, next) {
+function requireAdmin(req, res, next) {
     if (!isPublicPortfolioHost(req)) {
         return res.status(404).send('Not found');
     }
 
-    if (!ANALYTICS_ADMIN_PASSWORD) {
-        return res.status(503).send('Analytics admin password is not configured');
+    if (!ADMIN_PASSWORD) {
+        return res.status(503).send('Admin password is not configured');
     }
 
     const credentials = parseBasicAuth(req.headers.authorization || '');
     const valid = credentials &&
-        timingSafeStringEqual(credentials.username, ANALYTICS_ADMIN_USER) &&
-        timingSafeStringEqual(credentials.password, ANALYTICS_ADMIN_PASSWORD);
+        timingSafeStringEqual(credentials.username, ADMIN_USER) &&
+        timingSafeStringEqual(credentials.password, ADMIN_PASSWORD);
 
     if (!valid) {
-        res.setHeader('WWW-Authenticate', 'Basic realm="inazu analytics", charset="UTF-8"');
+        res.setHeader('WWW-Authenticate', 'Basic realm="inazu admin", charset="UTF-8"');
         return res.status(401).send('Authentication required');
+    }
+
+    return next();
+}
+
+// Basic auth is attached automatically by the browser, so cross-site forms could
+// reach mutating admin endpoints. Requiring a custom header blocks that: plain
+// forms cannot set headers, and cross-origin fetch would need a CORS preflight
+// that this server never approves.
+function requireSameSiteRequest(req, res, next) {
+    if (req.headers['x-requested-with'] !== 'fetch') {
+        return res.status(403).json({ error: 'Missing X-Requested-With header' });
     }
 
     return next();
@@ -183,7 +210,7 @@ app.get('/robots.txt', (req, res) => {
 // Keep chat and API protected while allowing legitimate crawlers to read the public portfolio.
 app.use((req, res, next) => {
     const userAgent = req.headers['user-agent'] || '';
-    const isProtectedSurface = isChatHost(req) || (req.path.startsWith('/api/') && !isPublicAnalyticsPath(req) && !isAdminAnalyticsPath(req));
+    const isProtectedSurface = isChatHost(req) || (req.path.startsWith('/api/') && !isPublicAnalyticsPath(req) && !isAdminPath(req));
     const isPublicSurface = isPublicPortfolioHost(req);
     const shouldBlock =
         !userAgent ||
@@ -225,11 +252,13 @@ app.get('/api/analytics/summary', (req, res) => {
     }
 });
 
-app.get('/admin/analytics/raw', requireAnalyticsAdmin, (req, res) => {
+app.use(['/admin', '/api/admin'], adminAuthLimiter);
+
+app.get('/admin/analytics/raw', requireAdmin, (req, res) => {
     return sendPublicFile(res, 'admin-analytics.html');
 });
 
-app.get('/api/admin/analytics/raw', requireAnalyticsAdmin, (req, res) => {
+app.get('/api/admin/analytics/raw', requireAdmin, (req, res) => {
     if (!analytics) {
         return res.status(503).json({ error: 'Analytics is not available' });
     }
@@ -313,6 +342,119 @@ app.get('/api/backgrounds', async (req, res) => {
         return res.status(500).json({ error: 'Failed to list background photos' });
     }
 });
+
+const backgroundUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: BACKGROUND_UPLOAD_MAX_FILE_SIZE,
+        files: BACKGROUND_UPLOAD_MAX_FILES
+    }
+});
+
+function requireValidBackgroundSlot(req, res, next) {
+    if (!BACKGROUND_SLOTS.includes(req.params.slot)) {
+        return res.status(400).json({ error: 'Unknown background slot' });
+    }
+
+    return next();
+}
+
+app.get('/admin/backgrounds', requireAdmin, (req, res) => {
+    return sendPublicFile(res, 'admin-backgrounds.html');
+});
+
+app.post(
+    '/api/admin/backgrounds/:slot',
+    requireAdmin,
+    requireSameSiteRequest,
+    requireValidBackgroundSlot,
+    (req, res) => {
+        backgroundUpload.array('photos', BACKGROUND_UPLOAD_MAX_FILES)(req, res, async (uploadError) => {
+            if (uploadError) {
+                const isClientError = uploadError instanceof multer.MulterError;
+                console.error('[BACKGROUND UPLOAD ERROR]', uploadError);
+                return res.status(isClientError ? 400 : 500).json({
+                    error: isClientError ? uploadError.message : 'Failed to receive upload'
+                });
+            }
+
+            if (!Array.isArray(req.files) || req.files.length === 0) {
+                return res.status(400).json({ error: 'No files uploaded (field name must be "photos")' });
+            }
+
+            const slot = req.params.slot;
+            const slotDir = path.join(BACKGROUND_DIR, slot);
+            const saved = [];
+            const failed = [];
+
+            try {
+                await fs.promises.mkdir(slotDir, { recursive: true });
+            } catch (error) {
+                console.error('[BACKGROUND UPLOAD ERROR]', error);
+                return res.status(500).json({ error: 'Failed to prepare background directory' });
+            }
+
+            for (const file of req.files) {
+                // Re-encode every upload: strips EXIF/GPS, bakes in orientation,
+                // caps dimensions, and rejects anything that is not a real image.
+                const filename = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}.jpg`;
+
+                try {
+                    await sharp(file.buffer)
+                        .rotate()
+                        .resize(BACKGROUND_MAX_DIMENSION, BACKGROUND_MAX_DIMENSION, {
+                            fit: 'inside',
+                            withoutEnlargement: true
+                        })
+                        .jpeg({ quality: BACKGROUND_JPEG_QUALITY, mozjpeg: true })
+                        .toFile(path.join(slotDir, filename));
+
+                    saved.push(`assets/backgrounds/${slot}/${filename}`);
+                } catch (error) {
+                    console.error(`[BACKGROUND UPLOAD ERROR] ${file.originalname}:`, error.message);
+                    failed.push({ name: file.originalname, error: 'Not a supported image' });
+                }
+            }
+
+            return res.status(saved.length > 0 ? 201 : 400).json({ saved, failed });
+        });
+    }
+);
+
+app.delete(
+    '/api/admin/backgrounds/:slot/:filename',
+    requireAdmin,
+    requireSameSiteRequest,
+    requireValidBackgroundSlot,
+    async (req, res) => {
+        const { slot, filename } = req.params;
+        const extension = path.extname(filename).toLowerCase();
+
+        if (!SAFE_BACKGROUND_FILENAME.test(filename) || !BACKGROUND_IMAGE_EXTENSIONS.has(extension)) {
+            return res.status(400).json({ error: 'Invalid filename' });
+        }
+
+        const slotDir = path.join(BACKGROUND_DIR, slot);
+        const target = path.join(slotDir, filename);
+
+        if (path.dirname(target) !== slotDir) {
+            return res.status(400).json({ error: 'Invalid filename' });
+        }
+
+        try {
+            await fs.promises.unlink(target);
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                return res.status(404).json({ error: 'Photo not found' });
+            }
+
+            console.error('[BACKGROUND DELETE ERROR]', error);
+            return res.status(500).json({ error: 'Failed to delete photo' });
+        }
+
+        return res.json({ deleted: `assets/backgrounds/${slot}/${filename}` });
+    }
+);
 
 app.post('/api/mas/worlds', (req, res) => {
     const topic = typeof req.body?.topic === 'string' ? req.body.topic : '';

@@ -66,23 +66,20 @@ SESSION_SECRET=your_random_session_secret
 
 ## Portfolio Background Photos
 
-`inazu.me` の背景写真は時間帯ごとに自動列挙されます。写真を追加するときは、次のいずれかに画像を置いてください。
+`inazu.me` の背景写真は時間帯ごとに自動列挙されます。写真の追加・削除は管理画面から行います。
 
-```text
-public/assets/backgrounds/morning/
-public/assets/backgrounds/lunch/
-public/assets/backgrounds/night/
-```
+- 管理画面: `https://inazu.me/admin/backgrounds`（Basic 認証）
+- 認証情報: `ADMIN_USER` / `ADMIN_PASSWORD`（未設定なら `ANALYTICS_ADMIN_USER` / `ANALYTICS_ADMIN_PASSWORD` にフォールバック。アナリティクス管理画面と共通）
 
-対応拡張子は `.jpg`, `.jpeg`, `.png`, `.webp` です。位置情報などの EXIF が入った写真は、公開前にメタデータを削除してください。
+アップロードされた写真はサーバー側で `sharp` により必ず再エンコードされます。EXIF/GPS などのメタデータ除去・向きの焼き込み・最大 2400px への縮小（`BACKGROUND_MAX_SIZE` / `BACKGROUND_QUALITY` で調整可）を行い、ファイル名もサーバー側で生成するため、手動のサニタイズは不要です。
 
-写真を追加した後は、公開前に背景画像を一括でサニタイズしてください。
+写真は `public/assets/backgrounds/{morning,lunch,night}/` に保存されますが、このディレクトリは `.gitignore` 済みで **git では管理されません**（実体は配信サーバーのディスク上にのみ存在します）。Time Machine などでのバックアップを忘れずに。
+
+サーバーを経由せず手動でファイルを直接置く場合は、従来どおり公開前にサニタイズしてください（ImageMagick が必要です）。
 
 ```bash
 npm run sanitize-backgrounds
 ```
-
-このコマンドは `.DS_Store` を削除し、画像の向きを焼き込んでからメタデータを削除し、最大 2400px に縮小します。ImageMagick が必要です。
 
 ## Model
 
