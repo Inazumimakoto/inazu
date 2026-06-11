@@ -10,8 +10,11 @@
         '.site-nav',
         '.button',
         '.analytics-pill',
+        '.hero',
+        '.panel',
         '.card',
         '.contact-card',
+        '.text-glass',
         '.background-slot-trigger',
         '.background-toggle',
         '.background-slot-options'
