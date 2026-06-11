@@ -27,6 +27,10 @@ const PUBLIC_PORTFOLIO_HOSTS = new Set(['inazu.me', 'www.inazu.me', 'mac-site-or
 const CHAT_HOSTS = new Set(['chat.inazu.me']);
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
 const BACKGROUND_SLOTS = ['morning', 'lunch', 'night'];
+// Staging area for uploads that have not been assigned a time slot yet.
+// Not exposed by the public /api/backgrounds listing.
+const BACKGROUND_INBOX = 'inbox';
+const BACKGROUND_ADMIN_AREAS = [...BACKGROUND_SLOTS, BACKGROUND_INBOX];
 const BACKGROUND_IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp']);
 const BACKGROUND_DIR = path.join(PUBLIC_DIR, 'assets', 'backgrounds');
 const BACKGROUND_MAX_DIMENSION = Number(process.env.BACKGROUND_MAX_SIZE || 2400);
@@ -351,23 +355,44 @@ const backgroundUpload = multer({
     }
 });
 
-function requireValidBackgroundSlot(req, res, next) {
-    if (!BACKGROUND_SLOTS.includes(req.params.slot)) {
-        return res.status(400).json({ error: 'Unknown background slot' });
+function requireValidBackgroundArea(req, res, next) {
+    if (!BACKGROUND_ADMIN_AREAS.includes(req.params.area)) {
+        return res.status(400).json({ error: 'Unknown background area' });
     }
 
     return next();
+}
+
+function isValidBackgroundFilename(filename) {
+    return SAFE_BACKGROUND_FILENAME.test(filename) &&
+        BACKGROUND_IMAGE_EXTENSIONS.has(path.extname(filename).toLowerCase());
 }
 
 app.get('/admin/backgrounds', requireAdmin, (req, res) => {
     return sendPublicFile(res, 'admin-backgrounds.html');
 });
 
+app.get('/api/admin/backgrounds', requireAdmin, async (req, res) => {
+    try {
+        const photos = {};
+
+        for (const area of BACKGROUND_ADMIN_AREAS) {
+            photos[area] = await listBackgroundPhotos(area);
+        }
+
+        res.setHeader('Cache-Control', 'no-store');
+        return res.json(photos);
+    } catch (error) {
+        console.error('[BACKGROUND ADMIN LIST ERROR]', error);
+        return res.status(500).json({ error: 'Failed to list background photos' });
+    }
+});
+
 app.post(
-    '/api/admin/backgrounds/:slot',
+    '/api/admin/backgrounds/:area',
     requireAdmin,
     requireSameSiteRequest,
-    requireValidBackgroundSlot,
+    requireValidBackgroundArea,
     (req, res) => {
         backgroundUpload.array('photos', BACKGROUND_UPLOAD_MAX_FILES)(req, res, async (uploadError) => {
             if (uploadError) {
@@ -382,13 +407,13 @@ app.post(
                 return res.status(400).json({ error: 'No files uploaded (field name must be "photos")' });
             }
 
-            const slot = req.params.slot;
-            const slotDir = path.join(BACKGROUND_DIR, slot);
+            const area = req.params.area;
+            const areaDir = path.join(BACKGROUND_DIR, area);
             const saved = [];
             const failed = [];
 
             try {
-                await fs.promises.mkdir(slotDir, { recursive: true });
+                await fs.promises.mkdir(areaDir, { recursive: true });
             } catch (error) {
                 console.error('[BACKGROUND UPLOAD ERROR]', error);
                 return res.status(500).json({ error: 'Failed to prepare background directory' });
@@ -407,9 +432,9 @@ app.post(
                             withoutEnlargement: true
                         })
                         .jpeg({ quality: BACKGROUND_JPEG_QUALITY, mozjpeg: true })
-                        .toFile(path.join(slotDir, filename));
+                        .toFile(path.join(areaDir, filename));
 
-                    saved.push(`assets/backgrounds/${slot}/${filename}`);
+                    saved.push(`assets/backgrounds/${area}/${filename}`);
                 } catch (error) {
                     console.error(`[BACKGROUND UPLOAD ERROR] ${file.originalname}:`, error.message);
                     failed.push({ name: file.originalname, error: 'Not a supported image' });
@@ -421,25 +446,55 @@ app.post(
     }
 );
 
-app.delete(
-    '/api/admin/backgrounds/:slot/:filename',
+app.post(
+    '/api/admin/backgrounds/:area/:filename/move',
     requireAdmin,
     requireSameSiteRequest,
-    requireValidBackgroundSlot,
+    requireValidBackgroundArea,
     async (req, res) => {
-        const { slot, filename } = req.params;
-        const extension = path.extname(filename).toLowerCase();
+        const { area, filename } = req.params;
+        const destination = req.body?.to;
 
-        if (!SAFE_BACKGROUND_FILENAME.test(filename) || !BACKGROUND_IMAGE_EXTENSIONS.has(extension)) {
+        if (!BACKGROUND_ADMIN_AREAS.includes(destination) || destination === area) {
+            return res.status(400).json({ error: 'Invalid destination area' });
+        }
+
+        if (!isValidBackgroundFilename(filename)) {
             return res.status(400).json({ error: 'Invalid filename' });
         }
 
-        const slotDir = path.join(BACKGROUND_DIR, slot);
-        const target = path.join(slotDir, filename);
+        const source = path.join(BACKGROUND_DIR, area, filename);
+        const target = path.join(BACKGROUND_DIR, destination, filename);
 
-        if (path.dirname(target) !== slotDir) {
+        try {
+            await fs.promises.mkdir(path.dirname(target), { recursive: true });
+            await fs.promises.rename(source, target);
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                return res.status(404).json({ error: 'Photo not found' });
+            }
+
+            console.error('[BACKGROUND MOVE ERROR]', error);
+            return res.status(500).json({ error: 'Failed to move photo' });
+        }
+
+        return res.json({ moved: `assets/backgrounds/${destination}/${filename}` });
+    }
+);
+
+app.delete(
+    '/api/admin/backgrounds/:area/:filename',
+    requireAdmin,
+    requireSameSiteRequest,
+    requireValidBackgroundArea,
+    async (req, res) => {
+        const { area, filename } = req.params;
+
+        if (!isValidBackgroundFilename(filename)) {
             return res.status(400).json({ error: 'Invalid filename' });
         }
+
+        const target = path.join(BACKGROUND_DIR, area, filename);
 
         try {
             await fs.promises.unlink(target);
@@ -452,7 +507,7 @@ app.delete(
             return res.status(500).json({ error: 'Failed to delete photo' });
         }
 
-        return res.json({ deleted: `assets/backgrounds/${slot}/${filename}` });
+        return res.json({ deleted: `assets/backgrounds/${area}/${filename}` });
     }
 );
 

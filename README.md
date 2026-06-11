@@ -71,6 +71,8 @@ SESSION_SECRET=your_random_session_secret
 - 管理画面: `https://inazu.me/admin/backgrounds`（Basic 認証）
 - 認証情報: `ADMIN_USER` / `ADMIN_PASSWORD`（未設定なら `ANALYTICS_ADMIN_USER` / `ANALYTICS_ADMIN_PASSWORD` にフォールバック。アナリティクス管理画面と共通）
 
+時間帯（朝・昼・夜）に直接アップロードするほかに、「未分類 (inbox)」にまとめてアップロードしてから各時間帯へ振り分けることもできます。未分類の写真は公開 API（`/api/backgrounds`）には載らず、サイトの背景にも使われません。写真は時間帯どうし・未分類との間で自由に移動できます。
+
 アップロードされた写真はサーバー側で `sharp` により必ず再エンコードされます。EXIF/GPS などのメタデータ除去・向きの焼き込み・最大 2400px への縮小（`BACKGROUND_MAX_SIZE` / `BACKGROUND_QUALITY` で調整可）を行い、ファイル名もサーバー側で生成するため、手動のサニタイズは不要です。
 
 写真は `public/assets/backgrounds/{morning,lunch,night}/` に保存されますが、このディレクトリは `.gitignore` 済みで **git では管理されません**（実体は配信サーバーのディスク上にのみ存在します）。Time Machine などでのバックアップを忘れずに。

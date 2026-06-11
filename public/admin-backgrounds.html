@@ -85,6 +85,40 @@
             opacity: 0.7;
             font-size: 0.9rem;
         }
+
+        .slot-note {
+            margin: 0 0 12px;
+            font-size: 0.85rem;
+            opacity: 0.75;
+        }
+
+        .photo-actions {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            gap: 4px;
+            padding: 6px;
+            background: linear-gradient(transparent, rgba(10, 12, 20, 0.85));
+        }
+
+        .photo-move {
+            border: none;
+            border-radius: 8px;
+            background: rgba(10, 12, 20, 0.7);
+            color: #cfe0ff;
+            font: inherit;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+
+        .photo-move:hover,
+        .photo-move:focus-visible {
+            background: rgba(70, 90, 140, 0.85);
+            color: #fff;
+        }
     </style>
     <script src="/admin-backgrounds.js" defer></script>
 </head>
@@ -101,7 +135,7 @@
         <section class="summary-band" aria-labelledby="backgrounds-title">
             <div>
                 <h1 id="backgrounds-title">Background photos</h1>
-                <p class="summary-copy">時間帯ごとの背景写真を追加・削除できます。アップロード時にEXIF/GPSは自動で除去され、最大2400pxに縮小されます。</p>
+                <p class="summary-copy">時間帯ごとの背景写真を追加・削除・振り分けできます。「未分類」に追加してあとで振り分けることも、時間帯に直接追加することもできます。アップロード時にEXIF/GPSは自動で除去され、最大2400pxに縮小されます。</p>
             </div>
         </section>
 
