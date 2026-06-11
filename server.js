@@ -549,7 +549,16 @@ app.get('/api/mas/worlds/:worldId/stream', (req, res) => {
     });
 });
 
-app.use(express.static(PUBLIC_DIR, { index: false }));
+app.use(express.static(PUBLIC_DIR, {
+    index: false,
+    setHeaders(res, filePath) {
+        // Admin UI assets change rarely but must never be served stale:
+        // force revalidation so updates show up on the next page load.
+        if (path.basename(filePath).startsWith('admin-')) {
+            res.setHeader('Cache-Control', 'no-cache');
+        }
+    }
+}));
 app.use('/scripts/three', express.static(path.join(__dirname, 'node_modules/three/build')));
 app.use('/scripts', express.static(path.join(__dirname, 'node_modules/marked')));
 
