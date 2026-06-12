@@ -52,7 +52,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="portfolio.css?v=liquid-glass-cards-20260611-2">
+    <link rel="stylesheet" href="portfolio.css?v=liquid-glass-cards-20260611-3">
 </head>
 
 <body>
@@ -82,6 +82,7 @@
                 <a href="#client">client</a>
                 <a href="#profile">profile</a>
                 <a href="#notes">notes</a>
+                <a href="#wishlist">wishlist</a>
                 <a href="#links">links</a>
                 <a href="/analytics">analytics</a>
             </nav>
@@ -268,6 +269,69 @@
                 <p class="notes-more"><a class="inline-link" href="https://zenn.dev/inazumimakoto" target="_blank" rel="noreferrer">View all posts on Zenn</a></p>
             </section>
 
+            <section class="panel reveal" id="wishlist">
+                <div class="panel-header">
+                    <div>
+                        <p class="section-kicker"><span class="text-glass text-glass-label">Wishlist</span></p>
+                        <h2 class="panel-title"><span class="text-glass text-glass-title">ほしい物リスト。</span></h2>
+                    </div>
+                    <p class="panel-copy"><span class="text-glass text-glass-copy">Amazonのほしい物リストには載せられないものたち。贈り物は随時受け付けています。</span></p>
+                </div>
+
+                <div class="wishlist-grid">
+                    <a class="card notes-card card-link" href="mailto:makoto@inazu.me" data-tilt>
+                        <p class="card-kicker">Career</p>
+                        <h3>内定</h3>
+                        <p>2027年卒として市場に出ています。ネットワークとセキュリティとAIができます。変なものも作れます。</p>
+                        <ul class="list">
+                            <li><span>priority</span><span>critical</span></li>
+                            <li><span>status</span><span>募集中</span></li>
+                        </ul>
+                        <span class="inline-link">内定はこちらから</span>
+                    </a>
+
+                    <article class="card notes-card" data-tilt>
+                        <p class="card-kicker">Security</p>
+                        <h3>CVE番号</h3>
+                        <p>人のではなく、自分で見つけた脆弱性に割り当てられるやつ。もちろん責任ある開示でいきます。</p>
+                        <ul class="list">
+                            <li><span>priority</span><span>high</span></li>
+                            <li><span>status</span><span>探索中</span></li>
+                        </ul>
+                    </article>
+
+                    <article class="card notes-card" data-tilt>
+                        <p class="card-kicker">Network</p>
+                        <h3>AS番号</h3>
+                        <p>自宅からBGPを話したい。まずはIPアドレスブロックと、家族の理解から。</p>
+                        <ul class="list">
+                            <li><span>priority</span><span>medium</span></li>
+                            <li><span>status</span><span>妄想中</span></li>
+                        </ul>
+                    </article>
+
+                    <article class="card notes-card" data-tilt>
+                        <p class="card-kicker">Hardware</p>
+                        <h3>メモリ</h3>
+                        <p>ローカルLLMが何GBあっても食べ尽くすので。多ければ多いほど嬉しいです。</p>
+                        <ul class="list">
+                            <li><span>priority</span><span>high</span></li>
+                            <li><span>status</span><span>常に不足</span></li>
+                        </ul>
+                    </article>
+
+                    <article class="card notes-card" data-tilt>
+                        <p class="card-kicker">Infrastructure</p>
+                        <h3>帯域</h3>
+                        <p>自宅サーバーの上り回線。いつもアップロードから先に死にます。</p>
+                        <ul class="list">
+                            <li><span>priority</span><span>high</span></li>
+                            <li><span>status</span><span>上りが限界</span></li>
+                        </ul>
+                    </article>
+                </div>
+            </section>
+
             <section class="panel reveal" id="links">
                 <div class="panel-header">
                     <div>
@@ -361,8 +425,8 @@
         </main>
     </div>
 
-    <script src="liquid-glass.js?v=liquid-glass-cards-20260611-2"></script>
-    <script src="portfolio.js?v=liquid-glass-cards-20260611-2"></script>
+    <script src="liquid-glass.js?v=liquid-glass-cards-20260611-3"></script>
+    <script src="portfolio.js?v=liquid-glass-cards-20260611-3"></script>
 </body>
 
 </html>
