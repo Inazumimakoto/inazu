@@ -421,11 +421,13 @@ main {
         0 10px 28px rgba(0, 0, 0, 0.12);
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
-    box-decoration-break: clone;
-    -webkit-box-decoration-break: clone;
 }
 
+/* The SVG refraction filter maps onto a single rounded-rect box, so text
+   frames must not fragment across line boxes. The fallback uses the same
+   single-box layout so both modes share one structure. */
 .text-glass-label {
+    display: inline-block;
     padding: 0.38rem 0.72rem;
     border-radius: 999px;
 }
@@ -438,19 +440,9 @@ main {
 }
 
 .text-glass-copy {
-    padding: 0.2rem 0.62rem 0.28rem;
-    border-radius: 18px;
-}
-
-/* The SVG refraction filter maps onto a single rounded-rect box, so text
-   frames must not fragment across line boxes when refraction is active. */
-html.glass-refraction .text-glass-label,
-html.glass-refraction .text-glass-copy {
     display: inline-block;
-}
-
-html.glass-refraction .text-glass-copy {
     padding: 0.5rem 0.85rem 0.55rem;
+    border-radius: 18px;
 }
 
 .hero-title-wrap {
@@ -924,6 +916,23 @@ button:focus-visible {
     justify-content: space-between;
 }
 
+.wishlist-grid {
+    gap: 14px;
+}
+
+.wishlist-grid .notes-card {
+    justify-content: flex-start;
+    padding: 16px 18px;
+}
+
+.wishlist-grid .notes-card h3 {
+    margin: 0 0 8px;
+}
+
+.wishlist-grid .notes-card p {
+    margin: 0;
+}
+
 .note-card {
     min-height: 300px;
 }
@@ -1074,14 +1083,14 @@ html.glass-fallback .contact-card,
 html.glass-fallback .background-slot-trigger,
 html.glass-fallback .background-toggle,
 html.glass-fallback .background-slot-options {
-    backdrop-filter: blur(10px) saturate(1.4);
-    -webkit-backdrop-filter: blur(10px) saturate(1.4);
+    backdrop-filter: blur(5px) saturate(1.35);
+    -webkit-backdrop-filter: blur(5px) saturate(1.35);
 }
 
 html.glass-fallback .hero,
 html.glass-fallback .panel {
-    backdrop-filter: blur(8px) saturate(1.3);
-    -webkit-backdrop-filter: blur(8px) saturate(1.3);
+    backdrop-filter: blur(4px) saturate(1.25);
+    -webkit-backdrop-filter: blur(4px) saturate(1.25);
 }
 
 @media (max-width: 980px) {

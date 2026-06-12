@@ -35,7 +35,8 @@
     const supportsRefraction =
         typeof CSS !== 'undefined' &&
         CSS.supports('backdrop-filter', 'url(#liquid-glass)') &&
-        Boolean(navigator.userAgentData?.brands?.some((entry) => /chromium/i.test(entry.brand)));
+        Boolean(navigator.userAgentData?.brands?.some((entry) => /chromium/i.test(entry.brand))) &&
+        new URLSearchParams(location.search).get('glass') !== 'fallback';
 
     document.documentElement.classList.add(supportsRefraction ? 'glass-refraction' : 'glass-fallback');
 
