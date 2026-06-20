@@ -141,6 +141,68 @@
         @media (max-width: 560px) {
             .inazu-loader__queue { transform: scale(0.6); }
         }
+
+        /* replay control in the footer */
+        .site-footer { display: flex; justify-content: center; padding: 40px 20px 64px; }
+        .loader-replay {
+            background: none; border: 0; cursor: pointer; font: inherit;
+            font-size: 13px; color: #8d8790; letter-spacing: .02em;
+            padding: 8px 14px; border-radius: 8px;
+            transition: color .2s ease, background .2s ease;
+        }
+        .loader-replay:hover { color: #DC143C; background: rgba(0, 0, 0, .05); }
+
+        /* easter-egg reveal: post-intro toast + flash the line inside the card */
+        .loader-egg-line { border-radius: 3px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+        @keyframes egg-flash {
+            0%   { background-color: rgba(200, 255, 109, 0);   box-shadow: 0 0 0 rgba(200, 255, 109, 0); }
+            10%  { background-color: rgba(200, 255, 109, .34); box-shadow: 0 0 24px rgba(200, 255, 109, .9); }
+            25%  { background-color: rgba(200, 255, 109, .1);  box-shadow: 0 0 8px rgba(200, 255, 109, .3); }
+            40%  { background-color: rgba(200, 255, 109, .34); box-shadow: 0 0 24px rgba(200, 255, 109, .9); }
+            55%  { background-color: rgba(200, 255, 109, .1);  box-shadow: 0 0 8px rgba(200, 255, 109, .3); }
+            70%  { background-color: rgba(200, 255, 109, .34); box-shadow: 0 0 24px rgba(200, 255, 109, .9); }
+            85%  { background-color: rgba(200, 255, 109, .1);  box-shadow: 0 0 8px rgba(200, 255, 109, .3); }
+            100% { background-color: rgba(200, 255, 109, 0);   box-shadow: 0 0 0 rgba(200, 255, 109, 0); }
+        }
+        .loader-egg-line.is-flash { animation: egg-flash 4s ease-in-out; }
+        .egg-toast {
+            position: fixed; right: 24px; bottom: 24px; z-index: 9000;
+            display: flex; align-items: stretch; overflow: hidden; opacity: 0;
+            font-family: 'Space Grotesk', sans-serif; color: var(--text, #fff);
+            background:
+                linear-gradient(180deg, rgba(8, 8, 8, 0.55), rgba(8, 8, 8, 0.4)),
+                rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 16px;
+            box-shadow:
+                inset 0 1px 1px rgba(255, 255, 255, 0.24),
+                inset 0 -1px 1px rgba(255, 255, 255, 0.08),
+                0 18px 50px rgba(0, 0, 0, 0.45);
+            -webkit-backdrop-filter: blur(18px);
+            backdrop-filter: blur(18px);
+        }
+        .egg-toast.is-in { opacity: 1; animation: egg-toast-pop .45s cubic-bezier(.22, 1, .36, 1); }
+        .egg-toast.is-out { opacity: 0; transform: translateY(12px); transition: opacity .3s ease, transform .3s ease; }
+        @keyframes egg-toast-pop {
+            0%   { opacity: 0; transform: translateY(20px) scale(.98); }
+            60%  { opacity: 1; transform: translateY(-3px) scale(1); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .egg-toast__main {
+            background: none; border: 0; cursor: pointer; font: inherit;
+            font-size: 14px; padding: 14px 16px; color: inherit; text-align: left; letter-spacing: .01em;
+        }
+        .egg-toast__cta { color: var(--accent, #c8ff6d); font-weight: 700; white-space: nowrap; }
+        .egg-toast__close {
+            background: none; border: 0; border-left: 1px solid rgba(255, 255, 255, 0.14); cursor: pointer;
+            font-size: 16px; line-height: 1; color: rgba(255, 255, 255, 0.6); padding: 0 14px;
+        }
+        .egg-toast__close:hover { color: #fff; }
+        @media (max-width: 560px) { .egg-toast { left: 14px; right: 14px; bottom: 14px; } }
+        @media (prefers-reduced-motion: reduce) {
+            .egg-toast.is-in { animation: none; }
+            .loader-egg-line.is-flash { animation-duration: .01s; }
+        }
     </style>
 </head>
 
@@ -236,7 +298,31 @@
                     <a class="card feature-card feature-card-lead card-link" href="https://github.com/Inazumimakoto/inazu" target="_blank" rel="noreferrer" data-tilt>
                         <p class="card-kicker">This Site</p>
                         <h3>inazu.me</h3>
-                        <p>このポートフォリオ自体も制作物です。背景には朝・昼・夜で切り替えられる写真を置いて、リロードするたびに違う1枚を見られるようにしています。右下から時間帯を選んだり、背景だけを眺めたりできます。</p>
+                        <p>このポートフォリオ自体も制作物です。背景には朝・昼・夜で切り替えられる写真を置いて、リロードするたびに違う1枚を見られるようにしています。右下から時間帯を選んだり、背景だけを眺めたりできます。初回に出るロード画面、ピンと来ました？……大丈夫、ここでは何もリークしていませんから。<br><span class="loader-egg-line">開発者ツールでこの辺りのHTMLを覗くか、コンソールパネルを開くと答えがわかります。</span></p>
+                        <!-- ============================================================
+     答え合わせ
+     ============================================================
+     初回に一瞬だけ出るあのロード画面は、ダークウェブ（Tor / .onion）上の
+     ランサムウェアグループ "LockBit" のリークサイトにある
+     「アクセスキュー画面」のオマージュです。
+
+     実物のページの HTML をそのままぶっこ抜いてきて、構造を読み解きながら
+     自分用に作り直しました：
+       LOCK BIT5.0 のロゴ   →  inazu.me バッジ
+       中央の L3 ロゴ        →  実家の猫「みゃー」
+       周回する3つのコイン  →  研究室のロゴ / 研究室の非公式マスコット /
+                               友人のサイトのファビコン（無断使用）
+       英語のキュー文言      →  日本語に書き換え
+       triangulate の動き    →  そのまま移植
+
+     拝啓　時下ますますご清祥のこととお慶び申し上げます。
+     ここまで見てくださり誠にありがとうございました。
+     万が一、あなた様の大切な個人情報が、強固な暗号化を施されたうえ、ダークウェブ（Tor / .onion）の最深部に鎮座するロックビットのリークサイトへと厳かに掲載され、ダウンロード用トレントと共に全世界の好事家へ向けて未来永劫にわたり公開される、誠に遺憾かつ前代未聞の運びとなりました暁には、当方、平日・休日・祝祭日・年末年始の別なく、また草木も眠る丑三つ時であろうとも、何をおいても最優先に、誠心誠意・全身全霊・平身低頭をもって、速やかかつ丁重に、貴殿のもとへ第一報を馳せ参じ申し上げる所存でございます。
+     今後とも変わらぬご愛顧のほど、伏してお願い申し上げます。
+     敬具
+     追伸　なお、お知らせの際に金銭を頂戴することは一切ございません。あくまで無償にて承ります。何卒ご安心くださいませ。
+============================================================ -->
+
                         <ul class="list">
                             <li><span>focus</span><span>liquid glass</span></li>
                             <li><span>background</span><span>photo rotation</span></li>
@@ -527,17 +613,42 @@
 
             </section>
         </main>
+        <footer class="site-footer">
+            <button type="button" class="loader-replay" data-loader-replay>もう一度キューに並ぶ</button>
+        </footer>
     </div>
 
     <script src="liquid-glass.js?v=liquid-glass-cards-20260612-1"></script>
     <script src="portfolio.js?v=liquid-glass-cards-20260612-1"></script>
 
-    <!-- intro loader: hold a minimum ~2s, then fade out and remove from DOM -->
+    <!-- intro loader: hold a minimum ~7s, then fade out and remove from DOM -->
     <script>
         (function () {
             var el = document.getElementById('inazu-loader');
             if (!el) return;
             if (!document.documentElement.classList.contains('show-loader')) { el.remove(); return; }
+
+            function revealEgg() {
+                var line = document.querySelector('.loader-egg-line');
+                if (!line) return;
+                line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                line.classList.remove('is-flash');
+                void line.offsetWidth; // restart the animation
+                line.classList.add('is-flash');
+            }
+            function showToast() {
+                var t = document.createElement('div');
+                t.className = 'egg-toast';
+                t.setAttribute('role', 'status');
+                t.innerHTML = '<button type="button" class="egg-toast__main">今のロード画面、実は… <span class="egg-toast__cta">答え合わせ ▶</span></button>' +
+                    '<button type="button" class="egg-toast__close" aria-label="閉じる">×</button>';
+                document.body.appendChild(t);
+                requestAnimationFrame(function () { t.classList.add('is-in'); });
+                var timer = setTimeout(remove, 9000);
+                function remove() { clearTimeout(timer); t.classList.add('is-out'); setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 300); }
+                t.querySelector('.egg-toast__main').addEventListener('click', function () { revealEgg(); remove(); });
+                t.querySelector('.egg-toast__close').addEventListener('click', remove);
+            }
 
             function begin() {
                 // commit "shown" only once actually displayed — a prerender pass that
@@ -547,7 +658,7 @@
                 function done() {
                     setTimeout(function () {
                         el.classList.add('is-done');
-                        setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 550);
+                        setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); showToast(); }, 550);
                     }, Math.max(0, MIN - (Date.now() - start)));
                 }
                 if (document.readyState === 'complete') done();
@@ -559,6 +670,41 @@
             } else {
                 begin();
             }
+        })();
+    </script>
+
+    <!-- console answer key: spell it out for the curious who open DevTools -->
+    <script>
+        console.log("%c inazu.me ", "background:#DC143C;color:#fff;font-size:20px;font-weight:bold;padding:4px 10px;border-radius:6px");
+        console.log(`答え合わせ
+────────────────────────────────────────
+初回に一瞬だけ出るあのロード画面は、ダークウェブ（Tor / .onion）上の
+ランサムウェアグループ "LockBit" のリークサイトにある「アクセスキュー画面」のオマージュです。
+
+実物のページの HTML をそのままぶっこ抜いてきて、構造を読み解きながら自分用に作り直しました：
+  LOCK BIT5.0 のロゴ   →  inazu.me バッジ
+  中央の L3 ロゴ        →  実家の猫「みゃー」
+  周回する3つのコイン  →  研究室のロゴ / 研究室の非公式マスコット / 友人のサイトのファビコン（無断使用）
+  英語のキュー文言      →  日本語に書き換え
+  triangulate の動き    →  そのまま移植
+
+拝啓　時下ますますご清祥のこととお慶び申し上げます。
+ここまで見てくださり誠にありがとうございました。
+万が一、あなた様の大切な個人情報が、強固な暗号化を施されたうえ、ダークウェブ（Tor / .onion）の最深部に鎮座するロックビットのリークサイトへと厳かに掲載され、ダウンロード用トレントと共に全世界の好事家へ向けて未来永劫にわたり公開される、誠に遺憾かつ前代未聞の運びとなりました暁には、当方、平日・休日・祝祭日・年末年始の別なく、また草木も眠る丑三つ時であろうとも、何をおいても最優先に、誠心誠意・全身全霊・平身低頭をもって、速やかかつ丁重に、貴殿のもとへ第一報を馳せ参じ申し上げる所存でございます。
+今後とも変わらぬご愛顧のほど、伏してお願い申し上げます。
+敬具
+追伸　なお、お知らせの際に金銭を頂戴することは一切ございません。あくまで無償にて承ります。何卒ご安心くださいませ。`);
+    </script>
+
+    <!-- replay control: clear the once-per-session flag and reload to re-show the intro -->
+    <script>
+        (function () {
+            var btn = document.querySelector('[data-loader-replay]');
+            if (!btn) return;
+            btn.addEventListener('click', function () {
+                try { sessionStorage.removeItem('inazu:loader-shown'); } catch (e) {}
+                location.reload();
+            });
         })();
     </script>
 </body>
