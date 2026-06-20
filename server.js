@@ -8,7 +8,6 @@ const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
-const { masWorlds } = require('./src/mas/orchestrator');
 const { createAnalytics } = require('./src/analytics');
 
 const app = express();
@@ -337,10 +336,6 @@ app.get(['/chat', '/chat.html'], (req, res) => {
     return sendPublicFile(res, 'chat.html');
 });
 
-app.get(['/mas', '/mas/', '/mas/index.html'], (req, res) => {
-    return sendPublicFile(res, 'mas/index.html');
-});
-
 app.get('/api/backgrounds', async (req, res) => {
     try {
         const photos = {};
@@ -526,44 +521,6 @@ app.delete(
     }
 );
 
-app.post('/api/mas/worlds', (req, res) => {
-    const topic = typeof req.body?.topic === 'string' ? req.body.topic : '';
-    const world = masWorlds.createWorld(topic);
-    return res.status(201).json(world.getSnapshot());
-});
-
-app.post('/api/mas/worlds/:worldId/topic', (req, res) => {
-    const world = masWorlds.restartWorld(req.params.worldId, req.body?.topic);
-    if (!world) {
-        return res.status(404).json({ error: 'MAS world not found' });
-    }
-
-    return res.json(world.getSnapshot());
-});
-
-app.get('/api/mas/worlds/:worldId/stream', (req, res) => {
-    const world = masWorlds.getWorld(req.params.worldId);
-    if (!world) {
-        return res.status(404).json({ error: 'MAS world not found' });
-    }
-
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.flushHeaders?.();
-
-    world.subscribe(res);
-
-    const heartbeat = setInterval(() => {
-        res.write(': keep-alive\n\n');
-    }, 15000);
-
-    req.on('close', () => {
-        clearInterval(heartbeat);
-        world.unsubscribe(res);
-    });
-});
-
 app.use(express.static(PUBLIC_DIR, {
     index: false,
     setHeaders(res, filePath) {
@@ -574,7 +531,6 @@ app.use(express.static(PUBLIC_DIR, {
         }
     }
 }));
-app.use('/scripts/three', express.static(path.join(__dirname, 'node_modules/three/build')));
 app.use('/scripts', express.static(path.join(__dirname, 'node_modules/marked')));
 
 // Logging function
