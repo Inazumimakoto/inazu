@@ -543,7 +543,7 @@
                 // commit "shown" only once actually displayed — a prerender pass that
                 // never activates must not consume the one-per-session show.
                 try { sessionStorage.setItem('inazu:loader-shown', '1'); } catch (e) {}
-                var MIN = 5000, start = Date.now();
+                var MIN = 7000, start = Date.now();
                 function done() {
                     setTimeout(function () {
                         el.classList.add('is-done');
