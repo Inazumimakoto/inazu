@@ -725,9 +725,28 @@ app.post('/api/chat', chatLimiter, async (req, res) => {
         logRequest(req, message);
 
     } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: error.message });
+        console.error('[CHAT ERROR]', error);
+        // The response may already be streaming; if so we can only close it.
+        if (res.headersSent) {
+            return res.end();
+        }
+        res.status(500).json({ error: 'Chat service error' });
     }
+});
+
+// Final error handler: never leak stack traces, internal paths, or error
+// messages to clients, regardless of NODE_ENV. Express's default handler
+// dumps err.stack when NODE_ENV !== 'production'; this overrides that so the
+// behavior does not depend on an env var being set correctly at deploy time.
+app.use((err, req, res, next) => {
+    console.error('[UNHANDLED ERROR]', err);
+
+    if (res.headersSent) {
+        return res.end();
+    }
+
+    const status = Number(err?.status || err?.statusCode) || 500;
+    return res.status(status).json({ error: 'Internal server error' });
 });
 
 app.listen(PORT, () => {

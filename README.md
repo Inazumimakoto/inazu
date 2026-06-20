@@ -163,6 +163,8 @@ pm2 restart inazu-chat
 
 `inazu-chat` はこのリポジトリの [`server.js`](server.js) を起動し、デフォルトの `PORT=3000` で待ち受けます。Cloudflare Tunnel はこのローカル3000番へ転送します。
 
+本番プロセスは `NODE_ENV=production` で起動してください（`pm2 start server.js --name inazu-chat --env-file .env` なら `.env` に `NODE_ENV=production` を入れる）。未設定でも `server.js` の最終エラーハンドラがスタックトレースの露出を防ぎますが、`production` にすると Express 全体が本番モードになります。
+
 反映後の確認:
 
 ```bash
