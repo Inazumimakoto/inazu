@@ -64,6 +64,7 @@ SESSION_SECRET=your_random_session_secret
 
 - 管理画面: `https://inazu.me/admin/backgrounds`（Basic 認証）
 - 認証情報: `ADMIN_USER` / `ADMIN_PASSWORD`（未設定なら `ANALYTICS_ADMIN_USER` / `ANALYTICS_ADMIN_PASSWORD` にフォールバック。アナリティクス管理画面と共通）
+- ユーザー名・パスワードのデフォルト値はありません。どちらも未設定の場合、管理画面は `503` を返します。
 
 時間帯（朝・昼・夜）に直接アップロードするほかに、「未分類 (inbox)」にまとめてアップロードしてから各時間帯へ振り分けることもできます。未分類の写真は公開 API（`/api/backgrounds`）には載らず、サイトの背景にも使われません。写真は時間帯どうし・未分類との間で自由に移動できます。
 
@@ -148,7 +149,7 @@ npm run analytics:report
 管理者用rawログ画面には、`.env` に次を設定してからサーバーを再起動してください。
 
 ```env
-ANALYTICS_ADMIN_USER=inazu
+ANALYTICS_ADMIN_USER=your_private_admin_user
 ANALYTICS_ADMIN_PASSWORD=your_private_password
 ```
 

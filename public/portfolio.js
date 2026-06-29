@@ -11,6 +11,8 @@ const backgroundSlotButtons = Array.from(document.querySelectorAll('[data-backgr
 const analyticsPill = document.querySelector('[data-analytics-pill]');
 const analyticsVisitors = document.querySelector('[data-analytics-visitors]');
 const analyticsViews = document.querySelector('[data-analytics-views]');
+const newsCard = document.querySelector('[data-news-card]');
+const newsList = document.querySelector('[data-news-list]');
 const celebrationCanvas = document.querySelector('[data-celebration-canvas]');
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const FALLBACK_BACKGROUND_PHOTO = 'assets/hero-dinner.jpg';
@@ -33,6 +35,7 @@ let backgroundSlotMenuOpen = false;
 let loadedBackgroundPhotos = null;
 
 loadPublicAnalyticsCount();
+loadLatestNews();
 
 async function loadPublicAnalyticsCount() {
     if (!analyticsPill || !analyticsVisitors || !analyticsViews) {
@@ -54,6 +57,44 @@ async function loadPublicAnalyticsCount() {
 
 function formatAnalyticsNumber(value) {
     return new Intl.NumberFormat('en-US').format(Number(value || 0));
+}
+
+async function loadLatestNews() {
+    if (!newsCard || !newsList) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/assets/news.json', { cache: 'no-store' });
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const entries = (Array.isArray(data?.entries) ? data.entries : [])
+            .filter((entry) => entry && typeof entry.date === 'string' && typeof entry.text === 'string')
+            .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+            .slice(0, 2);
+
+        if (!entries.length) return;
+
+        // Render each entry as a list row (content left, date right) — same shape
+        // as the Credentials card. textContent keeps it injection-safe.
+        newsList.innerHTML = '';
+        for (const entry of entries) {
+            const row = document.createElement('li');
+            const text = document.createElement('span');
+            text.textContent = entry.text;
+            const date = document.createElement('span');
+            date.textContent = entry.date;
+            row.append(text, date);
+            newsList.appendChild(row);
+        }
+
+        newsCard.hidden = false;
+        // The card starts hidden, so the reveal observer may not re-fire — show it directly.
+        newsCard.classList.add('is-visible');
+    } catch (error) {
+        // Keep the news card hidden when the feed is unavailable.
+    }
 }
 
 function getMealSlot(date = new Date()) {

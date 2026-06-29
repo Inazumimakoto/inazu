@@ -19,7 +19,7 @@ const ANALYTICS_SALT_FILE = process.env.ANALYTICS_SALT_FILE || path.join(__dirna
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET;
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
-const ADMIN_USER = process.env.ADMIN_USER || process.env.ANALYTICS_ADMIN_USER || 'inazu';
+const ADMIN_USER = process.env.ADMIN_USER || process.env.ANALYTICS_ADMIN_USER || '';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.ANALYTICS_ADMIN_PASSWORD || '';
 
 const PUBLIC_PORTFOLIO_HOSTS = new Set(['inazu.me', 'www.inazu.me', 'mac-site-origin.inazu.me']);
@@ -168,8 +168,8 @@ function requireAdmin(req, res, next) {
         return res.status(404).send('Not found');
     }
 
-    if (!ADMIN_PASSWORD) {
-        return res.status(503).send('Admin password is not configured');
+    if (!ADMIN_USER || !ADMIN_PASSWORD) {
+        return res.status(503).send('Admin credentials are not configured');
     }
 
     const credentials = parseBasicAuth(req.headers.authorization || '');
@@ -245,6 +245,14 @@ app.get(['/analytics', '/analytics/'], (req, res) => {
     }
 
     return sendPublicFile(res, 'analytics.html');
+});
+
+app.get(['/news', '/news/'], (req, res) => {
+    if (!isPublicPortfolioHost(req)) {
+        return res.redirect(302, 'https://inazu.me/news');
+    }
+
+    return sendPublicFile(res, 'news.html');
 });
 
 app.get('/api/analytics/summary', (req, res) => {

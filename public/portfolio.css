@@ -882,6 +882,19 @@ button:focus-visible {
     margin: 18px 0 0;
 }
 
+/* news: an outer panel (a card) holding one compact inner card for the latest
+   entry — panel -> card nesting like Selected Work -> lifelify. No title/copy;
+   "View all" lives in the panel header. Hidden until news.json loads. */
+/* news: a quiet card (same shape as the Credentials card) listing the latest few
+   entries as plain rows; "View all" opens /news. Hidden until news.json loads. */
+.news-section[hidden] {
+    display: none;
+}
+
+.news-more {
+    margin: 18px 0 0;
+}
+
 .list {
     margin: 18px 0 0;
     padding: 0;

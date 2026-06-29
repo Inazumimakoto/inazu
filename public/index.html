@@ -72,11 +72,17 @@
             align-items: center;
             justify-content: center;
             background: #ffffff;
+            cursor: pointer;
             opacity: 1;
+            touch-action: manipulation;
             transition: opacity .5s ease;
         }
         html.show-loader #inazu-loader { display: flex; }
         #inazu-loader.is-done { opacity: 0; }
+        #inazu-loader:focus-visible {
+            outline: 3px solid #DC143C;
+            outline-offset: -8px;
+        }
 
         .inazu-loader__queue {
             display: flex; flex-direction: column; align-items: center;
@@ -101,6 +107,7 @@
         .inazu-loader__wait { margin: 8px 0 0; font-size: 22px; color: #111; }
         .inazu-loader__wait span { color: #DC143C; font-weight: 700; }
         .inazu-loader__note { margin: 0; max-width: 560px; font-size: 14px; color: #333; }
+        .inazu-loader__note strong { color: #DC143C; font-weight: 700; }
 
         .inazu-loader__stage {
             position: relative; width: 240px; height: 216px;
@@ -207,7 +214,7 @@
 </head>
 
 <body>
-    <div id="inazu-loader" aria-hidden="true">
+    <div id="inazu-loader" role="button" tabindex="0" aria-label="ロード画面。タップまたはクリックでスキップできます。">
         <div class="inazu-loader__queue">
             <div class="inazu-loader__brand">
                 <img class="inazu-loader__brand-cat" src="assets/loader/center.webp?v=2" alt="" width="48" height="48">
@@ -222,7 +229,7 @@
                 <img class="inazu-loader__coin inazu-loader__coin--3" src="assets/loader/dot-3.webp?v=2" alt="" width="46" height="46">
             </div>
             <p class="inazu-loader__wait">推定転送時間 <span>&lt;3秒</span></p>
-            <p class="inazu-loader__note">このページを閉じないでください。自動的に転送されます。</p>
+            <p class="inazu-loader__note">少々お待ちください！すぐご案内します！<br><strong>待てない方は画面をタップしてください。</strong></p>
         </div>
     </div>
 
@@ -285,6 +292,12 @@
                 </div>
             </section>
 
+            <article class="card notes-card news-section reveal" data-news-card hidden>
+                <p class="card-kicker">News</p>
+                <ul class="list" data-news-list></ul>
+                <p class="news-more"><a class="inline-link" href="/news">View all</a></p>
+            </article>
+
             <section class="panel reveal" id="work">
                 <div class="panel-header">
                     <div>
@@ -315,12 +328,6 @@
        英語のキュー文言      →  日本語に書き換え
        triangulate の動き    →  そのまま移植
 
-     拝啓　時下ますますご清祥のこととお慶び申し上げます。
-     ここまで見てくださり誠にありがとうございました。
-     万が一、あなた様の大切な個人情報が、強固な暗号化を施されたうえ、ダークウェブ（Tor / .onion）の最深部に鎮座するロックビットのリークサイトへと厳かに掲載され、ダウンロード用トレントと共に全世界の好事家へ向けて未来永劫にわたり公開される、誠に遺憾かつ前代未聞の運びとなりました暁には、当方、平日・休日・祝祭日・年末年始の別なく、また草木も眠る丑三つ時であろうとも、何をおいても最優先に、誠心誠意・全身全霊・平身低頭をもって、速やかかつ丁重に、貴殿のもとへ第一報を馳せ参じ申し上げる所存でございます。
-     今後とも変わらぬご愛顧のほど、伏してお願い申し上げます。
-     敬具
-     追伸　なお、お知らせの際に金銭を頂戴することは一切ございません。あくまで無償にて承ります。何卒ご安心くださいませ。
 ============================================================ -->
 
                         <ul class="list">
@@ -621,12 +628,15 @@
     <script src="liquid-glass.js?v=liquid-glass-cards-20260612-1"></script>
     <script src="portfolio.js?v=liquid-glass-cards-20260612-1"></script>
 
-    <!-- intro loader: hold a minimum ~7s, then fade out and remove from DOM -->
+    <!-- intro loader: auto-dismiss after the gag delay, or let visitors skip immediately -->
     <script>
         (function () {
             var el = document.getElementById('inazu-loader');
             if (!el) return;
             if (!document.documentElement.classList.contains('show-loader')) { el.remove(); return; }
+            var dismissed = false;
+            var delayTimer = null;
+            var fadeTimer = null;
 
             function revealEgg() {
                 var line = document.querySelector('.loader-egg-line');
@@ -649,17 +659,33 @@
                 t.querySelector('.egg-toast__main').addEventListener('click', function () { revealEgg(); remove(); });
                 t.querySelector('.egg-toast__close').addEventListener('click', remove);
             }
+            function dismissLoader() {
+                if (dismissed) return;
+                dismissed = true;
+                clearTimeout(delayTimer);
+                clearTimeout(fadeTimer);
+                el.classList.add('is-done');
+                fadeTimer = setTimeout(function () {
+                    if (el.parentNode) el.parentNode.removeChild(el);
+                    showToast();
+                }, 550);
+            }
+
+            el.addEventListener('click', dismissLoader);
+            el.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' || event.key === ' ' || event.key === 'Escape') {
+                    event.preventDefault();
+                    dismissLoader();
+                }
+            });
 
             function begin() {
                 // commit "shown" only once actually displayed — a prerender pass that
                 // never activates must not consume the one-per-session show.
                 try { sessionStorage.setItem('inazu:loader-shown', '1'); } catch (e) {}
-                var MIN = 7000, start = Date.now();
+                var MIN = 3000, start = Date.now();
                 function done() {
-                    setTimeout(function () {
-                        el.classList.add('is-done');
-                        setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); showToast(); }, 550);
-                    }, Math.max(0, MIN - (Date.now() - start)));
+                    delayTimer = setTimeout(dismissLoader, Math.max(0, MIN - (Date.now() - start)));
                 }
                 if (document.readyState === 'complete') done();
                 else window.addEventListener('load', done);
@@ -686,14 +712,7 @@
   中央の L3 ロゴ        →  実家の猫「みゃー」
   周回する3つのコイン  →  研究室のロゴ / 研究室の非公式マスコット / 友人のサイトのファビコン（無断使用）
   英語のキュー文言      →  日本語に書き換え
-  triangulate の動き    →  そのまま移植
-
-拝啓　時下ますますご清祥のこととお慶び申し上げます。
-ここまで見てくださり誠にありがとうございました。
-万が一、あなた様の大切な個人情報が、強固な暗号化を施されたうえ、ダークウェブ（Tor / .onion）の最深部に鎮座するロックビットのリークサイトへと厳かに掲載され、ダウンロード用トレントと共に全世界の好事家へ向けて未来永劫にわたり公開される、誠に遺憾かつ前代未聞の運びとなりました暁には、当方、平日・休日・祝祭日・年末年始の別なく、また草木も眠る丑三つ時であろうとも、何をおいても最優先に、誠心誠意・全身全霊・平身低頭をもって、速やかかつ丁重に、貴殿のもとへ第一報を馳せ参じ申し上げる所存でございます。
-今後とも変わらぬご愛顧のほど、伏してお願い申し上げます。
-敬具
-追伸　なお、お知らせの際に金銭を頂戴することは一切ございません。あくまで無償にて承ります。何卒ご安心くださいませ。`);
+  triangulate の動き    →  そのまま移植`);
     </script>
 
     <!-- replay control: clear the once-per-session flag and reload to re-show the intro -->

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>inazu.me news</title>
+    <meta name="description" content="inazu.me の更新履歴。サイトの変更や出来事を新しい順にまとめています。">
+    <link rel="canonical" href="https://inazu.me/news">
+    <meta property="og:site_name" content="inazu.me">
+    <meta property="og:title" content="inazu.me news">
+    <meta property="og:description" content="inazu.me の更新履歴。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://inazu.me/news">
+    <meta property="og:locale" content="ja_JP">
+    <link rel="icon" href="/assets/site-icon.png" type="image/png" sizes="512x512">
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" sizes="180x180">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/analytics.css">
+    <link rel="stylesheet" href="/news.css">
+    <script src="/news.js" defer></script>
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="/">inazu.me</a>
+        <nav class="header-nav" aria-label="News navigation">
+            <a href="/">Home</a>
+            <a aria-current="page" href="/news">News</a>
+            <a href="/analytics">Analytics</a>
+        </nav>
+    </header>
+
+    <main class="analytics-shell">
+        <section class="summary-band" aria-labelledby="news-title">
+            <div>
+                <h1 id="news-title">News</h1>
+                <p class="summary-copy">inazu.me の更新の記録。新しい順に並べています。</p>
+            </div>
+        </section>
+
+        <section class="panel panel-wide" aria-labelledby="news-list-title">
+            <div class="panel-heading">
+                <h2 id="news-list-title">更新履歴</h2>
+                <span class="panel-meta" data-news-count>Loading</span>
+            </div>
+            <ol class="news-list" data-news-list></ol>
+        </section>
+    </main>
+</body>
+</html>
