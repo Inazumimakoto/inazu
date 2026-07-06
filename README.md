@@ -1,5 +1,7 @@
 # inazu.me / chat.inazu.me
 
+![フォールバックする様子](docs/assets/fallback-demo.gif)
+
 `inazu.me` のポートフォリオサイトと `chat.inazu.me` のローカル LLM チャットアプリを同じ Node.js サーバーで配信しているリポジトリです。
 
 - `inazu.me`: ポートフォリオサイト
