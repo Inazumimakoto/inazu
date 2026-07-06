@@ -1,5 +1,9 @@
 # inazu.me / chat.inazu.me
 
+## Failover Demo
+
+Mac mini が止まってもサイトは落ちず、Cloudflare Worker 経由で Raspberry Pi 側へ切り替わる様子です。
+
 ![フォールバックする様子](docs/assets/fallback-demo.gif)
 
 `inazu.me` のポートフォリオサイトと `chat.inazu.me` のローカル LLM チャットアプリを同じ Node.js サーバーで配信しているリポジトリです。
