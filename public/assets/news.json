@@ -1,9 +1,17 @@
 {
     "entries": [
-        { "date": "2026-07-26", "text": "chat.inazu.meをローカルLLMから人工無能「なずみ」に一新しました。" },
-        { "date": "2026-07-06", "text": "記憶力ゲーム Parallel Memory を公開しました。" },
-        { "date": "2026-06-20", "text": "ロード画面を追加しました。" },
-        { "date": "2026-01-15", "text": "ポートフォリオサイトを作りました。" },
-        { "date": "2026-01-13", "text": "ドメイン（inazu.me）を買いました。" }
+        {"date": "2026-10-20", "text": "検索エンジンやAI学習用クローラーを広く受け入れるよう、サイトのクロール設定を更新しました。", "url": "/robots.txt", "linkText": "クロール設定"},
+        {"date": "2026-10-13", "text": "ゲームの記録と思い出をまとめたページを公開しました。", "url": "/games", "linkText": "ゲームの記録と思い出をまとめたページ"},
+        {"date": "2026-10-11", "text": "「とくべチュ、して」（tokubechu.site）のドメインを取得しました（初年度1.18ドル、更新料は年約15ドル）。ちなみに、=LOVEのことは全然知りません。「俺のほうがこのドメインを有意義に使えるぞ」という方はご連絡ください。あげます。", "url": "https://tokubechu.site/", "linkText": "tokubechu.site"},
+        {"date": "2026-09-25", "text": "コピペの落とし穴を体験するサイト Copy Gap（copy-gap.inazu.me）を公開しました。", "url": "https://copy-gap.inazu.me", "linkText": "Copy Gap（copy-gap.inazu.me）"},
+        {"date": "2026-09-13", "text": "欲しいものリストから内定を削除しました。", "url": "/#wishlist", "linkText": "欲しいものリスト"},
+        {"date": "2026-08-14", "text": "Zennにセキュリティ・キャンプ2026 コネクトの応募課題を公開しました。", "url": "https://zenn.dev/inazumimakoto/articles/seccamp2026-connect-kadai", "linkText": "セキュリティ・キャンプ2026 コネクトの応募課題"},
+        {"date": "2026-08-06", "text": "名刺を作りました。昼の背景写真で見ることができます。", "url": "/assets/backgrounds/lunch/1786021090282-6aa25a75.jpg", "linkText": "名刺"},
+        {"date": "2026-08-06", "text": "Zennにカジュアル面談を題材にした注意喚起記事を公開しました。", "url": "https://zenn.dev/inazumimakoto/articles/odeko-casual-interview", "linkText": "カジュアル面談を題材にした注意喚起記事"},
+        {"date": "2026-07-26", "text": "chat.inazu.meをローカルLLMから人工無能「なずみ」に一新しました。", "url": "https://chat.inazu.me", "linkText": "chat.inazu.me"},
+        {"date": "2026-07-06", "text": "記憶力ゲーム Concurrent Memory を公開しました。", "url": "https://concurrentmemory.inazu.me", "linkText": "記憶力ゲーム Concurrent Memory"},
+        {"date": "2026-06-20", "text": "ロード画面を追加しました。", "url": "/#loader-replay", "linkText": "ロード画面"},
+        {"date": "2026-01-15", "text": "ポートフォリオサイトを作りました。", "url": "/", "linkText": "ポートフォリオサイト"},
+        {"date": "2026-01-13", "text": "ドメイン（inazu.me）を買いました。", "url": "https://inazu.me/", "linkText": "inazu.me"}
     ]
 }

@@ -1,3 +1,5 @@
+import { appendNewsText } from './news-content.js?v=news-links-20261020-1';
+
 const revealTargets = document.querySelectorAll('.reveal');
 const tiltTargets = document.querySelectorAll('[data-tilt]');
 const hero = document.querySelector('[data-hero]');
@@ -16,6 +18,7 @@ const newsList = document.querySelector('[data-news-list]');
 const celebrationCanvas = document.querySelector('[data-celebration-canvas]');
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const FALLBACK_BACKGROUND_PHOTO = 'assets/hero-dinner.jpg';
+const BACKGROUND_ASSET_REVISION = '20260821-1';
 const BACKGROUND_SLOTS = ['morning', 'lunch', 'night'];
 const BACKGROUND_SLOT_MODES = ['current', ...BACKGROUND_SLOTS];
 const BACKGROUND_SLOT_LABELS = {
@@ -33,6 +36,7 @@ let backgroundSlotMode = readStoredBackgroundSlotMode();
 let backgroundViewEnabled = readStoredBackgroundView();
 let backgroundSlotMenuOpen = false;
 let loadedBackgroundPhotos = null;
+let backgroundApplySequence = 0;
 
 loadPublicAnalyticsCount();
 loadLatestNews();
@@ -76,13 +80,12 @@ async function loadLatestNews() {
 
         if (!entries.length) return;
 
-        // Render each entry as a list row (content left, date right) — same shape
-        // as the Credentials card. textContent keeps it injection-safe.
-        newsList.innerHTML = '';
+        // Render each entry as a list row (content left, date right).
+        newsList.replaceChildren();
         for (const entry of entries) {
             const row = document.createElement('li');
             const text = document.createElement('span');
-            text.textContent = entry.text;
+            appendNewsText(text, entry);
             const date = document.createElement('span');
             date.textContent = entry.date;
             row.append(text, date);
@@ -340,9 +343,42 @@ function resolveBackgroundPhoto(backgroundPhotos, date = new Date(), slot = getA
     return selected;
 }
 
-function applyBackgroundPhoto(background) {
-    document.documentElement.style.setProperty('--page-photo-url', `url("${background.photo}")`);
-    document.body.dataset.mealSlot = background.activeSlot;
+function getBackgroundPhotoUrl(photo) {
+    if (!photo.startsWith('assets/backgrounds/')) {
+        return photo;
+    }
+
+    const separator = photo.includes('?') ? '&' : '?';
+    return `${photo}${separator}v=${BACKGROUND_ASSET_REVISION}`;
+}
+
+function preloadBackgroundPhoto(photo) {
+    const photoUrl = getBackgroundPhotoUrl(photo);
+
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(photoUrl);
+        image.onerror = () => reject(new Error(`Background image failed to load: ${photo}`));
+        image.src = photoUrl;
+    });
+}
+
+async function applyBackgroundPhoto(background) {
+    const sequence = ++backgroundApplySequence;
+
+    try {
+        const photoUrl = await preloadBackgroundPhoto(background.photo);
+        if (sequence !== backgroundApplySequence) return;
+
+        document.documentElement.style.setProperty('--page-photo-url', `url("${photoUrl}")`);
+        document.body.dataset.mealSlot = background.activeSlot;
+    } catch (error) {
+        if (sequence !== backgroundApplySequence) return;
+
+        document.documentElement.style.removeProperty('--page-photo-url');
+        document.body.dataset.mealSlot = 'fallback';
+        console.warn('Background image failed; keeping the fallback photo.', error);
+    }
 }
 
 async function loadBackgroundPhotos() {
@@ -350,6 +386,11 @@ async function loadBackgroundPhotos() {
 
     if (!response.ok) {
         throw new Error(`Background API returned ${response.status}`);
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+        throw new Error(`Background API returned ${contentType || 'an unknown content type'}`);
     }
 
     return normalizeBackgroundPhotos(await response.json());

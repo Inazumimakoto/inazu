@@ -1,3 +1,5 @@
+import { appendNewsText } from './news-content.js?v=news-links-20261020-1';
+
 const newsList = document.querySelector('[data-news-list]');
 const newsCount = document.querySelector('[data-news-count]');
 
@@ -26,7 +28,7 @@ function normalizeEntries(data) {
 }
 
 function render(entries) {
-    newsList.innerHTML = '';
+    newsList.replaceChildren();
 
     if (!entries.length) {
         setCount(0);
@@ -42,10 +44,13 @@ function render(entries) {
     for (const entry of entries) {
         const item = document.createElement('li');
         item.className = 'news-item';
-        item.innerHTML = `
-            <span class="news-date">${escapeHtml(entry.date)}</span>
-            <span class="news-text">${escapeHtml(entry.text)}</span>
-        `;
+        const date = document.createElement('span');
+        date.className = 'news-date';
+        date.textContent = entry.date;
+        const text = document.createElement('span');
+        text.className = 'news-text';
+        appendNewsText(text, entry);
+        item.append(date, text);
         newsList.appendChild(item);
     }
 }
@@ -58,18 +63,9 @@ function setCount(count) {
 
 function renderError(error) {
     if (newsCount) newsCount.textContent = 'Failed to load';
-    newsList.innerHTML = '';
+    newsList.replaceChildren();
     const item = document.createElement('li');
     item.className = 'empty';
     item.textContent = error.message;
     newsList.appendChild(item);
-}
-
-function escapeHtml(value) {
-    return String(value ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
 }

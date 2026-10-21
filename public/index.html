@@ -52,7 +52,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="portfolio.css?v=liquid-glass-cards-20260612-1">
+    <link rel="stylesheet" href="portfolio.css?v=news-links-20261020-1">
 
     <!-- intro loader: decide before paint; the "shown" flag is committed later, only
          when actually displayed, so a prerender pass can't burn it (and reloads stay clean) -->
@@ -258,6 +258,7 @@
                 <a href="#work">work</a>
                 <a href="#client">client</a>
                 <a href="#profile">profile</a>
+                <a href="#game-history">games</a>
                 <a href="#notes">notes</a>
                 <a href="#wishlist">wishlist</a>
                 <a href="#links">links</a>
@@ -301,15 +302,12 @@
             <section class="panel reveal" id="work">
                 <div class="panel-header">
                     <div>
-                        <p class="section-kicker"><span class="text-glass text-glass-label">Selected Work</span></p>
                         <h2 class="panel-title"><span class="text-glass text-glass-title">作った変なもの集。</span></h2>
                     </div>
-                    <p class="panel-copy"><span class="text-glass text-glass-copy">だいたい変なものです。真面目なのは <code>lifelify</code> くらいです。</span></p>
                 </div>
 
                 <div class="feature-grid">
                     <a class="card feature-card feature-card-lead card-link" href="https://github.com/Inazumimakoto/inazu" target="_blank" rel="noreferrer" data-tilt>
-                        <p class="card-kicker">This Site</p>
                         <h3>inazu.me</h3>
                         <p>このポートフォリオ自体も制作物です。背景には朝・昼・夜で切り替えられる写真を置いて、リロードするたびに違う1枚を見られるようにしています。右下から時間帯を選んだり、背景だけを眺めたりできます。初回に出るロード画面、ピンと来ました？……大丈夫、ここでは何もリークしていませんから。<br><span class="loader-egg-line">開発者ツールでこの辺りのHTMLを覗くか、コンソールパネルを開くと答えがわかります。</span></p>
                         <!-- ============================================================
@@ -338,14 +336,12 @@
                     </a>
 
                     <a class="card feature-card card-link" href="https://terminal.inazu.me" target="_blank" rel="noreferrer" data-tilt>
-                        <p class="card-kicker">Terminal Ver.</p>
                         <h3>terminal.inazu.me</h3>
                         <p>ポートフォリオのCLI版です。マウス不要、キーボードだけで自己紹介が読めます。whoami や sudo を打ってみてください。</p>
                         <span class="inline-link">Launch terminal</span>
                     </a>
 
                     <a class="card feature-card card-link" href="https://chat.inazu.me" data-tilt>
-                        <p class="card-kicker">Featured System</p>
                         <h3>chat.inazu.me</h3>
                         <p>自宅MacのローカルLLMをやめて、マルコフ連鎖の人工無能「なずみ」に置き換えました。中の人のTwitter 8年分だけを学習しているので、下手なLLMより中の人の口調が出ます。賢くありません。</p>
                         <ul class="list">
@@ -355,19 +351,32 @@
                         <span class="inline-link">Launch chat</span>
                     </a>
 
-                    <a class="card feature-card card-link" href="https://parallelmemory.inazu.me" target="_blank" rel="noreferrer" data-tilt>
-                        <p class="card-kicker">Web Game</p>
-                        <h3>parallelmemory.inazu.me</h3>
+                    <a class="card feature-card card-link" href="https://tokubechu.site/" target="_blank" rel="noopener noreferrer" data-tilt>
+                        <div class="tokubechu-preview">
+                            <img src="assets/tokubechu-title.png" width="1448" height="274" alt="とくべチュ、して" loading="lazy" decoding="async">
+                        </div>
+                        <h3>tokubechu.site</h3>
+                        <p>.siteというTLDを見たら、tokubechu.siteが降りてきました。ドメインを取得して、文字が斜めに流れるイントロと、公式のMV・ダンス・ライブ映像を横スワイプで楽しめるサイトを作りました。ちなみに、＝LOVEのことは全然知りません。</p>
+                        <span class="inline-link">Open tokubechu.site</span>
+                    </a>
+
+                    <a class="card feature-card card-link" href="https://copy-gap.inazu.me" target="_blank" rel="noreferrer" data-tilt>
+                        <h3>copy-gap.inazu.me</h3>
+                        <p>画面に見えている文字列と、コピーされる文字列が食い違う仕組みを体験するサイトです。コピーボタンと選択コピーの両方を試して、種明かしまで見られます。</p>
+                        <span class="inline-link">Open Copy Gap</span>
+                    </a>
+
+                    <a class="card feature-card card-link" href="https://concurrentmemory.inazu.me" target="_blank" rel="noreferrer" data-tilt>
+                        <h3>concurrentmemory.inazu.me</h3>
                         <p>複数の神経衰弱ボードを切り替えながら並行して解く記憶力ゲームです。1面ずつなら普通の神経衰弱なのに、ボードを増やした瞬間に記憶が混線します。最大10面まで並べられます。</p>
                         <ul class="list">
                             <li><span>boards</span><span>1 – 10</span></li>
                             <li><span>difficulty</span><span>3×4 / 4×4 / トランプ</span></li>
                         </ul>
-                        <span class="inline-link">Open Parallel Memory</span>
+                        <span class="inline-link">Open Concurrent Memory</span>
                     </a>
 
                     <a class="card feature-card card-link" href="https://apps.apple.com/app/id6755782099" target="_blank" rel="noreferrer" data-tilt>
-                        <p class="card-kicker">App Store</p>
                         <img class="feature-icon" src="assets/lifelify-icon.jpg" alt="" aria-hidden="true">
                         <h3>lifelify</h3>
                         <p>日記、予定、ToDo、習慣、健康、メモをひとつにまとめるライフログアプリです。iPhone / iPad 向けに App Store で公開しています。</p>
@@ -379,7 +388,6 @@
                     </a>
 
                     <a class="card feature-card card-link" href="https://vibe-coder-culc-3.vercel.app/" target="_blank" rel="noreferrer" data-tilt>
-                        <p class="card-kicker">Satire Web App</p>
                         <h3>CalcuAI</h3>
                         <p>入力値を Gemini などのAPIに投げて、LLMに計算させる電卓です。何でもAIに聞く現代への風刺として作っていて、未完成ながら Pro プランでは偶数判定ができるようになります。</p>
                         <ul class="list">
@@ -395,14 +403,11 @@
             <section class="panel reveal" id="client">
                 <div class="panel-header">
                     <div>
-                        <p class="section-kicker"><span class="text-glass text-glass-label">Client Work</span></p>
                         <h2 class="panel-title"><span class="text-glass text-glass-title">仕事で作ったもの。</span></h2>
                     </div>
-                    <p class="panel-copy"><span class="text-glass text-glass-copy">個人制作とは分けて、仕事として作ったサイトはここに置きます。</span></p>
                 </div>
 
                 <a class="card feature-card card-link" href="https://hakua-salon.com/" target="_blank" rel="noreferrer" data-tilt>
-                    <p class="card-kicker">Static Website</p>
                     <h3>hakua-salon.com</h3>
                     <p>町田・相模大野の脱白髪染め専門店 HAKUA のWebサイトです。仕事で制作した静的サイトで、メニュー、店舗情報、予約導線をシンプルに整理しています。</p>
                     <ul class="list">
@@ -416,21 +421,18 @@
             <section class="panel reveal" id="profile">
                 <div class="panel-header">
                     <div>
-                        <p class="section-kicker"><span class="text-glass text-glass-label">Profile</span></p>
                         <h2 class="panel-title"><span class="text-glass text-glass-title">研究と制作の背景。</span></h2>
                     </div>
                 </div>
 
                 <div class="profile-grid">
                     <a class="card profile-card card-link" href="https://www.kamamu-lab.jp/" target="_blank" rel="noreferrer" data-tilt>
-                        <p class="card-kicker">Affiliation</p>
                         <h3>情報通信ネットワーク研究室</h3>
                         <p>ネットワーク情報の可視化・分析、通信ネットワークの最適化に取り組む研究室です。</p>
                         <span class="inline-link">Open lab site</span>
                     </a>
 
-                    <article class="card notes-card">
-                        <p class="card-kicker">Credentials</p>
+                    <article class="card notes-card profile-card">
                         <h3>資格</h3>
                         <ul class="list">
                             <li><span>応用情報技術者</span><span>2025-12-25</span></li>
@@ -439,7 +441,6 @@
                     </article>
 
                     <article class="card profile-card">
-                        <p class="card-kicker">Highlight</p>
                         <h3>Security Camp 2026 Connect</h3>
                         <p>AIレッドチーミングクラス修了。</p>
                         <span class="timeline-date">March 26-29, 2026</span>
@@ -447,34 +448,42 @@
                 </div>
             </section>
 
+            <section class="panel reveal" id="game-history">
+                <div class="panel-header">
+                    <h2 class="panel-title"><span class="text-glass text-glass-title">ゲームの記録。</span></h2>
+                </div>
+
+                <a class="card feature-card card-link" href="/games" data-tilt>
+                    <h3>今までプレイしたゲーム達</h3>
+                    <p>どうぶつの森、モンハン、Apexなど、今まで遊んだゲームの記録です。</p>
+                    <span class="inline-link">ゲーム遍歴を読む</span>
+                </a>
+            </section>
+
             <section class="panel reveal" id="notes">
                 <div class="panel-header">
                     <div>
-                        <p class="section-kicker"><span class="text-glass text-glass-label">Notes</span></p>
-                        <h2 class="panel-title"><span class="text-glass text-glass-title">実験と記録はZennへ。</span></h2>
+                        <h2 class="panel-title"><span class="text-glass text-glass-title">Zennに書いた記事。</span></h2>
                     </div>
-                    <p class="panel-copy"><span class="text-glass text-glass-copy">macOSやLinuxの検証、セキュリティ・キャンプの記録、制作メモをZennにまとめています。技術寄りの話も、生活ログっぽい話もここに束ねます。</span></p>
                 </div>
 
                 <div class="note-grid">
-                    <a class="card notes-card note-card card-link" href="https://zenn.dev/inazumimakoto/articles/mac-tcp-report" target="_blank" rel="noreferrer" data-tilt>
-                        <p class="card-kicker">Zenn / Tech</p>
-                        <h3>49.7日目、MacのTCP時計は止まった</h3>
-                        <p>macOS長期稼働でTCP接続が詰まる現象を、TIME_WAITや一時ポートのログから追った実体験と分析の記録です。</p>
+                    <a class="card notes-card note-card card-link" href="https://zenn.dev/inazumimakoto/articles/seccamp2026-connect-kadai" target="_blank" rel="noreferrer" data-tilt>
+                        <h3>セキュリティ・キャンプ2026 コネクト AIレッドチーミングクラスの応募課題を晒す</h3>
+                        <p>プロンプトインジェクションやSSRFなどLLM連携の攻撃シナリオを整理し、難易度・コスト・UX影響の観点から対策を検討した応募課題の全文公開です。</p>
                         <ul class="list">
-                            <li><span>topics</span><span>macOS / TCP</span></li>
-                            <li><span>published</span><span>2026-05-08</span></li>
+                            <li><span>topics</span><span>AI / Security</span></li>
+                            <li><span>published</span><span>2026-08-14</span></li>
                         </ul>
                         <span class="inline-link">Read on Zenn</span>
                     </a>
 
-                    <a class="card notes-card note-card card-link" href="https://zenn.dev/inazumimakoto/articles/2e6c009ffc3443" target="_blank" rel="noreferrer" data-tilt>
-                        <p class="card-kicker">Zenn / Idea</p>
-                        <h3>セキュリティ・キャンプ2026 コネクトで食べたもの</h3>
-                        <p>セキュリティ・キャンプ2026 コネクト中に食べたものを写真付きで残した記録です。技術の話は出てきません。</p>
+                    <a class="card notes-card note-card card-link" href="https://zenn.dev/inazumimakoto/articles/odeko-casual-interview" target="_blank" rel="noreferrer" data-tilt>
+                        <h3>【注意喚起】カジュアル面談でおでこしか映さないまま『日本人です』って押し通す外国人IT労働者な奴</h3>
+                        <p>求人を出していない学生に届いた応募メールから、AI製の履歴書・職務経歴書の矛盾と、画面におでこしか映さないカジュアル面談を追った注意喚起の記録です。</p>
                         <ul class="list">
-                            <li><span>topics</span><span>securitycamp / food</span></li>
-                            <li><span>published</span><span>2026-05-08</span></li>
+                            <li><span>topics</span><span>AI / Security</span></li>
+                            <li><span>published</span><span>2026-08-06</span></li>
                         </ul>
                         <span class="inline-link">Read on Zenn</span>
                     </a>
@@ -486,18 +495,11 @@
             <section class="panel reveal" id="wishlist">
                 <div class="panel-header">
                     <div>
-                        <p class="section-kicker"><span class="text-glass text-glass-label">Wishlist</span></p>
                         <h2 class="panel-title"><span class="text-glass text-glass-title">欲しいものリスト。</span></h2>
                     </div>
-                    <p class="panel-copy"><span class="text-glass text-glass-copy">欲しいもののリストです。一つずつ取得していきます。</span></p>
                 </div>
 
                 <div class="wishlist-grid">
-                    <article class="card notes-card" data-tilt>
-                        <h3>内定</h3>
-                        <p>28卒です。履歴書はこれです。よろしくお願いします。</p>
-                    </article>
-
                     <article class="card notes-card" data-tilt>
                         <h3>CVE番号</h3>
                         <p>墓石に刻む用。</p>
@@ -538,10 +540,8 @@
             <section class="panel reveal" id="links">
                 <div class="panel-header">
                     <div>
-                        <p class="section-kicker"><span class="text-glass text-glass-label">Links</span></p>
                         <h2 class="panel-title"><span class="text-glass text-glass-title">連絡先と外部リンク。</span></h2>
                     </div>
-                    <p class="panel-copy"><span class="text-glass text-glass-copy">大学メールは切り替わる可能性があるので載せず、個人で長く使える連絡先だけを出しています。</span></p>
                 </div>
 
                 <div class="contact-grid">
@@ -627,12 +627,12 @@
             </section>
         </main>
         <footer class="site-footer">
-            <button type="button" class="loader-replay" data-loader-replay>もう一度キューに並ぶ</button>
+            <button type="button" class="loader-replay" id="loader-replay" data-loader-replay>もう一度キューに並ぶ</button>
         </footer>
     </div>
 
     <script src="liquid-glass.js?v=liquid-glass-cards-20260612-1"></script>
-    <script src="portfolio.js?v=liquid-glass-cards-20260612-1"></script>
+    <script type="module" src="portfolio.js?v=news-links-20261020-1"></script>
 
     <!-- intro loader: auto-dismiss after the gag delay, or let visitors skip immediately -->
     <script>

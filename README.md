@@ -176,6 +176,8 @@ pm2 restart inazu-chat
 
 ```bash
 curl -I -A 'Googlebot' https://inazu.me/
+curl -I -A 'GPTBot' https://inazu.me/
+curl -I -A 'ClaudeBot' https://inazu.me/
 curl -A 'Googlebot' https://inazu.me/robots.txt
 curl -I https://inazu.me/sitemap.xml
 ```
@@ -184,5 +186,8 @@ curl -I https://inazu.me/sitemap.xml
 
 - `https://inazu.me/` は `200`
 - `https://inazu.me/robots.txt` は `Allow: /`
+- 公開ポートフォリオでは User-Agent による拒否を行わず、AI・SEO クローラーや自動取得ツールも受け入れます
+- Cloudflare の「AI ボット ポリシー」は、検索・エージェント・トレーニングをすべて「許可（ブロックしない）」に設定します
 - `https://inazu.me/sitemap.xml` は `200`
+- サイトマップには `/`、`/games`、`/news`、`/analytics` を掲載します
 - `https://chat.inazu.me/` は Bot に対して引き続き `403`

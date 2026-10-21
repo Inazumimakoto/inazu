@@ -36,6 +36,22 @@
     line-height: 1.7;
 }
 
+.news-link {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    overflow-wrap: anywhere;
+}
+
+.news-link:hover {
+    text-decoration-thickness: 2px;
+}
+
+.news-link:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
 @media (max-width: 560px) {
     .news-item {
         grid-template-columns: 1fr;

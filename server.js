@@ -98,13 +98,6 @@ const PROTECTED_BOT_PATTERNS = [
     /bytespider/i, /gptbot/i, /claudebot/i, /anthropic/i
 ];
 
-const PUBLIC_BLOCKED_BOT_PATTERNS = [
-    /ahrefsbot/i, /semrush/i, /dotbot/i, /bytespider/i,
-    /gptbot/i, /claudebot/i, /anthropic/i, /scrape/i,
-    /wget/i, /curl/i, /python/i, /java\//i, /ruby/i, /perl/i, /php/i,
-    /node-fetch/i, /undici/i, /axios/i, /go-http-client/i
-];
-
 function getHostname(req) {
     const forwardedHost = req.headers['x-forwarded-host'];
     const rawHost = (Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost) || req.headers.host || req.hostname || '';
@@ -220,16 +213,13 @@ app.get('/robots.txt', (req, res) => {
     return res.send('User-agent: *\nAllow: /\nSitemap: https://inazu.me/sitemap.xml\n');
 });
 
-// Keep chat and API protected while allowing legitimate crawlers to read the public portfolio.
+// Welcome every crawler on the public portfolio; keep existing chat and API protections.
 app.use((req, res, next) => {
     const userAgent = req.headers['user-agent'] || '';
     const isProtectedSurface = isChatHost(req) || (req.path.startsWith('/api/') && !isPublicAnalyticsPath(req) && !isAdminPath(req));
     const isPublicSurface = isPublicPortfolioHost(req);
-    const shouldBlock =
-        !userAgent ||
-        (isProtectedSurface && PROTECTED_BOT_PATTERNS.some(pattern => pattern.test(userAgent))) ||
-        (!isProtectedSurface && isPublicSurface && PUBLIC_BLOCKED_BOT_PATTERNS.some(pattern => pattern.test(userAgent))) ||
-        (!isProtectedSurface && !isPublicSurface && PROTECTED_BOT_PATTERNS.some(pattern => pattern.test(userAgent)));
+    const shouldBlock = (isProtectedSurface || !isPublicSurface) &&
+        (!userAgent || PROTECTED_BOT_PATTERNS.some(pattern => pattern.test(userAgent)));
 
     if (shouldBlock) {
         console.log(`[BOT BLOCKED] ${getHostname(req)} ${req.ip} - ${userAgent.substring(0, 50)}`);
@@ -245,6 +235,14 @@ app.get(['/analytics', '/analytics/'], (req, res) => {
     }
 
     return sendPublicFile(res, 'analytics.html');
+});
+
+app.get(['/games', '/games/'], (req, res) => {
+    if (!isPublicPortfolioHost(req)) {
+        return res.redirect(302, 'https://inazu.me/games');
+    }
+
+    return sendPublicFile(res, 'games.html');
 });
 
 app.get(['/news', '/news/'], (req, res) => {
