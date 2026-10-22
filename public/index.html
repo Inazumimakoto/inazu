@@ -52,7 +52,8 @@
     <link
         href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="portfolio.css?v=friends-20261022-1">
+    <link rel="stylesheet" href="portfolio.css?v=presence-20261022-1">
+    <script src="/presence.js?v=20261022-1" defer></script>
 
     <!-- intro loader: decide before paint; the "shown" flag is committed later, only
          when actually displayed, so a prerender pass can't burn it (and reloads stay clean) -->
@@ -280,15 +281,19 @@
                         <a class="button" href="https://instagram.com/inazutagram" target="_blank" rel="noreferrer">Instagram</a>
                     </div>
                     <a class="analytics-pill" href="/analytics" data-analytics-pill hidden>
-                        <span class="analytics-pill-item">
+                        <span class="analytics-pill-item analytics-pill-presence" data-presence hidden>
+                            <span class="presence-dot" aria-hidden="true"></span>
+                            <span><strong data-presence-count></strong>人が閲覧中</span>
+                        </span>
+                        <span class="analytics-pill-item" data-analytics-summary-item hidden>
                             <span class="analytics-pill-label">visitors</span>
                             <strong data-analytics-visitors>--</strong>
                         </span>
-                        <span class="analytics-pill-item">
+                        <span class="analytics-pill-item analytics-pill-views" data-analytics-summary-item hidden>
                             <span class="analytics-pill-label">views</span>
                             <strong data-analytics-views>--</strong>
                         </span>
-                        <span class="analytics-pill-link">open analytics</span>
+                        <span class="analytics-pill-link" data-analytics-summary-item hidden>open analytics</span>
                     </a>
                 </div>
             </section>
@@ -646,7 +651,7 @@
     </div>
 
     <script src="liquid-glass.js?v=liquid-glass-cards-20260612-1"></script>
-    <script type="module" src="portfolio.js?v=news-links-20261020-1"></script>
+    <script type="module" src="portfolio.js?v=presence-20261022-1"></script>
 
     <!-- intro loader: auto-dismiss after the gag delay, or let visitors skip immediately -->
     <script>

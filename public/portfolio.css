@@ -495,7 +495,8 @@ main {
     transition: transform 220ms ease, border-color 220ms ease, background 220ms ease;
 }
 
-.analytics-pill[hidden] {
+.analytics-pill[hidden],
+.analytics-pill [hidden] {
     display: none;
 }
 
@@ -542,6 +543,23 @@ main {
 .analytics-pill-link {
     padding: 12px 16px;
     color: var(--text);
+}
+
+.analytics-pill-presence {
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.analytics-pill-presence strong {
+    margin-right: 4px;
+}
+
+.presence-dot {
+    flex: 0 0 7px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
 }
 
 .hero-mode-switch {
@@ -1261,8 +1279,19 @@ html.glass-fallback .panel {
         justify-content: space-between;
     }
 
-    .analytics-pill-item:nth-child(2) {
+    .analytics-pill-views {
         border-right: 0;
+    }
+
+    .analytics-pill-presence {
+        flex: 1 1 100%;
+        justify-content: center;
+        min-height: 44px;
+        border-right: 0;
+    }
+
+    .analytics-pill:has([data-analytics-summary-item]:not([hidden])) .analytics-pill-presence {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.18);
     }
 
     .analytics-pill-link {

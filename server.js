@@ -9,6 +9,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { createAnalytics } = require('./src/analytics');
+const { createPresenceRouter } = require('./src/presence');
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -41,6 +42,14 @@ const SAFE_BACKGROUND_FILENAME = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
 // Trust proxy (for Cloudflare)
 app.set('trust proxy', 1);
+
+// Presence is transient and independent of sessions and persisted analytics.
+app.use('/api/analytics/presence', createPresenceRouter({
+    allowedHosts: [...PUBLIC_PORTFOLIO_HOSTS, ...LOCAL_HOSTS],
+    proxyOrigins: {
+        'https://mac-site-origin.inazu.me': ['https://inazu.me', 'https://www.inazu.me']
+    }
+}));
 
 app.use(express.json());
 

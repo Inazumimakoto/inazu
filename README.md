@@ -144,7 +144,10 @@ npm run analytics:report
 
 `https://inazu.me/analytics` で匿名化した公開アクセス解析を表示します。
 
-- `https://inazu.me/` のヒーロー下に、総visitor数と総view数、`/analytics` への導線を表示します
+- `https://inazu.me/` のヒーロー下に、閲覧中の人数、総visitor数と総view数、`/analytics` への導線を表示します
+- 閲覧人数はホーム・`/news`・`/games`・`/analytics` の表示中ブラウザを対象に、タブ間で共有するランダムIDで重複を除きます。25秒ごとの通知を受け、90秒更新がなければ除外します
+- `POST /api/analytics/presence` が閲覧状態を更新し、`GET /api/analytics/presence/stream` のSSEで人数の変化を配信します。SSE接続中断時も定期通知で更新し、再接続を試みます
+- 閲覧状態は単一Nodeプロセスのメモリで管理し、再起動でリセットされます。複数プロセスへ拡張する場合は共有ストアが必要です。人数通知はアクセス履歴やpageviewに加算しません
 - `https://inazu.me/admin/analytics/raw` はBasic認証付きの管理者用rawログ画面です。生IP、完全User-Agent、query string付きpathを表示します
 - pageview は `GET/HEAD` のHTMLページアクセスだけを数えます。リロードなどのHTML `304 Not Modified` もpageviewとして数えます
 - visitor は `IP + User-Agent分類` の重複なし件数です。同じIP/同じブラウザ分類なら日付が変わっても同一visitorとして扱います

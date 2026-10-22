@@ -53,6 +53,9 @@ async function loadPublicAnalyticsCount() {
         const summary = await response.json();
         analyticsVisitors.textContent = formatAnalyticsNumber(summary?.totals?.uniqueVisitors);
         analyticsViews.textContent = formatAnalyticsNumber(summary?.totals?.pageviews);
+        analyticsPill.querySelectorAll('[data-analytics-summary-item]').forEach((item) => {
+            item.hidden = false;
+        });
         analyticsPill.hidden = false;
     } catch (error) {
         // Keep the counter hidden when analytics is unavailable.
