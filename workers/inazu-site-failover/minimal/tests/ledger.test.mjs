@@ -4,8 +4,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { Miniflare } from 'miniflare';
+import { RESERVATION_MICRO_USD } from '../cost.mjs';
 
 const ledgerSource = await readFile(new URL('../ledger.mjs', import.meta.url), 'utf8');
+const costSource = await readFile(new URL('../cost.mjs', import.meta.url), 'utf8');
 const fixtureSource = `
     import { ChatLedger } from './ledger.mjs';
     export class TestLedger extends ChatLedger {
@@ -23,15 +25,16 @@ const fixtureSource = `
 `;
 const client = 'a'.repeat(64);
 
-async function openLedger(t, storage) {
+async function openLedger(t, storage, fixture = fixtureSource) {
     const simulator = new Miniflare({
         cf: false,
         resourcePersistencePath: storage,
         workers: [{ config: {
             name: 'ledger-test', compatibilityDate: '2026-05-09',
             manifest: { mainModule: 'fixture.mjs', modules: {
-                'fixture.mjs': { type: 'esm', contents: fixtureSource },
-                'ledger.mjs': { type: 'esm', contents: ledgerSource }
+                'fixture.mjs': { type: 'esm', contents: fixture },
+                'ledger.mjs': { type: 'esm', contents: ledgerSource },
+                'cost.mjs': { type: 'esm', contents: costSource }
             } },
             env: { LEDGER: { type: 'durable-object', worker: 'ledger-test', exportName: 'TestLedger' } },
             exports: { TestLedger: { type: 'durable-object', storage: 'sqlite' } }
@@ -60,6 +63,68 @@ test('concurrent admissions obey the rolling minute across JST midnight', async 
     const late = await ledger.settle(replies.find(reply => reply.ok).reservation, 220);
     assert.equal(late.estimatedUsd, 0);
     assert.equal(late.reservedUsd, 0.01);
+});
+
+test('nano-dollar settlements accumulate exactly and keep uncertainty out of spend', async t => {
+    const { ledger } = await openLedger(t);
+    await ledger.setTime(Date.parse('2027-05-01T12:00:00+09:00'));
+    for (let i = 1; i <= 4; i++) {
+        const admission = await ledger.reserveNano(client);
+        assert.equal(admission.usage.reservedUsd,
+            (RESERVATION_MICRO_USD * 1000 + (i - 1) * 25) / 1e9);
+        const settled = await ledger.settleNano(admission.reservation, 125, true, 25);
+        assert.equal(settled.estimatedUsd, i * 125 / 1e9);
+        assert.equal(settled.reservedUsd, i * 25 / 1e9);
+        const replayed = await ledger.settleNano(admission.reservation, 42, false);
+        assert.equal(replayed.estimatedUsd, settled.estimatedUsd);
+        assert.equal(replayed.reservedUsd, settled.reservedUsd);
+    }
+    assert.equal(await ledger.dayUse('2027-05-01'), 4);
+});
+
+test('new tool reservations include concurrent calls at the monthly boundary', async t => {
+    const { ledger } = await openLedger(t);
+    await ledger.setTime(Date.parse('2027-05-01T12:00:00+09:00'));
+    const seeded = 100_000_000 - RESERVATION_MICRO_USD;
+    await ledger.seedSpend('2027-05', seeded);
+    const admissions = await Promise.all([ledger.reserveNano(client), ledger.reserveNano(client)]);
+    const admitted = admissions.find(x => x.ok);
+    assert.equal(admissions.filter(x => x.ok).length, 1);
+    assert.equal(admissions.find(x => !x.ok).reason, 'budget');
+    assert.equal(admitted.usage.reservedUsd, RESERVATION_MICRO_USD / 1e6);
+    assert.equal((await ledger.settleNano(admitted.reservation, null, false)).estimatedUsd, seeded / 1e6);
+    assert.equal((await ledger.reserveNano(client)).reason, 'budget');
+    await ledger.settleNano(admitted.reservation, 0, false);
+    assert.equal((await ledger.reserveNano(client)).ok, true);
+});
+
+test('the deployed SQLite schema upgrades in place with old holds, spend and daily outcomes', async t => {
+    const directory = await mkdtemp(join(tmpdir(), 'inazu-pre-upgrade-'));
+    t.after(() => rm(directory, { recursive: true, force: true }));
+    const legacy = await openLedger(t, directory, `
+        import { DurableObject } from 'cloudflare:workers';
+        export class TestLedger extends DurableObject {
+            seed() { this.ctx.storage.sql.exec(\`
+                CREATE TABLE months (period TEXT PRIMARY KEY, spent INTEGER DEFAULT 0, held INTEGER DEFAULT 0);
+                CREATE TABLE holds (id TEXT PRIMARY KEY, period TEXT, amount INTEGER, pending_day TEXT);
+                CREATE TABLE days (day TEXT PRIMARY KEY, used INTEGER);
+                INSERT INTO months VALUES ('2027-05', 15, 10000);
+                INSERT INTO holds VALUES ('in-flight', '2027-05', 10000, '2027-05-01');
+                INSERT INTO days VALUES ('2027-05-01', 1);
+            \`); }
+        }
+    `);
+    await legacy.ledger.seed();
+    await legacy.close();
+    const { ledger } = await openLedger(t, directory);
+    await ledger.setTime(Date.parse('2027-05-01T12:00:00+09:00'));
+    assert.equal((await ledger.getUsage()).reservedUsd, 0.01);
+    const settled = await ledger.settle('in-flight', 120, false);
+    assert.equal(settled.estimatedUsd, 0.000135);
+    assert.equal(settled.reservedUsd, 0);
+    assert.equal(await ledger.dayUse('2027-05-01'), 0);
+    const next = await ledger.reserveNano(client);
+    assert.equal((await ledger.settleNano(next.reservation, 125)).estimatedUsd, 0.000135125);
 });
 
 test('only one request claims the final daily slot and JST midnight renews it', async (t) => {

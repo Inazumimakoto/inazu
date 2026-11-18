@@ -29,13 +29,17 @@ node minimal/build.mjs
 
 ## チャットと利用料
 
-`POST /api/chat` は質問を1件（300文字まで）受け付け、公開情報を添えて Worker から OpenAI Responses API に送ります。質問と回答はアプリのデータベースに保存しません。ブラウザには回答、対応する Console の項目、利用額を返します。
+`POST /api/chat` は質問を1件（2,048文字まで）受け付け、ポートフォリオの公開情報とともに OpenAI Responses API に送ります。一般の質問や公開URLの読み取りにも対応します。モデルが使う Web 検索、ページの閲覧、ページ内検索は OpenAI のホスト型ツールで実行します。質問と回答はアプリのデータベースに保存しません。[Web検索ツールの仕様](https://developers.openai.com/api/docs/guides/tools-web-search)
 
-OpenAI でこのサイト専用のキーを発行し、Cloudflare の Worker 設定「ランタイム変数とシークレット」で種類「シークレット」、名前 `OPENAI_API_KEY` として登録します。本番で登録済みの名前 `OPEN_API_KEY` も使用できます。両方登録した場合は `OPENAI_API_KEY` を優先します。ローカル実行用のキーは必要に応じて `workers/inazu-site-failover/.dev.vars` に設定できます。
+ブラウザが `Accept: application/x-ndjson` を指定すると、Worker はツールの操作を `tool`、最後の回答を `result`、生成時のエラーを `error` の各行で返します。JSONを使うクライアントには回答と操作をまとめて返します。画面には実行された操作、回答中のクリックできる引用、関連する Console の項目、その回答の推定料金を表示します。
+
+OpenAI でこのサイト専用のキーを発行し、Cloudflare の Worker 設定「ランタイム変数とシークレット」で種類「シークレット」、名前 `OPENAI_API_KEY` として登録します。以前使っていた `OPEN_API_KEY` も使用できます。両方登録した場合は `OPENAI_API_KEY` を優先します。ローカル実行用のキーは必要に応じて `workers/inazu-site-failover/.dev.vars` に設定できます。
 
 利用枠は SQLite の Durable Object `ChatLedger` で全地域にわたり共有します。日本時間で1日1,000回答、同じIPからの質問は直近60秒に5件までです。回答を生成している間は1件分の枠を確保し、生成に失敗したときはその日次枠を戻します。
 
-`GET /api/usage` が返す月額は、このチャットの呼び出しで確認できたトークン数と単価に基づく米ドルの推定額です。月初は日本時間で切り替わります。同時実行分を含めて月100ドルの範囲に収めるため、送信前に1件0.01ドルを仮押さえし、使用量が判明したら精算します。タイムアウトなどで課金の有無が分からない場合、仮押さえ分は当月の残り枠から差し引きます。単価・最大入力・出力を変えるときは `answer.mjs` と `ledger.mjs` の仮押さえ額を一緒に確認してください。[GPT-6 Luna の標準料金](https://developers.openai.com/api/docs/models/gpt-6-luna)
+`GET /api/usage` が返す月額は、OpenAI が返すトークンの内訳、Web検索の利用数と標準単価から計算した、このチャットの推定利用額です。新しい回答の金額は10億分の1ドル単位の整数で集計します。過去の推定額も引き継ぎます。クレジットの残高や割引後の請求額は OpenAI の請求画面で確認できます。[モデルの標準単価](https://developers.openai.com/api/docs/models/gpt-6-luna)・[Web検索の単価](https://developers.openai.com/api/docs/pricing)
+
+月の切り替わりは日本時間です。月100ドルの予算には処理中のリクエストも含めるため、送信前に枠を確保し、使用量が判明したら精算します。タイムアウトなどで使用量が不明のときは、未確定分の枠を維持します。料金やツール回数の上限を変更するときは `cost.mjs` にある単価と仮押さえ額を確認してください。
 
 ## 本番デプロイ
 

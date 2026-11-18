@@ -1,4 +1,5 @@
 import { DurableObject } from 'cloudflare:workers';
+import { RESERVATION_MICRO_USD } from './cost.mjs';
 
 const DAILY_LIMIT = 1_000;
 const RATE_LIMIT = 5;
@@ -6,8 +7,9 @@ const RATE_WINDOW_MS = 60_000;
 const DAY_MS = 86_400_000;
 const JST_OFFSET_MS = 9 * 3_600_000;
 const MICRO_USD = 1_000_000;
+const NANO_USD = 1_000_000_000;
 const MONTHLY_BUDGET = 100 * MICRO_USD;
-const RESERVATION_COST = 10_000;
+const LEGACY_RESERVATION = 10_000;
 
 function jstDate(now) {
     return new Date(now + JST_OFFSET_MS).toISOString().slice(0, 10);
@@ -20,14 +22,15 @@ function monthStart(day, offset) {
 }
 
 function monthlyTotals(sql, period) {
-    return sql.exec('SELECT spent, held FROM months WHERE period = ?', period).toArray()[0]
-        ?? { spent: 0, held: 0 };
+    return sql.exec('SELECT spent, held, spent_credit_nano, uncertainty_nano FROM months WHERE period = ?', period).toArray()[0]
+        ?? { spent: 0, held: 0, spent_credit_nano: 0, uncertainty_nano: 0 };
 }
 
-function usageFor(period, { spent, held }) {
+function usageFor(period, { spent, held, spent_credit_nano, uncertainty_nano }) {
+    const pendingMicro = held - Math.ceil(uncertainty_nano / 1000);
     return {
-        estimatedUsd: spent / MICRO_USD,
-        reservedUsd: held / MICRO_USD,
+        estimatedUsd: (spent * 1000 - spent_credit_nano) / NANO_USD,
+        reservedUsd: (pendingMicro * 1000 + uncertainty_nano) / NANO_USD,
         budgetUsd: MONTHLY_BUDGET / MICRO_USD,
         period,
         dailyLimit: DAILY_LIMIT
@@ -52,6 +55,18 @@ export class ChatLedger extends DurableObject {
             );
             CREATE INDEX IF NOT EXISTS holds_by_month ON holds(period);
         `);
+        // Keep deployed micro-USD columns and outstanding holds usable by the
+        // original worker during a rollout/rollback. Old rows have zero credit.
+        ctx.storage.transactionSync(() => {
+            const sql = ctx.storage.sql;
+            const columns = sql.exec('PRAGMA table_info(months)').toArray().map(column => column.name);
+            if (!columns.includes('spent_credit_nano')) {
+                sql.exec('ALTER TABLE months ADD COLUMN spent_credit_nano INTEGER NOT NULL DEFAULT 0');
+            }
+            if (!columns.includes('uncertainty_nano')) {
+                sql.exec('ALTER TABLE months ADD COLUMN uncertainty_nano INTEGER NOT NULL DEFAULT 0');
+            }
+        });
     }
 
     getUsage() {
@@ -60,6 +75,14 @@ export class ChatLedger extends DurableObject {
     }
 
     reserve(clientKey) {
+        return this.#reserve(clientKey, LEGACY_RESERVATION);
+    }
+
+    reserveNano(clientKey) {
+        return this.#reserve(clientKey, RESERVATION_MICRO_USD);
+    }
+
+    #reserve(clientKey, amount) {
         if (typeof clientKey !== 'string' || !/^[0-9a-f]{64}$/.test(clientKey)) {
             throw new TypeError('A hashed client identifier is required.');
         }
@@ -78,8 +101,9 @@ export class ChatLedger extends DurableObject {
             if (dayRow && dayRow.used >= DAILY_LIMIT) {
                 return denied('daily', Date.parse(day + 'T00:00:00+09:00') + DAY_MS);
             }
-            if (totals.spent + totals.held + RESERVATION_COST > MONTHLY_BUDGET) {
-                const canSettle = totals.held > 0 && totals.spent + RESERVATION_COST <= MONTHLY_BUDGET;
+            if (totals.spent + totals.held + amount > MONTHLY_BUDGET) {
+                const unknown = Math.ceil(totals.uncertainty_nano / 1000);
+                const canSettle = totals.held > unknown && totals.spent + unknown + amount <= MONTHLY_BUDGET;
                 const reset = monthStart(day, 1);
                 return denied('budget', canSettle ? Math.min(now + RATE_WINDOW_MS, reset) : reset);
             }
@@ -104,17 +128,24 @@ export class ChatLedger extends DurableObject {
             sql.exec(`INSERT INTO days (day, used) VALUES (?, 1)
                 ON CONFLICT(day) DO UPDATE SET used = used + 1`, day);
             sql.exec('INSERT INTO holds (id, period, amount, pending_day) VALUES (?, ?, ?, ?)',
-                reservation, period, RESERVATION_COST, day);
+                reservation, period, amount, day);
             sql.exec(`INSERT INTO months (period, held) VALUES (?, ?)
-                ON CONFLICT(period) DO UPDATE SET held = held + excluded.held`, period, RESERVATION_COST);
-            return { ok: true, reservation, usage: usageFor(period, { ...totals, held: totals.held + RESERVATION_COST }) };
+                ON CONFLICT(period) DO UPDATE SET held = held + excluded.held`, period, amount);
+            return { ok: true, reservation, usage: usageFor(period, { ...totals, held: totals.held + amount }) };
         });
     }
 
     settle(reservation, actualCostMicroUsd, answered = true) {
+        const legacyCost = typeof actualCostMicroUsd === 'number' && actualCostMicroUsd >= 0
+            ? Math.ceil(actualCostMicroUsd) * 1000 : null;
+        return this.settleNano(reservation, legacyCost, answered);
+    }
+
+    settleNano(reservation, costNanoUsd, answered = true, uncertaintyNanoUsd = 0) {
         if (typeof answered !== 'boolean') throw new TypeError('A boolean answer outcome is required.');
-        const knownCost = typeof actualCostMicroUsd === 'number' && actualCostMicroUsd >= 0 &&
-            Number.isSafeInteger(Math.ceil(actualCostMicroUsd));
+        const knownCost = Number.isSafeInteger(costNanoUsd) && costNanoUsd >= 0 &&
+            Number.isSafeInteger(uncertaintyNanoUsd) && uncertaintyNanoUsd >= 0 &&
+            Number.isSafeInteger(costNanoUsd + uncertaintyNanoUsd);
         const sql = this.ctx.storage.sql;
         return this.ctx.storage.transactionSync(() => {
             const hold = sql.exec('SELECT period, amount, pending_day FROM holds WHERE id = ?', reservation).toArray()[0];
@@ -124,8 +155,16 @@ export class ChatLedger extends DurableObject {
                 sql.exec('UPDATE days SET used = used - 1 WHERE day = ? AND used > 0', hold.pending_day);
             }
             if (knownCost) {
-                sql.exec('UPDATE months SET held = held - ?, spent = spent + ? WHERE period = ?',
-                    hold.amount, Math.ceil(actualCostMicroUsd), hold.period);
+                const totals = monthlyTotals(sql, hold.period);
+                const spentNano = totals.spent * 1000 - totals.spent_credit_nano + costNanoUsd;
+                const spentMicro = Math.ceil(spentNano / 1000);
+                const uncertainty = totals.uncertainty_nano + uncertaintyNanoUsd;
+                // Round up only the cumulative amounts for compatibility with
+                // legacy budget checks. Keep their exact nano-USD values.
+                const heldMicro = totals.held - hold.amount - Math.ceil(totals.uncertainty_nano / 1000)
+                    + Math.ceil(uncertainty / 1000);
+                sql.exec(`UPDATE months SET held = ?, spent = ?, spent_credit_nano = ?, uncertainty_nano = ?
+                    WHERE period = ?`, heldMicro, spentMicro, spentMicro * 1000 - spentNano, uncertainty, hold.period);
                 sql.exec('DELETE FROM holds WHERE id = ?', reservation);
             } else if (hold.pending_day) {
                 // Finalize the daily outcome once; keep the monthly hold until the cost is known.
