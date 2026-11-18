@@ -1,0 +1,464 @@
+{
+  "profile": {
+    "name": "稲積誠",
+    "englishName": "Inazumi Makoto / 稲積 誠",
+    "affiliation": "Seikei Univ. — ICN Lab, M1",
+    "bio": "4月からM1です。ネットワーク系の研究をしています。AIとセキュリティが好きです。変なものばっかり作っています。",
+    "focus": [
+      "network",
+      "security",
+      "llm"
+    ],
+    "boot": "2004-01-09T16:00:00+09:00",
+    "lab": {
+      "name": "情報通信ネットワーク研究室",
+      "url": "https://www.kamamu-lab.jp/",
+      "description": "ネットワーク情報の可視化・分析、通信ネットワークの最適化に取り組む研究室です。"
+    },
+    "qualifications": [
+      {
+        "name": "応用情報技術者",
+        "date": "2025-12-25"
+      },
+      {
+        "name": "基本情報技術者",
+        "date": "2025-10-15"
+      }
+    ],
+    "camp": {
+      "name": "Security Camp 2026 Connect",
+      "description": "AIレッドチーミングクラス修了。",
+      "date": "March 26-29, 2026"
+    }
+  },
+  "projects": [
+    {
+      "title": "inazu.me",
+      "url": "https://github.com/Inazumimakoto/inazu",
+      "archiveDescription": "このポートフォリオ自体も制作物です。背景には朝・昼・夜で切り替えられる写真を置いて、リロードするたびに違う1枚を見られるようにしています。右下から時間帯を選んだり、背景だけを眺めたりできます。初回に出るロード画面、ピンと来ました？……大丈夫、ここでは何もリークしていませんから。 開発者ツールでこの辺りのHTMLを覗くか、コンソールパネルを開くと答えがわかります。",
+      "metadata": [
+        {
+          "label": "focus",
+          "value": "liquid glass"
+        },
+        {
+          "label": "background",
+          "value": "photo rotation"
+        }
+      ]
+    },
+    {
+      "title": "terminal.inazu.me",
+      "url": "https://terminal.inazu.me",
+      "description": "ポートフォリオのCLI版です。マウス不要、キーボードだけで自己紹介が読めます。whoami や sudo を打ってみてください。"
+    },
+    {
+      "title": "chat.inazu.me",
+      "url": "https://chat.inazu.me",
+      "description": "自宅MacのローカルLLMをやめて、マルコフ連鎖の人工無能「なずみ」に置き換えました。中の人のTwitter 8年分だけを学習しているので、下手なLLMより中の人の口調が出ます。賢くありません。",
+      "metadata": [
+        {
+          "label": "実モデル",
+          "value": "4,787,980 bytes"
+        },
+        {
+          "label": "学習対象",
+          "value": "15,536投稿・17,190文・19,512語彙"
+        }
+      ]
+    },
+    {
+      "title": "tokubechu.site",
+      "url": "https://tokubechu.site/",
+      "description": ".siteというTLDを見たら、tokubechu.siteが降りてきました。ドメインを取得して、文字が斜めに流れるイントロと、公式のMV・ダンス・ライブ映像を横スワイプで楽しめるサイトを作りました。ちなみに、＝LOVEのことは全然知りません。"
+    },
+    {
+      "title": "copy-gap.inazu.me",
+      "url": "https://copy-gap.inazu.me",
+      "description": "画面に見えている文字列と、コピーされる文字列が食い違う仕組みを体験するサイトです。コピーボタンと選択コピーの両方を試して、種明かしまで見られます。"
+    },
+    {
+      "title": "concurrentmemory.inazu.me",
+      "url": "https://concurrentmemory.inazu.me",
+      "description": "複数の神経衰弱ボードを切り替えながら並行して解く記憶力ゲームです。1面ずつなら普通の神経衰弱なのに、ボードを増やした瞬間に記憶が混線します。最大10面まで並べられます。",
+      "metadata": [
+        {
+          "label": "boards",
+          "value": "1 – 10"
+        },
+        {
+          "label": "difficulty",
+          "value": "3×4 / 4×4 / トランプ"
+        }
+      ]
+    },
+    {
+      "title": "lifelify",
+      "url": "https://apps.apple.com/app/id6755782099",
+      "description": "日記、予定、ToDo、習慣、健康、メモをひとつにまとめるライフログアプリです。iPhone / iPad 向けに App Store で公開しています。",
+      "metadata": [
+        {
+          "label": "platform",
+          "value": "iPhone / iPad"
+        },
+        {
+          "label": "category",
+          "value": "Lifestyle"
+        }
+      ]
+    },
+    {
+      "title": "CalcuAI",
+      "url": "https://vibe-coder-culc-3.vercel.app/",
+      "description": "入力値を Gemini などのAPIに投げて、LLMに計算させる電卓です。何でもAIに聞く現代への風刺として作っていて、未完成ながら Pro プランでは偶数判定ができるようになります。",
+      "metadata": [
+        {
+          "label": "model",
+          "value": "Gemini"
+        },
+        {
+          "label": "status",
+          "value": "unfinished"
+        }
+      ]
+    }
+  ],
+  "clientWork": [
+    {
+      "title": "hakua-salon.com",
+      "url": "https://hakua-salon.com/",
+      "description": "町田・相模大野の脱白髪染め専門店 HAKUA のWebサイトです。仕事で制作した静的サイトで、メニュー、店舗情報、予約導線をシンプルに整理しています。",
+      "metadata": [
+        {
+          "label": "type",
+          "value": "static site"
+        },
+        {
+          "label": "for",
+          "value": "hair salon"
+        }
+      ]
+    }
+  ],
+  "articles": [
+    {
+      "title": "セキュリティ・キャンプ2026 コネクト AIレッドチーミングクラスの応募課題を晒す",
+      "url": "https://zenn.dev/inazumimakoto/articles/seccamp2026-connect-kadai",
+      "description": "プロンプトインジェクションやSSRFなどLLM連携の攻撃シナリオを整理し、難易度・コスト・UX影響の観点から対策を検討した応募課題の全文公開です。",
+      "metadata": [
+        {
+          "label": "topics",
+          "value": "AI / Security"
+        },
+        {
+          "label": "published",
+          "value": "2026-08-14"
+        }
+      ]
+    },
+    {
+      "title": "【注意喚起】カジュアル面談でおでこしか映さないまま『日本人です』って押し通す外国人IT労働者な奴",
+      "url": "https://zenn.dev/inazumimakoto/articles/odeko-casual-interview",
+      "description": "求人を出していない学生に届いた応募メールから、AI製の履歴書・職務経歴書の矛盾と、画面におでこしか映さないカジュアル面談を追った注意喚起の記録です。",
+      "metadata": [
+        {
+          "label": "topics",
+          "value": "AI / Security"
+        },
+        {
+          "label": "published",
+          "value": "2026-08-06"
+        }
+      ]
+    }
+  ],
+  "games": [
+    {
+      "id": "new-leaf",
+      "title": "とびだせ どうぶつの森",
+      "paragraphs": [
+        "小学生の頃はこれをずっとやっていた。",
+        "姉と同じDSを使っていたので、最初は姉が村長だった。でも納得がいかない俺は勝手にセーブデータを消して自分の村を作る。それに怒った姉がまたデータを消して作り直す。俺がまた消す。消しては消されの繰り返しで、当然のように何度も大喧嘩になった。",
+        "結局、1つのデータを2人で共有することにして、俺の「まこと」と姉の「ことみ」を合わせて「まことみ」という名前で村を発展させていった。",
+        "朝、登校前に遊ぶのが日課だったが、早朝はお店が閉まっているのが嫌で「朝型の村条例」にしていた。すると今度は、雑草が生えるのが嫌な姉が「美しい村条例」に変えてくる。俺が朝型に戻して、姉がまた美しい村にする。その繰り返しだった。",
+        "条例を変えるたびにベルが吹っ飛ぶので村長はずっと金欠。最後まで条例をめぐって喧嘩していた。"
+      ],
+      "cover": {
+        "src": "/assets/games/covers/new-leaf.jpg",
+        "alt": "とびだせ どうぶつの森のパッケージ",
+        "width": 200,
+        "height": 179
+      },
+      "images": []
+    },
+    {
+      "id": "mh4g",
+      "title": "モンスターハンター4G",
+      "paragraphs": [
+        "小学校終わりに、みんなで公園に集まるルーティンがあった。",
+        "公園には駄菓子屋もあり、お菓子を食べながらサッカーをするやつもいれば、ゲームをするやつもいて本当に自由だった。なぜかその公園にはフリーWi-Fiが飛んでいたので、ローカル通信で協力プレイをするやつもいれば、オンラインで野良部屋に潜るやつもいた。",
+        "当時の俺は紛れもない「ゆうた」だった。よりによってゴグマジオスにミヅハ一式で乗り込み、速攻で3乙。あのとき部屋にいた野良の人、本当にごめんなさい。"
+      ],
+      "cover": {
+        "src": "/assets/games/covers/mh4g.jpg",
+        "alt": "モンスターハンター4Gのパッケージ",
+        "width": 768,
+        "height": 680
+      },
+      "images": []
+    },
+    {
+      "id": "cod-wwii",
+      "title": "Call of Duty: WWII",
+      "playtime": "プレイ時間 114時間",
+      "paragraphs": [
+        "中学1年生くらいの頃、初めてやったFPSがこれ。",
+        "よく死体を撃たれていたが、当時の俺はこれが「煽り」だとはまったく気づいていなかった。純粋にボコボコにされていた。"
+      ],
+      "cover": {
+        "src": "/assets/games/covers/cod-wwii.png",
+        "alt": "Call of Duty: WWIIのパッケージ",
+        "width": 500,
+        "height": 627
+      },
+      "images": []
+    },
+    {
+      "id": "fortnite",
+      "title": "Fortnite",
+      "playtime": "プレイ時間 2,121時間",
+      "paragraphs": [
+        "中学生の頃、ずっとやっていた。とにかく楽しかった。",
+        "部活が終わるとみんなでVC（ボイスチャット）に繋ぎ、スクワッドやデュオへ行くのがお決まりだった。当時はPlayStationのパーティー機能が最大8人までしか入れず、人が集まりすぎてパーティーが2つ作られることもあった。パーティーはみんなの声でわちゃわちゃしていてうるさかった。懐かしい。"
+      ],
+      "cover": {
+        "src": "/assets/games/covers/fortnite.jpg",
+        "alt": "Fortniteの公式カバー画像",
+        "width": 1200,
+        "height": 1600
+      },
+      "images": [
+        {
+          "src": "/assets/games/fortnite-21-eliminations.jpg",
+          "alt": "Fortniteで21キルして優勝したときのゲーム画面",
+          "width": 1280,
+          "height": 720,
+          "caption": "21キルでVictory Royale。写真を押すと元のサイズで見られます。"
+        }
+      ]
+    },
+    {
+      "id": "siege",
+      "title": "レインボーシックス シージ",
+      "playtime": "プレイ時間 2,969時間",
+      "paragraphs": [
+        "初めての爆弾ゲーム。中学から高校にかけて、友達と狂ったようにやり込んだ。最高ランクはダイヤ。",
+        "かなりシビアで頭を使うゲームだが、クラッチを決めたときの気持ちよさは異常だった。"
+      ],
+      "cover": {
+        "src": "/assets/games/covers/siege.jpg",
+        "alt": "レインボーシックス シージのパッケージ",
+        "width": 400,
+        "height": 502
+      },
+      "images": []
+    },
+    {
+      "id": "new-horizons",
+      "title": "あつまれ どうぶつの森",
+      "paragraphs": [
+        "コロナ禍でずっとやっていた。思い出は「カブ」に尽きる。",
+        "ある日、自分の島で1カブ500ベルくらいまでいきなり高騰して、持っていたカブを全部売りさばいた。もちろんそれだけで預金の7,000万ベルを稼いだわけではない。Twitterで「1カブ500ベルです。売りたい方DMお願いします」と募集をかけて、島に来る人から手数料をもらっていた。たしか1往復20万ベルくらいだった。",
+        "向こうからすれば、1カブ100ベルくらいで仕入れて俺の島で500ベルで売れば、持ち物いっぱいなら売上は200万ベル。仕入れ代と20万ベルの手数料を引いても、140万ベルくらいの利益が残る。",
+        "「売上の10％は取りすぎだろ！ 実際の株式売買の仲介料はそんなに高くないだろ！」と言われそうだが、うるさいなぁ。損しないんだからいいの。",
+        "そうやって荒稼ぎして預金残高が72,522,411ベルになった。ただ、DIYが性に合わず、島の評価が★5になってすずらんが咲いた瞬間に燃え尽きた。"
+      ],
+      "cover": {
+        "src": "/assets/games/covers/new-horizons.jpg",
+        "alt": "あつまれ どうぶつの森のパッケージ",
+        "width": 800,
+        "height": 1295
+      },
+      "images": [
+        {
+          "src": "/assets/games/animal-crossing-savings.jpg",
+          "alt": "あつまれどうぶつの森で預金残高72,522,411ベルが表示された画面の写真",
+          "width": 720,
+          "height": 1280,
+          "caption": "カブで荒稼ぎした当時の預金残高（72,522,411ベル）。"
+        }
+      ]
+    },
+    {
+      "id": "apex",
+      "title": "Apex Legends",
+      "playtime": "プレイ時間 3,390時間",
+      "paragraphs": [
+        "シーズン10の開幕プレデター（世界上位750人）。",
+        "コロナ禍の分散登校や休校の時期、シーズン5で知り合った固定の2人とひたすらランクを回していた。「毎日やろうぜ」と決めていたわけではないが、自然と集まってはこの2人としかやっていなかった。",
+        "ひたすら潜り続けて、ついに念願のプレデターに到達。「一旦お腹すいたし昼飯食べるか」と解散し、飯を食って戻ってきたらもうマスターに降格していた。",
+        "だが「1回踏めたし、どうせ学校も始まって維持なんてできないからいいや」と完全に満足して燃え尽き、このシーズンは以降ランクを回さなかった。",
+        "カジュアルはほぼやらず、ひたすらランクだけを回して8,700試合以上、2万キル超え。最高6,000ダメとか16連勝とか、間違いなく青春の時間を一番吸い取られたゲーム。"
+      ],
+      "cover": {
+        "src": "/assets/games/covers/apex.jpg",
+        "alt": "Apex Legendsの公式カバー画像",
+        "width": 600,
+        "height": 900
+      },
+      "images": [
+        {
+          "src": "/assets/games/apex-season10-predator.jpg",
+          "alt": "Apex Legendsシーズン10でプレデターに到達したときのゲーム画面",
+          "width": 1280,
+          "height": 720,
+          "caption": "シーズン10、開幕プレデター到達の記録。"
+        },
+        {
+          "src": "/assets/games/apex-predator-rank.jpg",
+          "alt": "Apex Legendsのプレデターのランク表示を撮影した写真",
+          "width": 2160,
+          "height": 3840,
+          "caption": "プレデターの記録（表示順位は撮影時点のもの）。このあと昼飯を食べてマスターへ降格。"
+        },
+        {
+          "src": "/assets/games/apex-career-stats.jpg",
+          "alt": "Apex Legendsの通算戦績画面（8,780試合、21,646キル）",
+          "width": 875,
+          "height": 1024,
+          "caption": "通算戦績の記録。"
+        }
+      ]
+    },
+    {
+      "id": "iceborne",
+      "title": "モンスターハンターワールド：アイスボーン",
+      "playtime": "プレイ時間 1,916時間",
+      "paragraphs": [
+        "ラージャンの狩猟数が3,000頭を超えた。すべての元凶は、装飾品ガチャのチケットが出るイベントクエスト「君はゴールデントロフィー」（通称ゴルトロ）。",
+        "今作の激昂ラージャンは動きが早すぎて隙がない。定石通り「数少ない隙に大ダメージを入れる」ために大剣装備を作ってソロで行ったが、全然勝てなかった。攻撃後の隙を狙おうにも被弾するし、何より起き攻めがエグくて何もできない。特例で「5乙までOK」の激甘設定なのに、あっけなく5乙して失敗した。",
+        "諦めて「マルチならいけるかも」と、HR/MRカンスト勢が立てていた野良の集会所に潜り込んだ。入ってみたら自分以外の3人が全員「太刀」。「あの素早すぎる連撃を居合するの？無茶すぎるでしょ…大剣のほうがいいはず…」と思っていたら、3人がラージャンの攻撃を華麗にいなし、爆速でクエストが終わった。",
+        "呆然とした。ラージャンがボコボコにされている姿を初めて見て、その太刀捌きに一目惚れした。",
+        "次の日から太刀でゴルトロの練習を開始。今度は自分で集会所を立てたら、なんと昨日の3人のうちの1人が入ってきてくれた。その人と2人で何度もゴルトロに行き、動きを盗み、YouTubeで動画を見漁ってほぼ毎日通い詰めた。",
+        "気づけばソロでもマルチでも太刀でラージャンをボコせるようになっていた。攻撃が噛み合った瞬間の爽快感が凄まじく、3,000頭を超えた今でも続けている。"
+      ],
+      "cover": {
+        "src": "/assets/games/covers/iceborne.jpg",
+        "alt": "モンスターハンターワールド：アイスボーンのパッケージ",
+        "width": 500,
+        "height": 632
+      },
+      "images": [
+        {
+          "src": "/assets/games/iceborne-furious-rajang.jpg",
+          "alt": "アイスボーンで4人のハンターと戦う、金色の毛と電気をまとった激昂したラージャン",
+          "width": 1920,
+          "height": 1080,
+          "caption": "激昂したラージャン。画像：CAPCOM（公式紹介記事）",
+          "links": [
+            {
+              "label": "公式紹介記事",
+              "url": "https://news.capcomusa.com/dubindoh/blog/2020/03/22/raging-brachydios-and-furious-rajang-smash-into-monster-hunter-world-iceborne"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "minecraft",
+      "title": "Minecraft",
+      "playtime": "プレイ時間 1,317時間",
+      "paragraphs": [
+        "気休め。",
+        "FPSに疲れたときに、友達とだらだら喋りながら整地をするのがちょうどいい。"
+      ],
+      "cover": {
+        "src": "/assets/games/covers/minecraft.jpg",
+        "alt": "Minecraftのパッケージ",
+        "width": 822,
+        "height": 1024
+      },
+      "images": []
+    }
+  ],
+  "wishlist": [
+    {
+      "title": "CVE番号",
+      "description": "墓石に刻む用。"
+    },
+    {
+      "title": "AS番号",
+      "description": "世界の中心で、AS番号をさけぶ用。"
+    },
+    {
+      "title": "IPv4 /24",
+      "description": "中古でいいので💧なるべく綺麗なのがいいです。"
+    },
+    {
+      "title": ".inazumi",
+      "description": "申請には法人格が要るらしいので、まず起業します。"
+    },
+    {
+      "title": "メモリ",
+      "description": "こんなんなんぼあってもええですから。"
+    },
+    {
+      "title": "帯域",
+      "description": "5000兆bps欲しい！"
+    },
+    {
+      "title": "時間",
+      "description": "どこに売ってるんですかこれ。"
+    }
+  ],
+  "friends": [
+    {
+      "name": "taisuk.engineer",
+      "url": "https://taisuk.engineer/"
+    },
+    {
+      "name": "yut4k.com",
+      "url": "https://yut4k.com/"
+    },
+    {
+      "name": "nakamurahaya.to",
+      "url": "https://nakamurahaya.to/"
+    }
+  ],
+  "links": {
+    "email": {
+      "label": "makoto@inazu.me",
+      "url": "mailto:makoto@inazu.me",
+      "description": "個人で使っている連絡先。"
+    },
+    "github": {
+      "label": "Inazumimakoto",
+      "url": "https://github.com/Inazumimakoto",
+      "description": "コードと制作物。"
+    },
+    "x": {
+      "label": "@makoto0109a",
+      "url": "https://x.com/makoto0109a",
+      "description": "更新や雑多な記録。"
+    },
+    "instagram": {
+      "label": "@inazutagram",
+      "url": "https://instagram.com/inazutagram",
+      "description": "写真と軽めの断片。"
+    },
+    "backupEmail": {
+      "label": "inazumimakoto@gmail.com",
+      "url": "mailto:inazumimakoto@gmail.com",
+      "description": "メインが届かないとき用の予備。"
+    },
+    "zenn": {
+      "label": "Zenn",
+      "url": "https://zenn.dev/inazumimakoto",
+      "description": "View all posts on Zenn"
+    }
+  },
+  "colophon": {
+    "title": "元のロード画面について（旧サイトの説明）",
+    "description": "初回に一瞬だけ出るあのロード画面は、ダークウェブ（Tor / .onion）上の\nランサムウェアグループ \"LockBit\" のリークサイトにある\n「アクセスキュー画面」のオマージュです。\n実物のページの HTML をそのままぶっこ抜いてきて、構造を読み解きながら\n自分用に作り直しました：\nLOCK BIT5.0 のロゴ   →  inazu.me バッジ\n中央の L3 ロゴ        →  実家の猫「みゃー」\n周回する3つのコイン  →  研究室のロゴ / 研究室の非公式マスコット /\n友人のサイトのファビコン（無断使用）\n英語のキュー文言      →  日本語に書き換え\ntriangulate の動き    →  そのまま移植"
+  }
+}

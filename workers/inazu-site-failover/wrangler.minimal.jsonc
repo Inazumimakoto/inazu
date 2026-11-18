@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "inazu-site-failover",
+  "compatibility_date": "2026-05-09",
+  "workers_dev": false,
+  "routes": [
+    { "pattern": "inazu.me/*", "zone_name": "inazu.me" }
+  ],
+  "build": {
+    "command": "node minimal/build.mjs"
+  },
+  "assets": {
+    "directory": "./minimal/dist",
+    "not_found_handling": "404-page"
+  }
+}

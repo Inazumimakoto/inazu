@@ -1,6 +1,10 @@
 # inazu.me / chat.inazu.me
 
-## Failover Demo
+`inazu.me` は Cloudflare Workers の静的サイトです。ロゴとアニメーションを表示し、プロフィールや更新履歴は開発者ツールの Console から読めます。編集、ローカル確認、デプロイの手順は [Workers 版の README](workers/inazu-site-failover/minimal/README.md) にあります。
+
+以下は旧ポートフォリオと、同じ Node.js サーバーで開発していたチャットの記録です。
+
+## 旧サイトの Failover Demo
 
 Mac mini が止まってもサイトは落ちず、Cloudflare Worker 経由で Raspberry Pi 側へ切り替わる様子です。
 
@@ -162,7 +166,7 @@ ANALYTICS_ADMIN_USER=your_private_admin_user
 ANALYTICS_ADMIN_PASSWORD=your_private_password
 ```
 
-## Production Server
+## 旧サイトの Production Server
 
 本番の `inazu.me` / `chat.inazu.me` は pm2 の `inazu-chat` プロセスで動かしています。
 
