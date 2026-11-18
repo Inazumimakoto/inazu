@@ -7,27 +7,19 @@
 
 * { box-sizing: border-box; }
 
-[hidden] { display: none !important; }
-
 body {
     margin: 0;
     min-height: 100vh;
     min-height: 100svh;
-    padding-inline: max(20px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-right));
-}
-
-.page {
-    width: 100%;
-    max-width: 30rem;
-    margin-inline: auto;
-    padding-block: clamp(28px, calc((100svh - 610px) / 2), 140px) max(32px, env(safe-area-inset-bottom));
+    display: grid;
+    place-items: center;
+    padding: 24px;
 }
 
 .signature {
     width: 100%;
     max-width: 360px;
     min-width: 0;
-    margin-inline: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -93,120 +85,12 @@ body {
     66% { transform: translate(0px, var(--by)) rotate(360deg); }
 }
 
-.chat { margin-top: 40px; line-height: 1.65; }
-.chat h2 { margin: 0 0 6px; font-size: 1rem; font-weight: 650; }
-.chat-hint { margin: 0 0 12px; color: #4e4e4e; font-size: .875rem; }
-.visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-}
-
-.composer {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    border: 1px solid #b8b8b8;
-    border-radius: 10px;
-    padding: 4px;
-}
-.composer:focus-within { outline: 2px solid #555; outline-offset: 2px; }
-.composer input {
-    flex: 1;
-    min-width: 0;
-    padding: 9px 8px;
-    border: 0;
-    border-radius: 6px;
-    outline: 0;
-    color: inherit;
-    background: transparent;
-    font: inherit;
-    font-size: 16px;
-}
-.composer input::placeholder { color: #707070; }
-.composer button {
-    min-height: 44px;
-    padding: 8px 17px;
-    border: 0;
-    border-radius: 6px;
-    background: #202020;
-    color: white;
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
-}
-.composer button:hover { background: #404040; }
-.composer button:disabled { background: #666; cursor: wait; }
-button:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px solid #dc143c; outline-offset: 2px; }
-.note, .console-guide, .usage { color: #606060; font-size: .8125rem; }
-.note { margin: 6px 0 0; }
-.console-guide { margin: 18px 0 0; }
-.console-guide code, .usage dd {
-    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-    color: #333;
-}
-.console-guide code { display: inline-block; }
-.usage {
-    margin: 14px 0 0;
-    padding-top: 10px;
-    border-top: 1px solid #e0e0e0;
-}
-.usage > div { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px; }
-.usage dd { margin: 0 0 0 auto; font-variant-numeric: tabular-nums; }
-#chat-status, #public-profile { margin-top: 16px; font-size: .9375rem; }
-#chat-status { overflow-wrap: anywhere; }
-#chat-reply { white-space: pre-wrap; }
-#chat-reply.pending { color: #606060; font-size: .8125rem; }
-#chat-status p, #public-profile p { margin: 0; }
-#chat-status .asked { margin-bottom: 8px; color: #565656; font-size: .8125rem; }
-.tool-log {
-    margin: 0 0 10px 3px;
-    padding: 0 0 0 12px;
-    border-left: 1px solid #d5d5d5;
-    list-style: none;
-    color: #555;
-    font-size: .8125rem;
-}
-.tool-log li { position: relative; display: flex; align-items: baseline; gap: 8px; padding-block: 2px; }
-.tool-log li::before {
-    content: '';
-    position: absolute;
-    top: .86em;
-    left: -15px;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: #999;
-}
-.tool-label { flex: none; color: #353535; font-weight: 600; }
-.tool-target { min-width: 0; overflow-wrap: anywhere; }
-.tool-target a { color: inherit; text-underline-offset: 2px; }
-.citation { color: #a60f31; font-size: .8em; vertical-align: .18em; margin-inline: .12em; text-underline-offset: 2px; }
-#chat-sources { margin-top: 12px; }
-#chat-sources h3 { margin: 0; font-size: .8125rem; font-weight: 650; }
-#chat-sources ol { margin: 3px 0 0; padding-inline-start: 1.5em; color: #555; font-size: .8125rem; }
-#chat-sources li { padding-block: 2px; }
-#chat-sources a { color: #252525; text-underline-offset: 2px; }
-#more-sources summary { width: fit-content; padding-block: 3px; color: #555; cursor: pointer; font-size: .8125rem; }
-.source-host { margin-inline-start: .5em; color: #656565; font-size: .95em; }
-#public-profile summary { width: fit-content; cursor: pointer; }
-#public-profile p { margin-top: 6px; }
-
 @media (max-width: 560px) {
-    .page { padding-top: clamp(24px, calc((100svh - 518px) / 2), 120px); }
-    .signature { transform: scale(.75); margin-block: -45px; }
-    .chat { margin-top: 30px; }
+    .signature { transform: scale(.75); }
 }
 
 @media (max-height: 440px) {
-    .page { padding-top: 18px; }
     .signature { gap: 24px; margin-block: -60px; transform: scale(.6); }
-    .chat { margin-top: 20px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
