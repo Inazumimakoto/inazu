@@ -23,7 +23,7 @@ test('single bounded request carries only the public corpus and the question to 
     const result = await answerQuestion(longQuestion, key, async (url, options) => {
         calls++;
         assert.equal(url, 'https://api.openai.com/v1/responses');
-        assert.equal(options.redirect, 'error');
+        assert.equal(options.redirect, 'manual');
         assert.equal(options.headers.Authorization, 'Bearer ' + key);
         assert.equal(options.body.includes(key), false);
         assert.ok(Buffer.byteLength(options.body) <= 32_768);
@@ -115,7 +115,7 @@ test('unreadable provider responses keep their reservation and hide parse errors
 });
 
 test('provider failures never retry, read an HTTP error body or reveal exception details', async () => {
-    for (const [status, cost] of [[401, 0], [429, 0], [503, undefined]]) {
+    for (const [status, cost] of [[307, undefined], [401, 0], [429, 0], [503, undefined]]) {
         let calls = 0;
         await assert.rejects(answerQuestion(question, key, async () => {
             calls++;

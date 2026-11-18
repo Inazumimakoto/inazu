@@ -96,7 +96,7 @@ export async function answerQuestion(question, apiKey, fetchImpl = fetch) {
     let response;
     try {
         response = await fetchImpl('https://api.openai.com/v1/responses', {
-            method: 'POST', redirect: 'error', signal: AbortSignal.timeout(20_000),
+            method: 'POST', redirect: 'manual', signal: AbortSignal.timeout(20_000),
             headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
             body
         });
