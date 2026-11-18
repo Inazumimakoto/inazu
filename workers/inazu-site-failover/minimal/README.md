@@ -31,7 +31,7 @@ node minimal/build.mjs
 
 `POST /api/chat` は質問を1件（300文字まで）受け付け、公開情報を添えて Worker から OpenAI Responses API に送ります。質問と回答はアプリのデータベースに保存しません。ブラウザには回答、対応する Console の項目、利用額を返します。
 
-OpenAI でこのサイト専用のキーを発行し、Cloudflare の Worker 設定「ランタイム変数とシークレット」で種類「シークレット」、名前 `OPENAI_API_KEY` として登録します。ローカル実行用のキーは必要に応じて `workers/inazu-site-failover/.dev.vars` に設定できます。
+OpenAI でこのサイト専用のキーを発行し、Cloudflare の Worker 設定「ランタイム変数とシークレット」で種類「シークレット」、名前 `OPENAI_API_KEY` として登録します。本番で登録済みの名前 `OPEN_API_KEY` も使用できます。両方登録した場合は `OPENAI_API_KEY` を優先します。ローカル実行用のキーは必要に応じて `workers/inazu-site-failover/.dev.vars` に設定できます。
 
 利用枠は SQLite の Durable Object `ChatLedger` で全地域にわたり共有します。日本時間で1日1,000回答、同じIPからの質問は直近60秒に5件までです。回答を生成している間は1件分の枠を確保し、生成に失敗したときはその日次枠を戻します。
 

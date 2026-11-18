@@ -59,7 +59,8 @@ async function handleApi(request, env, url) {
     const method = isUsage ? 'GET' : 'POST';
     if (request.method !== method) return json({ error: '対応していないリクエストです。' }, 405, { Allow: method });
     const ledger = env.CHAT_LEDGER.getByName('portfolio');
-    if (isUsage) return json({ ...await ledger.getUsage(), available: Boolean(env.OPENAI_API_KEY) });
+    const apiKey = env.OPENAI_API_KEY || env.OPEN_API_KEY;
+    if (isUsage) return json({ ...await ledger.getUsage(), available: Boolean(apiKey) });
 
     if (request.headers.get('Origin') !== url.origin) return json({ error: 'サイトから送信してください。' }, 403);
     if (request.headers.get('Content-Type')?.split(';')[0].trim().toLowerCase() !== 'application/json') {
@@ -67,9 +68,9 @@ async function handleApi(request, env, url) {
     }
     const question = await readQuestion(request);
     if (!question) return json({ error: '質問は1〜300文字で入力してください。' }, 400);
-    if (!env.OPENAI_API_KEY) return json({ error: 'AIは準備中です。公開プロフィールを読めます。' }, 503);
+    if (!apiKey) return json({ error: 'AIは準備中です。公開プロフィールを読めます。' }, 503);
 
-    const admission = await ledger.reserve(await clientKey(request, env.OPENAI_API_KEY));
+    const admission = await ledger.reserve(await clientKey(request, apiKey));
     if (!admission.ok) {
         return json({ error: limitMessages[admission.reason], usage: admission.usage }, 429, {
             'Retry-After': String(admission.retryAfter)
@@ -78,7 +79,7 @@ async function handleApi(request, env, url) {
 
     let result;
     try {
-        result = await answerQuestion(question, env.OPENAI_API_KEY);
+        result = await answerQuestion(question, apiKey);
     } catch (error) {
         // Release the answer slot even if the provider could have charged for a timeout.
         await ledger.settle(admission.reservation, error.costMicroUsd ?? null, false);

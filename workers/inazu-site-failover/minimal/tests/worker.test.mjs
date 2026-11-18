@@ -28,7 +28,7 @@ test('workerd posts to the provider and records the returned token usage', async
                 name: 'chat-test', compatibilityDate: '2026-05-09',
                 manifest: { mainModule: 'worker.mjs', modules: { 'worker.mjs': { type: 'esm', contents: outputFiles[0].text } } },
                 env: {
-                    OPENAI_API_KEY: { type: 'text', value: 'local-test' },
+                    OPEN_API_KEY: { type: 'text', value: 'local-test' },
                     CHAT_LEDGER: { type: 'durable-object', worker: 'chat-test', exportName: 'ChatLedger' }
                 },
                 exports: { ChatLedger: { type: 'durable-object', storage: 'sqlite' } }
@@ -49,6 +49,7 @@ test('workerd posts to the provider and records the returned token usage', async
     assert.equal(result.section, 'profile');
     assert.equal(result.usage.estimatedUsd, 0.0002);
     const usage = await (await simulator.dispatchFetch(origin + '/api/usage')).json();
+    assert.equal(usage.available, true);
     assert.equal(usage.estimatedUsd, result.usage.estimatedUsd);
     assert.equal(usage.reservedUsd, 0);
 });
