@@ -18,20 +18,46 @@
     <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" sizes="180x180">
     <link rel="stylesheet" href="/style.css">
     <script src="/console.js" defer></script>
+    <script src="/chat.js" defer></script>
 </head>
 <body>
     <!-- プロフィール、制作物、記事、ゲームの記録は Console の inazu にあります。 -->
-    <main class="signature">
-        <h1 class="brand" aria-label="inazu.me">
-            <img class="brand__cat" src="/assets/loader/center.webp" alt="" width="48" height="48">
-            <span class="brand__name" aria-hidden="true">inazu</span><span class="brand__tld" aria-hidden="true">.me</span>
-        </h1>
-        <div class="orbit" aria-hidden="true">
-            <img class="orbit__center" src="/assets/loader/center.webp" alt="" width="92" height="92">
-            <img class="orbit__coin orbit__coin--1" src="/assets/loader/dot-1.webp" alt="" width="46" height="46">
-            <img class="orbit__coin orbit__coin--2" src="/assets/loader/dot-2.webp" alt="" width="58" height="58">
-            <img class="orbit__coin orbit__coin--3" src="/assets/loader/dot-3.webp" alt="" width="46" height="46">
-        </div>
+    <main class="page">
+        <header class="signature">
+            <h1 class="brand" aria-label="inazu.me">
+                <img class="brand__cat" src="/assets/loader/center.webp" alt="" width="48" height="48">
+                <span class="brand__name" aria-hidden="true">inazu</span><span class="brand__tld" aria-hidden="true">.me</span>
+            </h1>
+            <div class="orbit" aria-hidden="true">
+                <img class="orbit__center" src="/assets/loader/center.webp" alt="" width="92" height="92">
+                <img class="orbit__coin orbit__coin--1" src="/assets/loader/dot-1.webp" alt="" width="46" height="46">
+                <img class="orbit__coin orbit__coin--2" src="/assets/loader/dot-2.webp" alt="" width="58" height="58">
+                <img class="orbit__coin orbit__coin--3" src="/assets/loader/dot-3.webp" alt="" width="46" height="46">
+            </div>
+        </header>
+        <section class="chat" aria-labelledby="chat-heading">
+            <h2 id="chat-heading">稲積 誠についてAIに聞く</h2>
+            <form id="chat-form" hidden>
+                <label class="visually-hidden" for="question">ポートフォリオについての質問（300文字まで）</label>
+                <div class="composer">
+                    <input id="question" type="text" maxlength="300" required enterkeyhint="send"
+                        placeholder="どんなものを作っていますか？" aria-describedby="chat-notice">
+                    <button type="submit">送信</button>
+                </div>
+                <p id="chat-notice" class="note">入力した質問は OpenAI に送信されます。</p>
+            </form>
+            <noscript><p>AIへの質問には JavaScript が必要です。稲積誠は成蹊大学の情報通信ネットワーク研究室でネットワークを研究しています。</p></noscript>
+            <div id="chat-status" role="status" aria-atomic="true"></div>
+            <details id="public-profile" hidden>
+                <summary>公開プロフィールを読む</summary>
+                <p></p>
+            </details>
+            <p class="console-guide">詳しくは開発者ツールの Console で <code id="console-command">inazu.show()</code></p>
+            <p class="usage" id="chat-usage" hidden>
+                <span id="usage-label">今月のチャット推定額（JST）</span>
+                <span class="usage__amount" id="usage-amount">確認中…</span>
+            </p>
+        </section>
     </main>
 </body>
 </html>

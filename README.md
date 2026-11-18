@@ -1,6 +1,6 @@
 # inazu.me / chat.inazu.me
 
-`inazu.me` は Cloudflare Workers の静的サイトです。ロゴとアニメーションを表示し、プロフィールや更新履歴は開発者ツールの Console から読めます。編集、ローカル確認、デプロイの手順は [Workers 版の README](workers/inazu-site-failover/minimal/README.md) にあります。
+`inazu.me` は Cloudflare Workers で配信しています。アニメーションの下で稲積について質問でき、回答の出典になった公開プロフィールや制作物の詳細は開発者ツールの Console から読めます。編集、ローカル確認、デプロイの手順は [Workers 版の README](workers/inazu-site-failover/minimal/README.md) にあります。
 
 以下は旧ポートフォリオと、同じ Node.js サーバーで開発していたチャットの記録です。
 

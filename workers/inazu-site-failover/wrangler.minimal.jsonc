@@ -10,8 +10,13 @@
   "build": {
     "command": "node minimal/build.mjs"
   },
+  "durable_objects": {
+    "bindings": [{ "name": "CHAT_LEDGER", "class_name": "ChatLedger" }]
+  },
+  "migrations": [{ "tag": "chat-v1", "new_sqlite_classes": ["ChatLedger"] }],
   "assets": {
     "binding": "ASSETS",
+    "run_worker_first": ["/api/chat", "/api/usage"],
     "directory": "./minimal/dist",
     "not_found_handling": "404-page"
   }
