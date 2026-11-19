@@ -23,5 +23,8 @@ if (!consoleSource.includes(placeholder)) throw new Error('Missing console conte
 await writeFile(join(dist, 'console.js'), consoleSource.replace(placeholder, () => JSON.stringify(content)));
 
 const html = await readFile(join(dist, 'index.html'), 'utf8');
-await writeFile(join(dist, '404.html'), html.replace('<title>inazu.me</title>', '<title>inazu.me</title>\n    <meta name="robots" content="noindex">'));
+const notFound = html
+    .replace('    <script src="/rotations.js" defer></script>\n', '')
+    .replace('<title>inazu.me</title>', '<title>inazu.me</title>\n    <meta name="robots" content="noindex">');
+await writeFile(join(dist, '404.html'), notFound);
 console.log(`Built minimal inazu.me: ${Object.keys(content).length} console sections, ${content.news.length} news entries.`);

@@ -10,6 +10,7 @@
     }
   ],
   "vars": {
+    "MAINTENANCE_MODE": true,
     "MAC_ORIGIN": "https://mac-site-origin.inazu.me",
     "PI_ORIGIN": "https://pi-site-origin.inazu.me",
     "ORIGIN_TIMEOUT_MS": 1500

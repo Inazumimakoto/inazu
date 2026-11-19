@@ -16,6 +16,11 @@ function isAdminPath(pathname) {
 
 export default {
     async fetch(request, env) {
+        // Stop at the edge before admin handling or any origin request.
+        if (env.MAINTENANCE_MODE === true || env.MAINTENANCE_MODE === 'true') {
+            return maintenanceResponse(request);
+        }
+
         const requestUrl = new URL(request.url);
 
         if (isAdminPath(requestUrl.pathname)) {
@@ -77,6 +82,22 @@ function buildOriginUrl(origin, requestUrl) {
     const url = new URL(requestUrl.pathname.replace(/^\//, ''), base);
     url.search = requestUrl.search;
     return url;
+}
+
+function maintenanceResponse(request) {
+    const headers = new Headers({
+        'content-type': 'text/plain; charset=utf-8',
+        'cache-control': 'no-store',
+        'retry-after': '3600',
+        'x-content-type-options': 'nosniff',
+        'x-inazu-origin': 'maintenance'
+    });
+
+    if (request.method.toUpperCase() === 'HEAD') {
+        return new Response(null, { status: 503, headers });
+    }
+
+    return new Response('メンテ中です', { status: 503, headers });
 }
 
 async function fetchOrigin({ request, originUrl, timeoutMs }) {
