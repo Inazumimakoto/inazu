@@ -24,7 +24,7 @@ node minimal/build.mjs
 ./node_modules/.bin/wrangler dev --config wrangler.minimal.jsonc --local --ip 127.0.0.1 --port 8788
 ```
 
-`http://127.0.0.1:8788/` を開きます。`/games`、`/news`、`/analytics` は `/` へ302転送し、データは Console にまとめます。存在しないURLと旧APIは同じロゴ画面で404を返し、バックエンドへは接続しません。JSを無効にしてもロゴとCSSアニメーションは表示できます。OSの「動きを減らす」設定では周回を停止します。
+`http://127.0.0.1:8788/` を開きます。`/games`、`/news`、`/analytics` は `/` へ302転送し、データは Console にまとめます。存在しないURLと旧APIは同じロゴ画面で404を返し、バックエンドへは接続しません。JSを無効にしてもロゴとCSSアニメーションは表示できます。OSの「動きを減らす」がオンでも3つのアイコンは周回します。
 
 ## 本番デプロイ
 

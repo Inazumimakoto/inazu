@@ -96,10 +96,3 @@ body {
 @media (max-height: 440px) {
     .signature { gap: 24px; margin-block: -60px; transform: scale(.6); }
 }
-
-@media (prefers-reduced-motion: reduce) {
-    .orbit__coin { animation: none; }
-    .orbit__coin--1 { transform: translate(var(--tlx), var(--tly)); }
-    .orbit__coin--2 { transform: translate(var(--trx), var(--tly)); }
-    .orbit__coin--3 { transform: translate(0px, var(--by)); }
-}
