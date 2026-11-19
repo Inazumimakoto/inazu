@@ -80,12 +80,17 @@
         }
         html.show-loader #inazu-loader { display: flex; }
         #inazu-loader.is-done { opacity: 0; }
-        #inazu-loader:focus-visible {
+        .inazu-loader__skip {
+            position: absolute; inset: 0;
+            border: 0; padding: 0; background: transparent;
+        }
+        .inazu-loader__skip:focus-visible {
             outline: 3px solid #DC143C;
             outline-offset: -8px;
         }
 
         .inazu-loader__queue {
+            position: relative; pointer-events: none;
             display: flex; flex-direction: column; align-items: center;
             gap: 0; text-align: center; padding: 0 20px;
             font-family: -apple-system, system-ui, "Hiragino Sans", "Noto Sans JP", "Segoe UI", Roboto, sans-serif;
@@ -128,8 +133,12 @@
             position: absolute; top: var(--cy); left: 50%;
             width: var(--cs, 46px); height: var(--cs, 46px);
             margin: calc(var(--cs, 46px) / -2) 0 0 calc(var(--cs, 46px) / -2);
+            pointer-events: auto;
             animation: inazu-triangulate 1.5s ease infinite;
         }
+        .inazu-loader__coin img { display: block; width: 100%; height: 100%; }
+        .inazu-loader__coin:focus-visible { outline: 3px solid #DC143C; outline-offset: 3px; }
+        .inazu-loader__stage:has(.inazu-loader__coin:active) .inazu-loader__coin { animation-play-state: paused; }
         .inazu-loader__coin--2 { --cs: 58px; } /* network monster a touch larger */
         .inazu-loader__coin--1 { animation-delay: 0s; }
         .inazu-loader__coin--2 { animation-delay: -0.5s; }
@@ -215,7 +224,8 @@
 </head>
 
 <body>
-    <div id="inazu-loader" role="button" tabindex="0" aria-label="ロード画面。タップまたはクリックでスキップできます。">
+    <div id="inazu-loader">
+        <button class="inazu-loader__skip" type="button" aria-label="ロード画面をスキップ"></button>
         <div class="inazu-loader__queue">
             <div class="inazu-loader__brand">
                 <img class="inazu-loader__brand-cat" src="assets/loader/center.webp?v=2" alt="" width="48" height="48">
@@ -225,9 +235,15 @@
             <p class="inazu-loader__lead">猫が順にご案内します。</p>
             <div class="inazu-loader__stage">
                 <img class="inazu-loader__center" src="assets/loader/center.webp?v=2" alt="" width="92" height="92">
-                <img class="inazu-loader__coin inazu-loader__coin--1" src="assets/loader/dot-1.webp?v=2" alt="" width="46" height="46">
-                <img class="inazu-loader__coin inazu-loader__coin--2" src="assets/loader/dot-2.webp?v=2" alt="" width="58" height="58">
-                <img class="inazu-loader__coin inazu-loader__coin--3" src="assets/loader/dot-3.webp?v=2" alt="" width="46" height="46">
+                <a class="inazu-loader__coin inazu-loader__coin--1" href="https://yut4k.com/">
+                    <img src="assets/loader/dot-1.webp?v=3" alt="yut4k.com" width="46" height="46">
+                </a>
+                <a class="inazu-loader__coin inazu-loader__coin--2" href="https://nakamurahaya.to/">
+                    <img src="assets/loader/dot-2.webp?v=2" alt="nakamurahaya.to" width="58" height="58">
+                </a>
+                <a class="inazu-loader__coin inazu-loader__coin--3" href="https://taisuk.engineer/">
+                    <img src="assets/loader/dot-3.webp?v=2" alt="taisuk.engineer" width="46" height="46">
+                </a>
             </div>
             <p class="inazu-loader__wait">推定転送時間 <span>&lt;3秒</span></p>
             <p class="inazu-loader__note">少々お待ちください！すぐご案内します！<br><strong>待てない方は画面をタップしてください。</strong></p>
@@ -696,9 +712,9 @@
                 }, 550);
             }
 
-            el.addEventListener('click', dismissLoader);
+            el.querySelector('.inazu-loader__skip').addEventListener('click', dismissLoader);
             el.addEventListener('keydown', function (event) {
-                if (event.key === 'Enter' || event.key === ' ' || event.key === 'Escape') {
+                if (event.key === 'Escape') {
                     event.preventDefault();
                     dismissLoader();
                 }
@@ -710,7 +726,12 @@
                 try { sessionStorage.setItem('inazu:loader-shown', '1'); } catch (e) {}
                 var MIN = 3000, start = Date.now();
                 function done() {
-                    delayTimer = setTimeout(dismissLoader, Math.max(0, MIN - (Date.now() - start)));
+                    delayTimer = setTimeout(function () {
+                        if (!el.contains(document.activeElement)) { dismissLoader(); return; }
+                        el.addEventListener('focusout', function (event) {
+                            if (!el.contains(event.relatedTarget)) dismissLoader();
+                        });
+                    }, Math.max(0, MIN - (Date.now() - start)));
                 }
                 if (document.readyState === 'complete') done();
                 else window.addEventListener('load', done);
