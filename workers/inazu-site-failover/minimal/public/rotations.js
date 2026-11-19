@@ -13,20 +13,15 @@
     let retryTimer;
     let failures = 0;
     let pageActive = true;
+    let nextLapSlot = 0;
 
     function showLap(own) {
-        // Keep overlapping laps readable and give the visitor's red +1 time to finish.
-        if (pulses.childElementCount >= lapOffsets.length) {
-            const oldestPeer = pulses.querySelector('.rotations__pulse:not(.rotations__pulse--own)');
-            (oldestPeer ?? pulses.firstElementChild).remove();
-        }
         const pulse = document.createElement('span');
         pulse.className = own ? 'rotations__pulse rotations__pulse--own' : 'rotations__pulse';
         pulse.textContent = '+1';
-        const occupied = Array.from(pulses.children, child => Number(child.dataset.offset));
-        const free = lapOffsets.filter(offset => !occupied.includes(offset));
-        const offset = free[Math.floor(Math.random() * free.length)];
-        pulse.dataset.offset = String(offset);
+        if (!pulses.childElementCount) nextLapSlot = Math.floor(Math.random() * lapOffsets.length);
+        const offset = lapOffsets[nextLapSlot];
+        nextLapSlot = (nextLapSlot + 1) % lapOffsets.length;
         pulse.style.left = `${offset + Math.random() * 10 - 5}%`;
         pulse.style.setProperty('--lap-drift', `${Math.random() * 10 - 5}px`);
         pulses.append(pulse);
